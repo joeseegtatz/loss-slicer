@@ -20,11 +20,11 @@ class SliceSampler(ABC):
         self.max_value = model_wrapper.max_value
         
     @abstractmethod
-    def compute_slices(self, center_point, sample_size=101, **kwargs):
-        """Compute slices based on the center point.
+    def compute_slices(self, focus_point, sample_size=101, **kwargs):
+        """Compute slices based on the focus point.
         
         Args:
-            center_point (dict): Dictionary with keys 'weights' and 'biases'
+            focus_point (dict): Dictionary with keys 'weights' and 'biases'
             sample_size (int): Number of samples per slice
             **kwargs: Additional arguments for specific slicing methods
             
@@ -33,11 +33,11 @@ class SliceSampler(ABC):
         """
         pass
     
-    def measure_performance(self, center_point, sample_size=101, num_runs=5, **kwargs):
+    def measure_performance(self, focus_point, sample_size=101, num_runs=5, **kwargs):
         """Measure slicing performance in samples per second.
         
         Args:
-            center_point (dict): Dictionary with keys 'weights' and 'biases'
+            focus_point (dict): Dictionary with keys 'weights' and 'biases'
             sample_size (int): Number of samples per slice
             num_runs (int): Number of runs to average
             **kwargs: Additional arguments for specific slicing methods
@@ -50,7 +50,7 @@ class SliceSampler(ABC):
         
         for _ in range(num_runs):
             start_time = time.time()
-            result = self.compute_slices(center_point, sample_size, **kwargs)
+            result = self.compute_slices(focus_point, sample_size, **kwargs)
             end_time = time.time()
             
             # Count total samples

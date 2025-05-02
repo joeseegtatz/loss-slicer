@@ -6,12 +6,12 @@ import numpy as np
 from typing import List, Dict, Any
 
 
-def measure_sampling_performance(slicer, center_point, sample_size=101, num_runs=5, **kwargs):
+def measure_sampling_performance(slicer, focus_point, sample_size=101, num_runs=5, **kwargs):
     """Measure the performance of a slice sampler.
     
     Args:
         slicer: An instance of a SliceSampler subclass
-        center_point (dict): Dictionary with keys 'weights' and 'biases'
+        focus_point (dict): Dictionary with keys 'weights' and 'biases'
         sample_size (int): Number of samples per slice
         num_runs (int): Number of times to run the sampling for reliable measurements
         **kwargs: Additional arguments to pass to the sampler's compute_slices method
@@ -24,7 +24,7 @@ def measure_sampling_performance(slicer, center_point, sample_size=101, num_runs
     
     for _ in range(num_runs):
         start_time = time.time()
-        result = slicer.compute_slices(center_point, sample_size, **kwargs)
+        result = slicer.compute_slices(focus_point, sample_size, **kwargs)
         end_time = time.time()
         
         # Count total samples
@@ -44,12 +44,12 @@ def measure_sampling_performance(slicer, center_point, sample_size=101, num_runs
     }
 
 
-def compare_slicers(slicers, center_point, sample_size=101, num_runs=3, **kwargs):
+def compare_slicers(slicers, focus_point, sample_size=101, num_runs=3, **kwargs):
     """Compare the performance of multiple slice samplers.
     
     Args:
         slicers (list): List of (slicer_instance, slicer_name) tuples
-        center_point (dict): Dictionary with keys 'weights' and 'biases'
+        focus_point (dict): Dictionary with keys 'weights' and 'biases'
         sample_size (int): Number of samples per slice
         num_runs (int): Number of times to run the sampling for reliable measurements
         **kwargs: Additional arguments to pass to the samplers' compute_slices methods
@@ -61,7 +61,7 @@ def compare_slicers(slicers, center_point, sample_size=101, num_runs=3, **kwargs
     
     for slicer, name in slicers:
         print(f"Measuring performance for {name}...")
-        perf = measure_sampling_performance(slicer, center_point, sample_size, num_runs, **kwargs)
+        perf = measure_sampling_performance(slicer, focus_point, sample_size, num_runs, **kwargs)
         results[name] = perf
         print(f"  {name}: {perf['samples_per_second']:.2f} samples/second")
     

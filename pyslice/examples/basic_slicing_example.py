@@ -103,7 +103,7 @@ def main():
     # Generate random points for comparison
     print("Generating random points...")
     sampling_vectors = slicer.get_random_points(
-        center_point=trained_params,
+        focus_point=trained_params,
         quantity=num_of_sampling_points,
         sampling_method="uniform",
         radius=1.0
@@ -155,7 +155,7 @@ def main():
     from pyslice.utils.metrics import measure_sampling_performance
     performance = measure_sampling_performance(
         slicer=slicer,
-        center_point=trained_params,
+        focus_point=trained_params,
         sample_size=sample_size,
         num_runs=3
     )

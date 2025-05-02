@@ -8,19 +8,19 @@ from pyslice.core.slice_sampler import SliceSampler
 class AxisParallelSlicer(SliceSampler):
     """Slicer that creates slices along axis-parallel directions."""
     
-    def compute_slices(self, center_point, sample_size=101, **kwargs):
-        """Compute axis-parallel slices from a center point.
+    def compute_slices(self, focus_point, sample_size=101, **kwargs):
+        """Compute axis-parallel slices from a focus point.
         
         Args:
-            center_point (dict): Dictionary with keys 'weights' and 'biases'
+            focus_point (dict): Dictionary with keys 'weights' and 'biases'
             sample_size (int): Number of samples per slice
             **kwargs: Additional arguments (not used for axis-parallel slicing)
             
         Returns:
             dict: Slice data including origin point and slices
         """
-        weights = np.array(center_point['weights'], dtype=float)
-        biases = np.array(center_point['biases'], dtype=float)
+        weights = np.array(focus_point['weights'], dtype=float)
+        biases = np.array(focus_point['biases'], dtype=float)
         weights_length = len(weights)
         
         # Combine weights and biases into a single parameter vector
@@ -29,10 +29,10 @@ class AxisParallelSlicer(SliceSampler):
         # Storage for slices
         slices = []
         
-        # Calculate loss at the center point
-        origin_loss = self.model_wrapper.compute_loss(center_point)
+        # Calculate loss at the focus point
+        origin_loss = self.model_wrapper.compute_loss(focus_point)
         
-        # Create a copy of the center point for sampling
+        # Create a copy of the focus point for sampling
         for d in range(len(fp)):
             samples = []
             for i in range(sample_size):
@@ -61,14 +61,14 @@ class AxisParallelSlicer(SliceSampler):
             'weights_length': weights_length
         }
     
-    def get_random_points(self, center_point, quantity, sampling_method="uniform", radius=1.0):
-        """Generate random points around the center point using various sampling methods.
+    def get_random_points(self, focus_point, quantity, sampling_method="uniform", radius=1.0):
+        """Generate random points around the focus point using various sampling methods.
         
         Args:
-            center_point (dict): Dictionary with keys 'weights' and 'biases'
+            focus_point (dict): Dictionary with keys 'weights' and 'biases'
             quantity (int): Number of points to generate
             sampling_method (str): Sampling method to use (e.g., "uniform", "lhs classic", "halton")
-            radius (float): Radius around the center point to sample
+            radius (float): Radius around the focus point to sample
             
         Returns:
             list: List of dictionaries with 'weights', 'biases', and 'loss' keys
@@ -79,15 +79,15 @@ class AxisParallelSlicer(SliceSampler):
         except ImportError:
             raise ImportError("scikit-optimize is required for random point generation. Install with 'pip install scikit-optimize'.")
             
-        weights = center_point['weights']
-        biases = center_point['biases']
+        weights = focus_point['weights']
+        biases = focus_point['biases']
         wb = np.concatenate([weights, biases])
         dim = len(wb)
         n_samples = quantity
         
-        # If radius is 0, return just the center point
+        # If radius is 0, return just the focus point
         if radius == 0.0:
-            return [{'weights': weights, 'biases': biases, 'loss': self.model_wrapper.compute_loss(center_point)}]
+            return [{'weights': weights, 'biases': biases, 'loss': self.model_wrapper.compute_loss(focus_point)}]
         
         # Define search space
         space = Space([(float(wb[i] - radius), float(wb[i] + radius)) for i in range(dim)])
