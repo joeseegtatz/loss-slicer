@@ -23,6 +23,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+pysclice_gemm.egg-info/
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -58,4 +59,3 @@ dmypy.json
 *.swp
 *.swo
 .DS_Store
-
