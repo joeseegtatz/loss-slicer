@@ -1,4 +1,3 @@
-\
 """
 Slicing algorithms for loss landscape analysis.
 """
@@ -16,4 +15,5 @@ __all__ = [
     "LinearInterpolationSlicer",
     "AxisParallelSlicer",
     "RandomDirectionSlicer",
+    
 ]
