@@ -28,6 +28,7 @@ pysclice_gemm.egg-info/
 # Jupyter Notebook
 .ipynb_checkpoints
 */.ipynb_checkpoints/*
+/notebook
 
 # IPython
 profile_default/
