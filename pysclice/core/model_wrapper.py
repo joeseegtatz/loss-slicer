@@ -48,6 +48,22 @@ class ModelWrapper:
         params_tensor = torch.tensor(params, device=self.device, dtype=next(self.model.parameters()).dtype)
         torch.nn.utils.vector_to_parameters(params_tensor, self.model.parameters())
     
+    def get_random_parameters(self, scale: float = 1.0) -> np.ndarray:
+        """
+        Generate a random normalized vector of parameters with given scale.
+        
+        Args:
+            scale: Scale factor for the random vector (default: 1.0)
+            
+        Returns:
+            Random parameter vector as numpy array
+        """
+        params = self.get_parameters()
+        random_params = np.random.normal(size=params.shape)
+        # Normalize and scale
+        random_params = random_params / np.linalg.norm(random_params) * scale
+        return random_params
+    
     def compute_loss(self, 
                     params: Optional[np.ndarray] = None, 
                     data: Optional[Union[Tuple[torch.Tensor, torch.Tensor], torch.utils.data.DataLoader]] = None,
