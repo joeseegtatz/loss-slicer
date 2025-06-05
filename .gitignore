@@ -1,5 +1,3 @@
-/tb-plugin
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -45,6 +43,7 @@ ENV/
 env.bak/
 venv.bak/
 conda-env/
+/tb-plugin/tb-env
 
 # pytest
 .pytest_cache/
