@@ -149,24 +149,6 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
             except (AttributeError, TypeError, json.JSONDecodeError) as e:
                 # Improved error handling with more diagnostic information
                 print(f"Error processing tensor data: {e}")
-                print(f"Event type: {type(latest_event)}, numpy type: {type(latest_event.numpy)}")
-                
-                # Try to extract the JSON data from the string representation
-                event_str = str(latest_event)
-                json_start = event_str.find('{"alphas":')
-                if json_start >= 0:
-                    try:
-                        # Try to extract and parse the JSON part
-                        json_str = event_str[json_start:]
-                        # Handle potential truncation by finding a valid JSON ending
-                        json_end = json_str.rfind('}')
-                        if json_end > 0:
-                            json_str = json_str[:json_end+1]
-                        tensor_content = json.loads(json_str)
-                    except json.JSONDecodeError:
-                        tensor_content = {"error": "Failed to parse JSON data", "raw_event": event_str}
-                else:
-                    tensor_content = {"error": "Could not find JSON data in event", "raw_event": event_str}
             
             return werkzeug.Response(
                 json.dumps(tensor_content),
