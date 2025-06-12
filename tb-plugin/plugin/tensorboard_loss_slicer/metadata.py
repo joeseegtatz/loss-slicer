@@ -15,4 +15,6 @@
 """Plugin-specific global metadata."""
 
 
-PLUGIN_NAME = "Loss Slicer"
+PLUGIN_NAME = "loss_slicer"
+# Display name shown in the UI
+PLUGIN_DISPLAY_NAME = "Loss Slicer"

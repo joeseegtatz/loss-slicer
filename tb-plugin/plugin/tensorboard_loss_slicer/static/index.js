@@ -14,87 +14,228 @@
 // ==============================================================================
 
 export async function render() {
-  const msg = createElement('p', 'Fetching data…');
-  document.body.appendChild(msg);
+  const container = document.createElement('div');
+  container.className = 'loss-slicer-container';
+  container.style.padding = '20px';
+  container.style.height = '100%';
+  container.style.boxSizing = 'border-box';
+  container.style.display = 'flex';
+  container.style.flexDirection = 'column';
 
-  const runToTags = await fetch('./tags').then((response) => response.json());
-  const data = await Promise.all(
-    Object.entries(runToTags).flatMap(([run, tagToDescription]) =>
-      Object.keys(tagToDescription).map((tag) =>
-        fetch('./greetings?' + new URLSearchParams({run, tag}))
-          .then((response) => response.json())
-          .then((greetings) => ({
-            run,
-            tag,
-            greetings,
-            description: tagToDescription[tag].description,
-          }))
-      )
-    )
-  );
+  const header = document.createElement('h2');
+  header.textContent = 'Loss Slicer';
+  container.appendChild(header);
 
-  const style = createElement(
-    'style',
-    `
-      thead {
-        border-bottom: 1px black solid;
-        border-top: 2px black solid;
-      }
-      tbody {
-        border-bottom: 2px black solid;
-      }
-      table {
-        border-collapse: collapse;
-      }
-      td,
-      th {
-        padding: 2pt 8pt;
-      }
-    `
-  );
-  style.innerText = style.textContent;
-  document.head.appendChild(style);
+  // Add version indicator - this will always show
+  const versionIndicator = document.createElement('div');
+  versionIndicator.textContent = '✓ Plugin loaded successfully';
+  versionIndicator.style.backgroundColor = '#e6f7e6';
+  versionIndicator.style.color = '#2e8b57';
+  versionIndicator.style.padding = '5px 10px';
+  versionIndicator.style.borderRadius = '4px';
+  versionIndicator.style.marginBottom = '15px';
+  versionIndicator.style.fontWeight = 'bold';
+  container.appendChild(versionIndicator);
 
-  const table = createElement('table', [
-    createElement(
-      'thead',
-      createElement('tr', [
-        createElement('th', 'Run'),
-        createElement('th', 'Tag'),
-        createElement('th', 'Greetings'),
-        createElement('th', 'Description'),
-      ])
-    ),
-    createElement(
-      'tbody',
-      data.flatMap(({run, tag, greetings, description}) =>
-        greetings.map((guest, i) =>
-          createElement('tr', [
-            createElement('td', i === 0 ? run : null),
-            createElement('td', i === 0 ? tag : null),
-            createElement('td', guest),
-            createElement('td', description),
-          ])
-        )
-      )
-    ),
-  ]);
-  msg.textContent = 'Data loaded.';
-  document.body.appendChild(table);
-}
+  const description = document.createElement('p');
+  description.textContent = 'Visualize loss values along linear paths between model weight states';
+  container.appendChild(description);
 
-function createElement(tag, children) {
-  const result = document.createElement(tag);
-  if (children != null) {
-    if (typeof children === 'string') {
-      result.textContent = children;
-    } else if (Array.isArray(children)) {
-      for (const child of children) {
-        result.appendChild(child);
+  // Create a run selector
+  const runSelector = document.createElement('select');
+  runSelector.style.marginBottom = '15px';
+  runSelector.style.padding = '5px';
+  container.appendChild(runSelector);
+
+  // Create a tag selector
+  const tagSelector = document.createElement('select');
+  tagSelector.style.marginBottom = '15px';
+  tagSelector.style.padding = '5px';
+  container.appendChild(tagSelector);
+
+  // Create a chart container
+  const chartContainer = document.createElement('div');
+  chartContainer.style.flex = '1';
+  chartContainer.style.minHeight = '300px';
+  chartContainer.style.border = '1px solid #eee';
+  chartContainer.style.borderRadius = '5px';
+  chartContainer.style.padding = '10px';
+  chartContainer.id = 'chart-container';
+  container.appendChild(chartContainer);
+
+  // Status message container
+  const statusContainer = document.createElement('div');
+  statusContainer.style.marginTop = '10px';
+  statusContainer.style.color = '#666';
+  container.appendChild(statusContainer);
+
+  document.body.appendChild(container);
+  
+  // Load available runs and tags
+  const loadData = async () => {
+    try {
+      statusContainer.textContent = 'Loading available runs and tags...';
+      const tagsResponse = await fetch(`/data/plugin/loss_slicer/tags`);
+      
+      if (!tagsResponse.ok) {
+        throw new Error(`Failed to load tags: ${tagsResponse.statusText}`);
       }
-    } else {
-      result.appendChild(children);
+
+      const runToTags = await tagsResponse.json();
+      
+      // Clear options
+      runSelector.innerHTML = '';
+      tagSelector.innerHTML = '';
+
+      // Check if we have any runs
+      if (Object.keys(runToTags).length === 0) {
+        statusContainer.textContent = 'No loss slice data found. Try running the demo script first.';
+        return;
+      }
+
+      // Add options for runs
+      Object.keys(runToTags).forEach(run => {
+        const option = document.createElement('option');
+        option.value = run;
+        option.textContent = run;
+        runSelector.appendChild(option);
+      });
+
+      // Update tags when run changes
+      const updateTags = () => {
+        const selectedRun = runSelector.value;
+        const tags = runToTags[selectedRun] || [];
+        
+        // Clear previous tags
+        tagSelector.innerHTML = '';
+        
+        // Add new tag options
+        tags.forEach(tag => {
+          const option = document.createElement('option');
+          option.value = tag;
+          option.textContent = tag;
+          tagSelector.appendChild(option);
+        });
+        
+        // Trigger data loading if we have tags
+        if (tags.length > 0) {
+          loadSliceData();
+        }
+      };
+
+      // Setup event handlers
+      runSelector.addEventListener('change', updateTags);
+      tagSelector.addEventListener('change', loadSliceData);
+      
+      // Initialize tag list
+      updateTags();
+    } catch (error) {
+      statusContainer.textContent = `Error: ${error.message}`;
+      console.error('Error loading data:', error);
     }
-  }
-  return result;
+  };
+  
+  // Load slice data and render chart
+  const loadSliceData = async () => {
+    try {
+      const run = runSelector.value;
+      const tag = tagSelector.value;
+      
+      if (!run || !tag) {
+        statusContainer.textContent = 'Please select a run and tag';
+        return;
+      }
+      
+      statusContainer.textContent = `Loading slice data for ${run}/${tag}...`;
+      
+      const dataResponse = await fetch(`/data/plugin/loss_slicer/slices?run=${encodeURIComponent(run)}&tag=${encodeURIComponent(tag)}`);
+      
+      console.log("URI")
+      console.log(`/data/plugin/loss_slicer/slices?run=${encodeURIComponent(run)}&tag=${encodeURIComponent(tag)}`)
+      
+
+      if (!dataResponse.ok) {
+        throw new Error(`Failed to load slice data: ${dataResponse.statusText}`);
+      }
+      
+      const sliceData = await dataResponse.json();
+      console.log('Received slice data:', sliceData);
+      renderChart(sliceData);
+      
+      statusContainer.textContent = `Showing slice data for ${run}/${tag}`;
+    } catch (error) {
+      statusContainer.textContent = `Error: ${error.message}`;
+      console.error('Error loading slice data:', error);
+    }
+  };
+  
+  // Render chart with slice data
+  const renderChart = (data) => {
+    // If plotly is not loaded, load it
+    if (!window.Plotly) {
+      const script = document.createElement('script');
+      script.src = './lib/plotly.min.js'; // Use local plotly library
+      script.onload = () => renderPlotlyChart(data);
+      document.head.appendChild(script);
+    } else {
+      renderPlotlyChart(data);
+    }
+  };
+  
+  // Render chart using Plotly
+  const renderPlotlyChart = (data) => {
+    const chartDiv = document.getElementById('chart-container');
+    console.log('Rendering plotly chart with data:', data);
+    console.log('Plotly loaded?', !!window.Plotly);
+
+    console.log(data.alphas)
+    
+    // Check if data has the expected format
+    if (!data.alphas || !data.losses) {
+      console.error('Data is missing alphas or losses arrays:', data);
+      statusContainer.textContent = 'Error: Data format incorrect (missing alphas or losses)';
+      return;
+    }
+    
+    // Prepare plot data
+    const trace = {
+      x: data.alphas,
+      y: data.losses,
+      mode: 'lines+markers',
+      type: 'scatter',
+      name: 'Loss',
+      line: {
+        color: 'rgb(31, 119, 180)',
+        width: 2
+      },
+      marker: {
+        size: 6,
+        color: 'rgb(31, 119, 180)',
+        symbol: 'circle'
+      }
+    };
+    
+    // Layout configuration
+    const layout = {
+      title: 'Loss Surface Slice: Linear Interpolation',
+      xaxis: {
+        title: 'Interpolation Factor (α)',
+        zeroline: false
+      },
+      yaxis: {
+        title: 'Loss Value'
+      },
+      margin: { t: 50, l: 60, r: 30, b: 50 },
+      hovermode: 'closest'
+    };
+    
+    // Render the plot
+    Plotly.newPlot(chartDiv, [trace], layout, { responsive: true });
+  };
+  
+  // Start loading data
+  loadData();
+  
+  
+  return container;
 }

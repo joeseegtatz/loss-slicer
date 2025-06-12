@@ -21,13 +21,13 @@ setuptools.setup(
     name="tensorboard_loss_slicer",
     version="0.1.0",
     description="Neural Net Loss Landscape Slicer.",
-    packages=["tensorboard_plugin_example"],
+    packages=["tensorboard_loss_slicer"],
     package_data={
         "tensorboard_loss_slicer": ["static/**"],
     },
     entry_points={
         "tensorboard_plugins": [
-            "example_basic = tensorboard_loss_slicer.plugin:LossSlicerPlugin",
+            "loss_slicer = tensorboard_loss_slicer.plugin:LossSlicerPlugin",
         ],
     },
 )

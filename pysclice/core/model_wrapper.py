@@ -109,7 +109,12 @@ class ModelWrapper:
                     outputs = self.model(inputs)
                     loss = self.loss_fn(outputs, targets)
                     batch_size = inputs.size(0)
-                    total_loss += loss.item() * batch_size
+                    # Handle both tensor and float loss values
+                    if isinstance(loss, torch.Tensor):
+                        loss_value = loss.item()
+                    else:
+                        loss_value = loss
+                    total_loss += loss_value * batch_size
                     total_samples += batch_size
                     
             computed_loss = total_loss / total_samples
@@ -124,7 +129,12 @@ class ModelWrapper:
                 outputs = self.model(inputs)
                 loss = self.loss_fn(outputs, targets)
             
-            computed_loss = loss.item()
+            # Handle both tensor and float loss values
+            if isinstance(loss, torch.Tensor):
+                computed_loss = loss.item()
+            else:
+                # If loss is already a float, use it directly
+                computed_loss = loss
         
         # Restore original parameters if they were changed
         if params is not None:

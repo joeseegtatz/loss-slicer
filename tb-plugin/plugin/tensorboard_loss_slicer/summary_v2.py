@@ -16,51 +16,52 @@
 
 
 import tensorflow.compat.v2 as tf
+import numpy as np
 from tensorboard.compat.proto import summary_pb2
+import json
 
 from tensorboard_loss_slicer import metadata
 
 
-def greeting(name, guest, step=None, description=None):
-    """Write a "greeting" summary.
-
-    Arguments:
-      name: A name for this summary. The summary tag used for TensorBoard will
-        be this name prefixed by any active name scopes.
-      guest: A rank-0 string `Tensor`.
-      step: Explicit `int64`-castable monotonic step value for this summary. If
-        omitted, this defaults to `tf.summary.experimental.get_step()`, which must
-        not be None.
-      description: Optional long-form description for this summary, as a
-        constant `str`. Markdown is supported. Defaults to empty.
-
-    Returns:
-      True on success, or false if no summary was written because no default
-      summary writer was available.
-
-    Raises:
-      ValueError: if a default writer exists, but no step was provided and
-        `tf.summary.experimental.get_step()` is None.
-    """
-    with tf.summary.experimental.summary_scope(
-        name,
-        "greeting_summary",
-        values=[guest, step],
-    ) as (tag, _):
-        return tf.summary.write(
-            tag=tag,
-            tensor=tf.strings.join(["Hello, ", guest, "!"]),
-            step=step,
-            metadata=_create_summary_metadata(description),
-        )
-
-
 def _create_summary_metadata(description):
-    return summary_pb2.SummaryMetadata(
-        summary_description=description,
-        plugin_data=summary_pb2.SummaryMetadata.PluginData(
-            plugin_name=metadata.PLUGIN_NAME,
-            content=b"",  # no need for summary-specific metadata
-        ),
-        data_class=summary_pb2.DATA_CLASS_TENSOR,
+    """Create summary metadata with plugin-specific data."""
+    content = {"version": 0, "description": description}
+    summary_metadata = summary_pb2.SummaryMetadata()
+    summary_metadata.plugin_data.plugin_name = metadata.PLUGIN_NAME
+    summary_metadata.plugin_data.content = json.dumps(content).encode()
+    summary_metadata.data_class = summary_pb2.DATA_CLASS_TENSOR
+    return summary_metadata
+
+
+def slice_data(name, slice_data, step=None, description=None):
+    """Log slice data for the loss slicer plugin.
+    
+    Args:
+        name: A name for this slice data.
+        slice_data: A dictionary containing slicing data with 'alphas', 'losses', 
+                  and 'parameters' keys.
+        step: Optional global step for this training step.
+        description: Optional description for this slice data.
+        
+    Returns:
+        A serialized TF summary for the slice data.
+    """
+    description = description or ""
+    summary_metadata = _create_summary_metadata(description)
+    
+    # Convert data to JSON format
+    tensor_data = {
+        "alphas": slice_data["alphas"].tolist() if isinstance(slice_data["alphas"], np.ndarray) else slice_data["alphas"],
+        "losses": slice_data["losses"].tolist() if isinstance(slice_data["losses"], np.ndarray) else slice_data["losses"],
+        "parameters": [params.tolist() if isinstance(params, np.ndarray) else params for params in slice_data["parameters"]]
+    }
+    
+    tensor_str = json.dumps(tensor_data)
+    tensor = tf.constant(tensor_str)
+    
+    return tf.summary.write(
+        tag=name,
+        tensor=tensor,
+        step=step,
+        metadata=summary_metadata,
     )
