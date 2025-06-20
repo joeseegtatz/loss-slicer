@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: false, // preserve plotly.min.js
     lib: {
       // Use lib mode for creating a library export
-      entry: path.resolve(__dirname, 'app.jsx'),
+      entry: path.resolve(__dirname, 'app.tsx'),
       formats: ['es'],
       fileName: () => 'app.js'
     },
