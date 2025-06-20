@@ -34,7 +34,7 @@ INDEX_JS_ROUTE = '/index.js'
 INDEX_HTML_ROUTE = '/index.html'
 APP_JS_ROUTE = '/app.js'
 BUNDLE_JS_ROUTE = '/bundle.js'
-STYLES_CSS_ROUTE = '/styles.css'
+STYLES_CSS_ROUTE = '/tb-pluging-loss-slice.css'
 
 
 class LossSlicerPlugin(base_plugin.TBPlugin):
