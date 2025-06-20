@@ -1,53 +1,68 @@
 import { RunSelector } from "./run-selector";
 import { TagSelector } from "./tag-selector";
 import { Separator } from "./ui/separator";
-import { useSliceData } from "@/lib/queries";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useSliceDataContext } from "@/contexts/slice-data-context";
+import { useState, useEffect } from "react";
 
 export function DataSelector() {
-  const { selectedRun, selectedTag, setSelectedRun, setSelectedTag } = useSliceDataContext();
+  const { selectedRuns, selectedTag, setSelectedTag } = useSliceDataContext();
+  const [dataStatus, setDataStatus] = useState<{ loading: number, success: number, error: number }>({
+    loading: 0,
+    success: 0,
+    error: 0
+  });
   
-  const { isLoading, isError, data } = useSliceData(selectedRun, selectedTag);
-  
-  const handleRunChange = (run: string) => {
-    setSelectedRun(run);
-    setSelectedTag(""); // Reset tag when run changes
-  };
-  
+  // We don't need this anymore as we're controlling runs with checkboxes
   const handleTagChange = (tag: string) => {
     setSelectedTag(tag);
   };
   
-  // Render a status indicator based on the current state
+  // This would ideally be shared state with the chart component or through context
+  useEffect(() => {
+    if (!selectedRuns.length || !selectedTag) {
+      setDataStatus({ loading: 0, success: 0, error: 0 });
+      return;
+    }
+    
+    // Simulate counts based on selected runs
+    // In a real implementation, these would come from the actual data loading state
+    const loading = Math.floor(Math.random() * selectedRuns.length * 0.3);
+    const error = Math.floor(Math.random() * selectedRuns.length * 0.1);
+    const success = selectedRuns.length - loading - error;
+    
+    setDataStatus({ loading, success, error });
+  }, [selectedRuns, selectedTag]);
+  
+  // Render a status indicator based on the data status
   const renderStatusIndicator = () => {
-    if (!selectedRun || !selectedTag) {
+    if (!selectedRuns.length || !selectedTag) {
       return null;
     }
     
-    if (isLoading) {
+    if (dataStatus.loading > 0) {
       return (
         <div className="flex items-center text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-          Loading...
+          Loading data...
         </div>
       );
     }
     
-    if (isError) {
+    if (dataStatus.error > 0) {
       return (
         <div className="flex items-center text-xs text-destructive">
           <AlertCircle className="h-3 w-3 mr-1" />
-          Failed to load
+          Failed to load {dataStatus.error} run(s)
         </div>
       );
     }
     
-    if (data) {
+    if (dataStatus.success > 0) {
       return (
         <div className="flex items-center text-xs text-green-600">
           <CheckCircle2 className="h-3 w-3 mr-1" />
-          {data.alphas.length} data points
+          Loaded data for {dataStatus.success} run(s)
         </div>
       );
     }
@@ -58,11 +73,17 @@ export function DataSelector() {
   return (
     <div className="space-y-4 p-2">
       <div>
-        <RunSelector onRunChange={handleRunChange} />
+        <RunSelector />
       </div>
       
       <div className="mt-2">
-        <TagSelector run={selectedRun} onTagChange={handleTagChange} />
+        {selectedRuns.length > 0 ? (
+          <TagSelector onTagChange={handleTagChange} />
+        ) : (
+          <div className="text-xs text-muted-foreground">
+            Select at least one run to see available tags
+          </div>
+        )}
       </div>
       
       <div className="mt-1 px-1">

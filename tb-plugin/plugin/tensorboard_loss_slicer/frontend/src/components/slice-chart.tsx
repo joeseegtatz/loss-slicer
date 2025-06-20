@@ -1,4 +1,3 @@
-import { useSliceData } from "@/lib/queries";
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import {
   LineChart,
@@ -12,22 +11,130 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { fetchSliceData } from "@/lib/api";
+
+interface RunData {
+  isLoading: boolean;
+  isError: boolean;
+  errorMessage?: string;
+  data: {
+    alphas: number[];
+    losses: number[];
+  } | null;
+}
 
 export function SliceChart() {
-  const { selectedRun, selectedTag } = useSliceDataContext();
-  const { data, isLoading, isError, error } = useSliceData(selectedRun, selectedTag);
+  const { selectedRuns, selectedTag, runColors } = useSliceDataContext();
+  const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
+  
+  // For each selected run, fetch its data
+  useEffect(() => {
+    if (!selectedTag || selectedRuns.length === 0) return;
+    
+    // Initialize run data for new runs
+    selectedRuns.forEach(run => {
+      if (!runDataMap[run]) {
+        setRunDataMap(prev => ({
+          ...prev,
+          [run]: {
+            isLoading: true,
+            isError: false,
+            data: null
+          }
+        }));
+      }
+    });
+    
+  }, [selectedRuns, selectedTag, runDataMap]);
 
-  if (!selectedRun || !selectedTag) {
+  // Function to update run data when queries complete
+  const updateRunData = (run: string, data: Partial<RunData>) => {
+    setRunDataMap(prev => ({
+      ...prev,
+      [run]: { ...prev[run], ...data }
+    }));
+  };
+
+  // Calculate overall loading state
+  const isAnyLoading = useMemo(() => {
+    return selectedRuns.some(run => runDataMap[run]?.isLoading);
+  }, [selectedRuns, runDataMap]);
+
+  // Calculate error state
+  const errors = useMemo(() => {
+    return selectedRuns
+      .filter(run => runDataMap[run]?.isError)
+      .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
+  }, [selectedRuns, runDataMap]);
+
+  // Prepare combined chart data
+  const chartData = useMemo(() => {
+    const data: Record<string, any>[] = [];
+    
+    // Find all runs that have data
+    const runsWithData = selectedRuns.filter(run => 
+      runDataMap[run]?.data?.alphas && runDataMap[run]?.data?.losses
+    );
+    
+    if (runsWithData.length === 0) return [];
+    
+    // Use first run's alphas as the base
+    const firstRun = runsWithData[0];
+    const alphas = runDataMap[firstRun]?.data?.alphas || [];
+    
+    // Create data points with alpha value and loss for each run
+    alphas.forEach((alpha, i) => {
+      const dataPoint: Record<string, any> = { alpha };
+      
+      runsWithData.forEach(run => {
+        const runData = runDataMap[run]?.data;
+        if (runData && i < runData.losses.length) {
+          dataPoint[run] = runData.losses[i];
+        }
+      });
+      
+      data.push(dataPoint);
+    });
+    
+    return data;
+  }, [selectedRuns, runDataMap]);
+
+  // For each selected run, fetch data using the useSliceData hook
+  useEffect(() => {
+    if (!selectedTag) return;
+    
+    selectedRuns.forEach(run => {
+      // Use the fetchSliceData function from API
+      fetchSliceData(run, selectedTag)
+        .then(data => {
+          updateRunData(run, {
+            isLoading: false,
+            isError: false,
+            data: data
+          });
+        })
+        .catch(error => {
+          updateRunData(run, {
+            isLoading: false,
+            isError: true,
+            errorMessage: error.message
+          });
+        });
+    });
+  }, [selectedRuns, selectedTag]);
+
+  if (!selectedTag || selectedRuns.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
-          Select a run and tag from the sidebar to view your data
+          Select runs and a tag from the sidebar to view your data
         </CardContent>
       </Card>
     );
   }
 
-  if (isLoading) {
+  if (isAnyLoading) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="flex flex-col items-center gap-2">
@@ -38,17 +145,17 @@ export function SliceChart() {
     );
   }
 
-  if (isError) {
+  if (errors.length === selectedRuns.length) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-destructive">
-          Error loading data: {(error as Error).message}
+          Error loading data for all runs
         </CardContent>
       </Card>
     );
   }
 
-  if (!data || !data.alphas || !data.losses || data.alphas.length === 0) {
+  if (chartData.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
@@ -58,18 +165,17 @@ export function SliceChart() {
     );
   }
 
-  // Prepare data for Recharts
-  const chartData = data.alphas.map((alpha, index) => ({
-    alpha,
-    loss: data.losses[index],
-  }));
-
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Loss Surface Slice</CardTitle>
         <CardDescription>
-          Showing loss values along linear interpolation for {selectedRun}/{selectedTag}
+          Showing loss values along linear interpolation for {selectedRuns.length} run(s) with tag: {selectedTag}
+          {errors.length > 0 && (
+            <span className="text-destructive ml-2">
+              (Failed to load {errors.length} run(s))
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[400px]">
@@ -100,18 +206,23 @@ export function SliceChart() {
               }}
             />
             <Tooltip 
-              formatter={(value: number) => [value.toFixed(5), "Loss"]}
+              formatter={(value: number, name: string) => [value.toFixed(5), name]}
               labelFormatter={(label: number) => `Alpha: ${label.toFixed(5)}`}
             />
             <Legend />
-            <Line
-              type="monotone"
-              dataKey="loss"
-              name="Loss"
-              stroke="#8884d8"
-              activeDot={{ r: 8 }}
-              strokeWidth={2}
-            />
+            
+            {/* Create a line for each run */}
+            {selectedRuns.filter(run => runDataMap[run]?.data).map(run => (
+              <Line
+                key={run}
+                type="monotone"
+                dataKey={run}
+                name={run}
+                stroke={runColors[run]}
+                activeDot={{ r: 6 }}
+                strokeWidth={2}
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </CardContent>

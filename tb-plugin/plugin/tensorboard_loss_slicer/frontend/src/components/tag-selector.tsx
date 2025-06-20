@@ -7,14 +7,32 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { useSliceDataContext } from "@/contexts/slice-data-context";
+import { useMemo } from "react";
 
 interface TagSelectorProps {
-  run: string | undefined;
   onTagChange: (tag: string) => void;
 }
 
-export function TagSelector({ run, onTagChange }: TagSelectorProps) {
+export function TagSelector({ onTagChange }: TagSelectorProps) {
+  const { selectedRuns } = useSliceDataContext();
   const { data: runsAndTags, isLoading } = useRunsAndTags();
+  
+  // Find common tags across all selected runs
+  const commonTags = useMemo(() => {
+    if (!runsAndTags || selectedRuns.length === 0) return [];
+    
+    // Get all tags for the first run
+    let tags = runsAndTags[selectedRuns[0]] || [];
+    
+    // For each additional run, keep only the tags that are common
+    for (let i = 1; i < selectedRuns.length; i++) {
+      const runTags = runsAndTags[selectedRuns[i]] || [];
+      tags = tags.filter(tag => runTags.includes(tag));
+    }
+    
+    return tags;
+  }, [runsAndTags, selectedRuns]);
   
   if (isLoading) {
     return (
@@ -28,30 +46,28 @@ export function TagSelector({ run, onTagChange }: TagSelectorProps) {
     );
   }
   
-  if (!run || !runsAndTags) {
+  if (selectedRuns.length === 0 || !runsAndTags) {
     return (
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Tag</label>
         <Select disabled>
           <SelectTrigger className="h-9">
-            <SelectValue placeholder="Select a run first" />
+            <SelectValue placeholder="Select runs first" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="placeholder">Select a run first</SelectItem>
+            <SelectItem value="placeholder">Select runs first</SelectItem>
           </SelectContent>
         </Select>
       </div>
     );
   }
   
-  const tags = runsAndTags[run] || [];
-  
-  if (tags.length === 0) {
+  if (commonTags.length === 0) {
     return (
       <div className="space-y-2">
         <label className="text-sm font-medium">Select Tag</label>
         <div className="text-sm text-muted-foreground">
-          No tags available for this run
+          No common tags across selected runs
         </div>
       </div>
     );
@@ -65,7 +81,7 @@ export function TagSelector({ run, onTagChange }: TagSelectorProps) {
           <SelectValue placeholder="Select a tag" />
         </SelectTrigger>
         <SelectContent>
-          {tags.map((tag) => (
+          {commonTags.map((tag) => (
             <SelectItem key={tag} value={tag}>
               {tag}
             </SelectItem>
