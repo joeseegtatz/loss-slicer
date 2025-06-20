@@ -48,7 +48,7 @@ class SimpleModel(nn.Module):
         return x
 
 
-def train_model(model, writer=None, epochs=20, batch_size=32):
+def train_model(model, writer=None, epochs=20, batch_size=32, learning_rate=0.01):
     """Train the model for a few epochs and log training metrics."""
     # Generate some random data
     input_size = model.layer1.weight.shape[1]
@@ -59,15 +59,15 @@ def train_model(model, writer=None, epochs=20, batch_size=32):
     # Save initial parameters before any training
     initial_params = [p.clone().detach().cpu().numpy() for p in model.parameters()]
     
-    # Setup optimizer
-    optimizer = optim.SGD(model.parameters(), lr=0.01)
+    # Setup optimizer with specified learning rate
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     criterion = nn.MSELoss()
     
     # Track loss history and parameter states
     losses = []
     param_history = [initial_params]
     
-    print("\n📊 Training model:")
+    print(f"\n📊 Training model (lr={learning_rate}, epochs={epochs}):")
     print("=" * 40)
     
     # Training loop
@@ -186,65 +186,109 @@ def generate_slice(model, initial_params, final_params, checkpoint_params=None,
 
 
 def main(unused_argv):
-    log_dir = "loss_slicer_logs"
-    writer = tf.summary.create_file_writer(log_dir)
-    
     print("\n" + "="*50)
-    print("🔍 Loss Slicer TensorBoard Plugin Demo")
+    print("🔍 Loss Slicer TensorBoard Plugin Demo - Multiple Runs")
     print("="*50)
     
-    # Create our model
-    model = SimpleModel(input_size=20, hidden_size=10, output_size=1)
-    print(f"\nCreated model with {sum(p.numel() for p in model.parameters())} parameters")
+    # Define different configurations for multiple runs
+    configurations = [
+        {
+            "name": "small_model",
+            "input_size": 10,
+            "hidden_size": 5,
+            "output_size": 1,
+            "learning_rate": 0.01,
+            "epochs": 25,
+        },
+        {
+            "name": "medium_model",
+            "input_size": 20,
+            "hidden_size": 10,
+            "output_size": 1,
+            "learning_rate": 0.005,
+            "epochs": 30,
+        },
+        {
+            "name": "large_model",
+            "input_size": 30,
+            "hidden_size": 15,
+            "output_size": 1,
+            "learning_rate": 0.002,
+            "epochs": 35,
+        }
+    ]
     
-    # Train it and get initial and final parameters
-    initial_params, final_params, training_losses, param_history = train_model(
-        model, writer=writer, epochs=30
-    )
+    base_log_dir = "loss_slicer_logs"
     
-    # Generate a basic slice from initial to final parameters
-    basic_slice = generate_slice(
-        model=model,
-        initial_params=initial_params,
-        final_params=final_params,
-        n_samples=50
-    )
-    
-    # Generate an extended slice that goes beyond the endpoints
-    extended_slice = generate_slice(
-        model=model,
-        initial_params=initial_params,
-        final_params=final_params, 
-        n_samples=75,
-        alpha_range=(-0.5, 1.5)  # Extend beyond the endpoints
-    )
-    
-    # Log the slices
-    with writer.as_default():
-        print("\n📋 Logging slice data to TensorBoard...")
+    # Create runs for each configuration
+    for config in configurations:
+        run_name = config["name"]
+        log_dir = os.path.join(base_log_dir, run_name)
+        writer = tf.summary.create_file_writer(log_dir)
         
-        # Log the basic slice
-        summary_v2.slice_data(
-            name="loss_slice/basic_interpolation",
-            slice_data=basic_slice,
-            step=len(training_losses),
-            description="Linear interpolation slice from initial to final parameters"
+        print(f"\n\n{'='*50}")
+        print(f"📊 Creating run: {run_name}")
+        print(f"{'='*50}")
+        
+        # Create our model with configuration
+        model = SimpleModel(
+            input_size=config["input_size"],
+            hidden_size=config["hidden_size"],
+            output_size=config["output_size"]
+        )
+        print(f"\nCreated {run_name} with {sum(p.numel() for p in model.parameters())} parameters")
+        
+        # Create optimizer with configuration's learning rate
+        optimizer = optim.SGD(model.parameters(), lr=config["learning_rate"])
+        
+        # Train it and get initial and final parameters
+        initial_params, final_params, training_losses, param_history = train_model(
+            model, writer=writer, epochs=config["epochs"], learning_rate=config["learning_rate"]
         )
         
-        # Log the extended slice 
-        summary_v2.slice_data(
-            name="loss_slice/extended_interpolation",
-            slice_data=extended_slice,
-            step=len(training_losses),
-            description="Extended linear interpolation beyond endpoints"
+        # Generate a basic slice from initial to final parameters
+        basic_slice = generate_slice(
+            model=model,
+            initial_params=initial_params,
+            final_params=final_params,
+            n_samples=50
         )
         
-        # Force flush to disk
-        writer.flush()
+        # Generate an extended slice that goes beyond the endpoints
+        extended_slice = generate_slice(
+            model=model,
+            initial_params=initial_params,
+            final_params=final_params, 
+            n_samples=75,
+            alpha_range=(-0.5, 1.5)  # Extend beyond the endpoints
+        )
+        
+        # Log the slices
+        with writer.as_default():
+            print(f"\n📋 Logging slice data for {run_name} to TensorBoard...")
+            
+            # Log the basic slice
+            summary_v2.slice_data(
+                name="loss_slice/basic_interpolation",
+                slice_data=basic_slice,
+                step=len(training_losses),
+                description=f"{run_name} - Linear interpolation slice from initial to final parameters"
+            )
+            
+            # Log the extended slice 
+            summary_v2.slice_data(
+                name="loss_slice/extended_interpolation",
+                slice_data=extended_slice,
+                step=len(training_losses),
+                description=f"{run_name} - Extended linear interpolation beyond endpoints"
+            )
+            
+            # Force flush to disk
+            writer.flush()
     
     print("\n" + "="*50)
-    print(f"✅ Data logged to {log_dir}")
-    print(f"🚀 Run 'tensorboard --logdir={log_dir}' to visualize")
+    print(f"✅ Data logged to {base_log_dir}")
+    print(f"🚀 Run 'tensorboard --logdir={base_log_dir}' to visualize")
     print("="*50)
 
 

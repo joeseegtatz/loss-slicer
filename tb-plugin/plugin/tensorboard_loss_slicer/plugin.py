@@ -16,6 +16,7 @@
 
 
 import json
+import mimetypes
 import os
 
 from tensorboard import plugin_util
@@ -23,8 +24,17 @@ from tensorboard.data import provider
 from tensorboard.plugins import base_plugin
 import werkzeug
 from werkzeug import wrappers
+from typing import Any, Optional
 
 from tensorboard_loss_slicer import metadata
+
+# Route definitions
+BASE_ROUTE = '/'
+INDEX_JS_ROUTE = '/index.js'
+INDEX_HTML_ROUTE = '/index.html'
+APP_JS_ROUTE = '/app.js'
+BUNDLE_JS_ROUTE = '/bundle.js'
+STYLES_CSS_ROUTE = '/styles.css'
 
 
 class LossSlicerPlugin(base_plugin.TBPlugin):
@@ -49,10 +59,15 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
     def get_plugin_apps(self):
         """Returns a mapping between routes and handlers."""
         return {
-            "/index.js": self._serve_js,
-            "/lib/plotly.min.js": self._serve_plotly_js,
+            BASE_ROUTE: self.default_handler,
             "/tags": self.tags_handler,
             "/slices": self.slices_handler,
+            "/lib/plotly.min.js": self._serve_plotly_js,
+            INDEX_JS_ROUTE: self.static_file_route,
+            INDEX_HTML_ROUTE: self.static_file_route,
+            BUNDLE_JS_ROUTE: self.static_file_route,
+            STYLES_CSS_ROUTE: self.static_file_route,
+            APP_JS_ROUTE: self.static_file_route,
         }
         
     def frontend_metadata(self):
@@ -61,27 +76,53 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
         This is how the plugin tells TensorBoard where to find the ES module.
         """
         return base_plugin.FrontendMetadata(
-            es_module_path="/index.js",
+            es_module_path=INDEX_JS_ROUTE,
             tab_name="Loss Slicer",
         )
     
-    # serve frontend
+  # pytype: disable=wrong-arg-types
+    # Default handler for the base route
     @wrappers.Request.application
-    def _serve_js(self, request):
-        del request  # unused
-        filepath = os.path.join(os.path.dirname(__file__), "static", "index.js")
-        with open(filepath) as infile:
-            contents = infile.read()
-        return werkzeug.Response(contents, content_type="text/javascript")
+    def default_handler(self, _: wrappers.Request) -> wrappers.Response:
+        contents = self._read_static_file_impl('index.html')
+        return respond(contents, 'text/html')
         
+    @wrappers.Request.application
+    def static_file_route(self, request: wrappers.Request) -> wrappers.Response:
+        # pytype: enable=wrong-arg-types
+        filename = os.path.basename(request.path)
+        extention = os.path.splitext(filename)[1]
+        if extention == '.html':
+          mimetype = 'text/html'
+        elif extention == '.css':
+          mimetype = 'text/css'
+        elif extention == '.js':
+          mimetype = 'application/javascript'
+        else:
+          mimetype = 'application/octet-stream'
+        try:
+          contents = self._read_static_file_impl(filename)
+        except IOError:
+          return respond('Fail to read the files.', 'text/plain', code=404)
+        return respond(contents, mimetype)
+        
+    # Method for reading static file contents
+    def _read_static_file_impl(self, filename: str) -> bytes:
+        filepath = os.path.join(os.path.dirname(__file__), 'static', filename)
+        try:
+            with open(filepath, 'rb') as infile:
+                contents = infile.read()
+        except IOError as io_error:
+            raise io_error
+        return contents
+
     @wrappers.Request.application
     def _serve_plotly_js(self, request):
         del request  # unused
         filepath = os.path.join(os.path.dirname(__file__), "static", "lib", "plotly.min.js")
         with open(filepath, 'rb') as infile:
             contents = infile.read()
-        return werkzeug.Response(contents, content_type="text/javascript")
-
+        return respond(contents, "text/javascript")
 
     @wrappers.Request.application
     def tags_handler(self, request):
@@ -96,7 +137,7 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
         response = {}
         for run, tag_mapping in run_tag_mapping.items():
             response[run] = list(tag_mapping.keys())
-        return werkzeug.Response(json.dumps(response), content_type="application/json")
+        return respond(response, "application/json")
     
     @wrappers.Request.application
     def slices_handler(self, request):
@@ -108,9 +149,10 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
         experiment_id = plugin_util.experiment_id(request.environ)
          
         if not (run and tag):
-            return werkzeug.Response(
+            return respond(
                 "Both 'run' and 'tag' parameters are required.",
-                status=400,
+                "text/plain",
+                code=400
             )
         
         run_tag_filter = provider.RunTagFilter(runs=[run], tags=[tag])
@@ -124,9 +166,10 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
         
         events = tensor_events.get(run, {}).get(tag, [])
         if not events:
-            return werkzeug.Response(
+            return respond(
                 f"No slice data found for run '{run}' and tag '{tag}'.",
-                status=404,
+                "text/plain",
+                code=404
             )
         
         # Process the events data correctly
@@ -150,14 +193,32 @@ class LossSlicerPlugin(base_plugin.TBPlugin):
                 # Improved error handling with more diagnostic information
                 print(f"Error processing tensor data: {e}")
             
-            return werkzeug.Response(
-                json.dumps(tensor_content),
-                content_type="application/json",
+            return respond(
+                tensor_content,
+                "application/json"
             )
         
         # If we get here, we had an empty events list but didn't catch it earlier
-        return werkzeug.Response(
-            json.dumps({"error": "No valid event data found"}),
-            content_type="application/json",
+        return respond(
+            {"error": "No valid event data found"},
+            "application/json"
         )
+
+# Helper function to create HTTP responses
+def respond(body: Any, content_type: str, code: int = 200, 
+           content_encoding: Optional[tuple[str, str]] = None) -> wrappers.Response:
+    if content_type == 'application/json' and isinstance(
+        body, (dict, list, set, tuple)):
+        body = json.dumps(body, sort_keys=True)
+    if not isinstance(body, bytes):
+        body = body.encode('utf-8')
+    
+    response = wrappers.Response(body, content_type=content_type, status=code)
+    
+    # Set Content-Encoding header if specified
+    if content_encoding is not None:
+        encoding_name, encoding_value = content_encoding
+        response.headers['Content-Encoding'] = encoding_name
+    
+    return response
 
