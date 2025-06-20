@@ -166,7 +166,7 @@ export function SliceChart() {
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full ">
       <CardHeader>
         <CardTitle>Loss Surface Slice</CardTitle>
         <CardDescription>
