@@ -1,19 +1,18 @@
-import { useState } from "react";
 import { RunSelector } from "./run-selector";
 import { TagSelector } from "./tag-selector";
 import { Separator } from "./ui/separator";
 import { useSliceData } from "@/lib/queries";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
+import { useSliceDataContext } from "@/contexts/slice-data-context";
 
 export function DataSelector() {
-  const [selectedRun, setSelectedRun] = useState<string | undefined>(undefined);
-  const [selectedTag, setSelectedTag] = useState<string | undefined>(undefined);
+  const { selectedRun, selectedTag, setSelectedRun, setSelectedTag } = useSliceDataContext();
   
   const { isLoading, isError, data } = useSliceData(selectedRun, selectedTag);
   
   const handleRunChange = (run: string) => {
     setSelectedRun(run);
-    setSelectedTag(undefined);
+    setSelectedTag(""); // Reset tag when run changes
   };
   
   const handleTagChange = (tag: string) => {
