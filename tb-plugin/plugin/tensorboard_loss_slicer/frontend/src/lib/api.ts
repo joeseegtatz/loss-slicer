@@ -1,5 +1,3 @@
-// API client for the loss slicer plugin
-
 /**
  * Fetch all available runs and their tags
  */

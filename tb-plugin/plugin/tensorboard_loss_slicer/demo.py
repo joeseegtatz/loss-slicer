@@ -95,6 +95,19 @@ def train_model(model, writer=None, epochs=20, batch_size=32, learning_rate=0.01
         avg_loss = epoch_loss / (data_size // batch_size)
         losses.append(avg_loss)
         
+        # Compute accuracy metrics (R-squared for regression)
+        with torch.no_grad():
+            all_outputs = model(X)
+            # Calculate R-squared (coefficient of determination)
+            y_mean = torch.mean(y)
+            ss_tot = torch.sum((y - y_mean) ** 2)
+            ss_res = torch.sum((y - all_outputs) ** 2)
+            r_squared = 1 - (ss_res / ss_tot)
+            r_squared = r_squared.item()  # Convert to Python scalar
+            
+            # Calculate RMSE (Root Mean Square Error)
+            rmse = torch.sqrt(torch.mean((y - all_outputs) ** 2)).item()
+        
         # Save parameters state at this epoch
         current_params = [p.clone().detach().cpu().numpy() for p in model.parameters()]
         param_history.append(current_params)
@@ -103,9 +116,11 @@ def train_model(model, writer=None, epochs=20, batch_size=32, learning_rate=0.01
         if writer is not None:
             with writer.as_default():
                 tf.summary.scalar("training/loss", avg_loss, step=epoch)
+                tf.summary.scalar("training/r_squared", r_squared, step=epoch)
+                tf.summary.scalar("training/rmse", rmse, step=epoch)
         
         # Progress display
-        print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.6f}")
+        print(f"Epoch {epoch+1}/{epochs}, Loss: {avg_loss:.6f}, R²: {r_squared:.4f}, RMSE: {rmse:.6f}")
         
         # Check for early stopping
         if avg_loss < 1e-6:
@@ -114,8 +129,23 @@ def train_model(model, writer=None, epochs=20, batch_size=32, learning_rate=0.01
     
     # Save final parameters
     final_params = [p.clone().detach().cpu().numpy() for p in model.parameters()]
+    
+    # Calculate final metrics
+    with torch.no_grad():
+        all_outputs = model(X)
+        # Final R-squared
+        y_mean = torch.mean(y)
+        ss_tot = torch.sum((y - y_mean) ** 2)
+        ss_res = torch.sum((y - all_outputs) ** 2)
+        final_r_squared = 1 - (ss_res / ss_tot).item()
+        # Final RMSE
+        final_rmse = torch.sqrt(torch.mean((y - all_outputs) ** 2)).item()
+    
     print("=" * 40)
-    print(f"Training completed. Final loss: {losses[-1]:.6f}")
+    print(f"Training completed. Final metrics:")
+    print(f"  - Loss: {losses[-1]:.6f}")
+    print(f"  - R²: {final_r_squared:.4f}")
+    print(f"  - RMSE: {final_rmse:.6f}")
     
     return initial_params, final_params, losses, param_history
 
@@ -344,23 +374,23 @@ def main(unused_argv):
             
             # Log the basic slice
             summary_v2.slice_data(
-                name="loss_slice/basic_interpolation",
+                name="loss_slice/linear_interpolation",
                 slice_data=basic_slice,
                 step=len(training_losses),
                 description=f"{run_name} - Linear interpolation slice from initial to final parameters"
             )
             
-            # Log the extended slice 
-            summary_v2.slice_data(
-                name="loss_slice/extended_interpolation",
-                slice_data=extended_slice,
-                step=len(training_losses),
-                description=f"{run_name} - Extended linear interpolation beyond endpoints"
-            )
+            # # Log the extended slice 
+            # summary_v2.slice_data(
+            #     name="loss_slice/extended_interpolation",
+            #     slice_data=extended_slice,
+            #     step=len(training_losses),
+            #     description=f"{run_name} - Extended linear interpolation beyond endpoints"
+            # )
             
             # Log the 2D random direction slices
             summary_v2.random_direction_slice_2d(
-                name="loss_slice/initial_random_2d",
+                name="loss_slice/random_direction_2d",
                 slice_data=initial_slice_2d,
                 step=len(training_losses),
                 description=f"{run_name} - 2D random direction slice around initial parameters"
