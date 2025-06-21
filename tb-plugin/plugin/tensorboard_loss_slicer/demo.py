@@ -31,6 +31,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 from tensorboard_loss_slicer import summary_v2
 from pysclice.slicers import LinearInterpolationSlicer
 from pysclice.slicers import RandomDirectionSlicer
+from pysclice.slicers import AxisParallelSlicer
 from pysclice.core import ModelWrapper
 
 
@@ -273,6 +274,60 @@ def generate_random_direction_slice_2d(model, center_params, n_samples_per_dim=3
     return slice_data
 
 
+def generate_axis_parallel_slice(model, center_params, n_samples=31):
+    """Generate axis-parallel slicing data around a parameter vector.
+    
+    Args:
+        model: PyTorch model
+        center_params: Parameter values to use as center point for slicing
+        n_samples: Number of samples per parameter
+        
+    Returns:
+        Dictionary containing axis-parallel slice data
+    """
+    # Create test data for ModelWrapper
+    input_size = model.layer1.weight.shape[1]
+    test_inputs = torch.randn(20, input_size)
+    test_targets = torch.randn(20, 1)
+    
+    # Define loss function for ModelWrapper
+    criterion = nn.MSELoss()
+    def loss_fn(output, target):
+        # Make sure we return a tensor, not a float
+        loss_val = criterion(output, target)
+        if isinstance(loss_val, torch.Tensor):
+            return loss_val
+        else:
+            return torch.tensor(loss_val, device=output.device)
+    
+    # Create ModelWrapper
+    model_wrapper = ModelWrapper(
+        model=model,
+        loss_fn=loss_fn,
+        train_data=(test_inputs, test_targets)
+    )
+    
+    # Create AxisParallelSlicer
+    slicer = AxisParallelSlicer(model_wrapper)
+    
+    # Flatten parameter arrays if they're not already flattened
+    if isinstance(center_params[0], np.ndarray):
+        flat_center_params = np.concatenate([p.flatten() for p in center_params])
+    else:
+        flat_center_params = center_params
+    
+    print("\n📊 Generating axis-parallel slice...")
+    # Get axis-parallel slicing data
+    slice_data = slicer.slice(
+        center_point=flat_center_params,
+        bounds=(-1.0, 1.0),
+        n_samples=n_samples
+    )
+    
+    print(f"Axis-parallel slice generated with {n_samples} samples per parameter")
+    return slice_data
+
+
 def main(unused_argv):
     print("\n" + "="*50)
     print("🔍 Loss Slicer TensorBoard Plugin Demo - Multiple Runs")
@@ -372,35 +427,50 @@ def main(unused_argv):
         with writer.as_default():
             print(f"\n📋 Logging slice data for {run_name} to TensorBoard...")
             
-            # Log the basic slice
+            # Log the basic slice - now with automatic prefix
             summary_v2.slice_data(
-                name="loss_slice/linear_interpolation",
+                name="basic_slice",
                 slice_data=basic_slice,
                 step=len(training_losses),
                 description=f"{run_name} - Linear interpolation slice from initial to final parameters"
             )
             
-            # # Log the extended slice 
+            # # Log the extended slice - now with automatic prefix
             # summary_v2.slice_data(
-            #     name="loss_slice/extended_interpolation",
+            #     name="extended_slice",
             #     slice_data=extended_slice,
             #     step=len(training_losses),
             #     description=f"{run_name} - Extended linear interpolation beyond endpoints"
             # )
             
-            # Log the 2D random direction slices
+            # Log the 2D random direction slices - now with automatic prefix
             summary_v2.random_direction_slice_2d(
-                name="loss_slice/random_direction_2d",
+                name="initial_params_slice",
                 slice_data=initial_slice_2d,
                 step=len(training_losses),
                 description=f"{run_name} - 2D random direction slice around initial parameters"
             )
             
             summary_v2.random_direction_slice_2d(
-                name="loss_slice/final_random_2d",
+                name="final_params_slice",
                 slice_data=final_slice_2d,
                 step=len(training_losses),
                 description=f"{run_name} - 2D random direction slice around final parameters"
+            )
+            
+            # Generate axis-parallel slice for final parameters (new)
+            axis_parallel_slice = generate_axis_parallel_slice(
+                model=model,
+                center_params=final_params,
+                n_samples=31
+            )
+            
+            # Log the axis-parallel slice
+            summary_v2.axis_parallel_slice(
+                name="parameter_sensitivity",
+                slice_data=axis_parallel_slice,
+                step=len(training_losses),
+                description=f"{run_name} - Axis-parallel slice showing parameter sensitivity"
             )
             
             # Force flush to disk
