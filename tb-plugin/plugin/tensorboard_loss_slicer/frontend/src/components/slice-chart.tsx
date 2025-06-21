@@ -1,14 +1,5 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -68,10 +59,8 @@ export function SliceChart() {
       .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
   }, [selectedRuns, runDataMap]);
 
-  // Prepare combined chart data
-  const chartData = useMemo(() => {
-    const data: Record<string, any>[] = [];
-    
+  // Prepare plotly data
+  const plotData = useMemo(() => {
     // Find all runs that have data
     const runsWithData = selectedRuns.filter(run => 
       runDataMap[run]?.data?.alphas && runDataMap[run]?.data?.losses
@@ -79,26 +68,43 @@ export function SliceChart() {
     
     if (runsWithData.length === 0) return [];
     
-    // Use first run's alphas as the base
-    const firstRun = runsWithData[0];
-    const alphas = runDataMap[firstRun]?.data?.alphas || [];
-    
-    // Create data points with alpha value and loss for each run
-    alphas.forEach((alpha, i) => {
-      const dataPoint: Record<string, any> = { alpha };
-      
-      runsWithData.forEach(run => {
-        const runData = runDataMap[run]?.data;
-        if (runData && i < runData.losses.length) {
-          dataPoint[run] = runData.losses[i];
-        }
-      });
-      
-      data.push(dataPoint);
+    // Create a trace for each run
+    return runsWithData.map(run => {
+      const runData = runDataMap[run]?.data;
+      return {
+        type: 'scatter' as const,
+        mode: 'lines+markers' as const,
+        name: run,
+        x: runData?.alphas,
+        y: runData?.losses,
+        line: { color: runColors[run], width: 2 },
+        marker: { size: 6 }
+      };
     });
-    
-    return data;
-  }, [selectedRuns, runDataMap]);
+  }, [selectedRuns, runDataMap, runColors]);
+
+  // Plotly layout configuration
+  const plotLayout = useMemo(() => {
+    return {
+      autosize: true,
+      margin: { l: 50, r: 30, b: 50, t: 10, pad: 4 },
+      xaxis: {
+        title: { text: 'Interpolation Factor (α)' }
+      },
+      yaxis: {
+        title: { text: 'Loss Value' }
+      },
+      hovermode: 'closest' as const,
+      legend: { orientation: 'h' as const, y: -0.2 }
+    };
+  }, []);
+
+  const plotConfig = {
+    responsive: true,
+    displayModeBar: true,
+    displaylogo: false,
+    modeBarButtonsToRemove: ['lasso2d', 'select2d'] as ('lasso2d' | 'select2d')[]
+  };
 
   // For each selected run, fetch data using the useSliceData hook
   useEffect(() => {
@@ -155,7 +161,7 @@ export function SliceChart() {
     );
   }
 
-  if (chartData.length === 0) {
+  if (plotData.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
@@ -166,7 +172,7 @@ export function SliceChart() {
   }
 
   return (
-    <Card className="w-full ">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>Loss Surface Slice</CardTitle>
         <CardDescription>
@@ -179,52 +185,12 @@ export function SliceChart() {
         </CardDescription>
       </CardHeader>
       <CardContent className="h-[400px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={chartData}
-            margin={{
-              top: 5,
-              right: 30,
-              left: 20,
-              bottom: 5,
-            }}
-          >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="alpha"
-              label={{
-                value: "Interpolation Factor (α)",
-                position: "insideBottom",
-                offset: -5,
-              }}
-            />
-            <YAxis
-              label={{
-                value: "Loss Value",
-                angle: -90,
-                position: "insideLeft",
-              }}
-            />
-            <Tooltip 
-              formatter={(value: number, name: string) => [value.toFixed(5), name]}
-              labelFormatter={(label: number) => `Alpha: ${label.toFixed(5)}`}
-            />
-            <Legend />
-            
-            {/* Create a line for each run */}
-            {selectedRuns.filter(run => runDataMap[run]?.data).map(run => (
-              <Line
-                key={run}
-                type="monotone"
-                dataKey={run}
-                name={run}
-                stroke={runColors[run]}
-                activeDot={{ r: 6 }}
-                strokeWidth={2}
-              />
-            ))}
-          </LineChart>
-        </ResponsiveContainer>
+        <Plot
+          data={plotData}
+          layout={plotLayout}
+          config={plotConfig}
+          style={{ width: '100%', height: '100%' }}
+        />
       </CardContent>
     </Card>
   );
