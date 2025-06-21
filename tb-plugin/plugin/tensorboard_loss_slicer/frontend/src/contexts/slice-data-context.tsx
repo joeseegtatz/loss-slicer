@@ -14,15 +14,17 @@ export const RUN_COLORS = [
   "#d0ed57", // yellow-green
 ];
 
+export type SliceType = 'linear-interpolation' | 'random-direction' | 'axis-parallel';
+
 interface RunColorMapping {
   [run: string]: string;
 }
 
 interface SliceDataContextType {
   selectedRuns: string[];
-  selectedTag: string | undefined;
+  activeSliceType: SliceType;
   toggleRun: (run: string) => void;
-  setSelectedTag: (tag: string) => void;
+  setActiveSliceType: (sliceType: SliceType) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
 }
@@ -35,7 +37,7 @@ interface SliceDataProviderProps {
 
 export function SliceDataProvider({ children }: SliceDataProviderProps) {
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
-  const [selectedTag, setSelectedTag] = useState<string | undefined>(undefined);
+  const [activeSliceType, setActiveSliceType] = useState<SliceType>('linear-interpolation');
   const [runColors, setRunColors] = useState<RunColorMapping>({});
 
   const toggleRun = (run: string) => {
@@ -60,16 +62,15 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
 
   const resetSelections = () => {
     setSelectedRuns([]);
-    setSelectedTag(undefined);
   };
 
   return (
     <SliceDataContext.Provider
       value={{
         selectedRuns,
-        selectedTag,
+        activeSliceType,
         toggleRun,
-        setSelectedTag,
+        setActiveSliceType,
         resetSelections,
         runColors
       }}

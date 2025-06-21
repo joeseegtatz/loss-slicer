@@ -1,26 +1,20 @@
 import { RunSelector } from "./run-selector";
-import { TagSelector } from "./tag-selector";
 import { Separator } from "./ui/separator";
 import { CheckCircle2, Loader2, AlertCircle } from "lucide-react";
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { useState, useEffect } from "react";
 
 export function DataSelector() {
-  const { selectedRuns, selectedTag, setSelectedTag } = useSliceDataContext();
+  const { selectedRuns, activeSliceType } = useSliceDataContext();
   const [dataStatus, setDataStatus] = useState<{ loading: number, success: number, error: number }>({
     loading: 0,
     success: 0,
     error: 0
   });
   
-  // We don't need this anymore as we're controlling runs with checkboxes
-  const handleTagChange = (tag: string) => {
-    setSelectedTag(tag);
-  };
-  
   // This would ideally be shared state with the chart component or through context
   useEffect(() => {
-    if (!selectedRuns.length || !selectedTag) {
+    if (!selectedRuns.length) {
       setDataStatus({ loading: 0, success: 0, error: 0 });
       return;
     }
@@ -32,11 +26,11 @@ export function DataSelector() {
     const success = selectedRuns.length - loading - error;
     
     setDataStatus({ loading, success, error });
-  }, [selectedRuns, selectedTag]);
+  }, [selectedRuns, activeSliceType]);
   
   // Render a status indicator based on the data status
   const renderStatusIndicator = () => {
-    if (!selectedRuns.length || !selectedTag) {
+    if (!selectedRuns.length) {
       return null;
     }
     
@@ -44,7 +38,7 @@ export function DataSelector() {
       return (
         <div className="flex items-center text-xs text-muted-foreground">
           <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-          Loading data...
+          Loading data for {activeSliceType}...
         </div>
       );
     }
@@ -78,10 +72,12 @@ export function DataSelector() {
       
       <div className="mt-2">
         {selectedRuns.length > 0 ? (
-          <TagSelector onTagChange={handleTagChange} />
+          <div className="text-sm text-muted-foreground">
+            Using <span className="font-medium">{activeSliceType}</span> slicing method
+          </div>
         ) : (
           <div className="text-xs text-muted-foreground">
-            Select at least one run to see available tags
+            Select at least one run to visualize data
           </div>
         )}
       </div>

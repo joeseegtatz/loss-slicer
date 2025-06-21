@@ -1,27 +1,29 @@
-import { useSliceDataContext } from "@/contexts/slice-data-context";
+import { useSliceDataContext, SliceType } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchSliceData } from "@/lib/api";
+import { fetchSliceData, fetchRunsAndTags, SliceData } from "@/lib/api";
 
 interface RunData {
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
-  data: {
-    alphas: number[];
-    losses: number[];
-  } | null;
+  data: SliceData | null;
+}
+
+// Helper function to format slice type for display
+const formatSliceType = (sliceType: SliceType): string => {
+  return sliceType.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 }
 
 export function SliceChart() {
-  const { selectedRuns, selectedTag, runColors } = useSliceDataContext();
+  const { selectedRuns, activeSliceType, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   
   // For each selected run, fetch its data
   useEffect(() => {
-    if (!selectedTag || selectedRuns.length === 0) return;
+    if (selectedRuns.length === 0) return;
     
     // Initialize run data for new runs
     selectedRuns.forEach(run => {
@@ -37,7 +39,7 @@ export function SliceChart() {
       }
     });
     
-  }, [selectedRuns, selectedTag, runDataMap]);
+  }, [selectedRuns, activeSliceType, runDataMap]);
 
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -62,23 +64,59 @@ export function SliceChart() {
   // Prepare plotly data
   const plotData = useMemo(() => {
     // Find all runs that have data
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.data?.alphas && runDataMap[run]?.data?.losses
-    );
+    const runsWithData = selectedRuns.filter(run => runDataMap[run]?.data !== null);
     
     if (runsWithData.length === 0) return [];
     
     // Create a trace for each run
     return runsWithData.map(run => {
-      const runData = runDataMap[run]?.data;
+      const sliceData = runDataMap[run]?.data;
+      
+      // Handle different slice data types
+      if (sliceData?.type === 'linear_interpolation') {
+        return {
+          type: 'scatter' as const,
+          mode: 'lines+markers' as const,
+          name: run,
+          x: sliceData.alphas,
+          y: sliceData.losses,
+          line: { color: runColors[run], width: 2 },
+          marker: { size: 6 }
+        };
+      } else if (sliceData?.type === 'random_direction_2d') {
+        // For 2D data, we need a different visualization (contour or heatmap)
+        // This is simplified here - you'd implement a proper 2D visualization
+        return {
+          type: 'contour' as const,
+          z: sliceData.grid_data,
+          x: sliceData.x_coordinates,
+          y: sliceData.y_coordinates,
+          colorscale: 'Viridis',
+          name: run
+        };
+      } else if (sliceData?.type === 'axis_parallel') {
+        // For now, just show the first slice to demonstrate
+        const firstSlice = sliceData.slices[0];
+        const samples = firstSlice?.samples || [];
+        
+        return {
+          type: 'scatter' as const,
+          mode: 'lines+markers' as const,
+          name: `${run} - param ${firstSlice?.parameter_index}`,
+          x: samples.map(s => s[0]),
+          y: samples.map(s => s[1]),
+          line: { color: runColors[run], width: 2 },
+          marker: { size: 6 }
+        };
+      }
+      
+      // Default empty trace if data type not recognized
       return {
         type: 'scatter' as const,
-        mode: 'lines+markers' as const,
         name: run,
-        x: runData?.alphas,
-        y: runData?.losses,
-        line: { color: runColors[run], width: 2 },
-        marker: { size: 6 }
+        x: [],
+        y: [],
+        line: { color: runColors[run], width: 2 }
       };
     });
   }, [selectedRuns, runDataMap, runColors]);
@@ -89,7 +127,9 @@ export function SliceChart() {
       autosize: true,
       margin: { l: 50, r: 30, b: 50, t: 10, pad: 4 },
       xaxis: {
-        title: { text: 'Interpolation Factor (α)' }
+        title: { text: activeSliceType === 'linear-interpolation' 
+          ? 'Interpolation Factor (α)' 
+          : 'Parameter Value' }
       },
       yaxis: {
         title: { text: 'Loss Value' }
@@ -97,7 +137,7 @@ export function SliceChart() {
       hovermode: 'closest' as const,
       legend: { orientation: 'h' as const, y: -0.2 }
     };
-  }, []);
+  }, [activeSliceType]);
 
   const plotConfig = {
     responsive: true,
@@ -106,21 +146,59 @@ export function SliceChart() {
     modeBarButtonsToRemove: ['lasso2d', 'select2d'] as ('lasso2d' | 'select2d')[]
   };
 
-  // For each selected run, fetch data using the useSliceData hook
+  // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
-    if (!selectedTag) return;
+    if (selectedRuns.length === 0) return;
+    
+    // Clear previous data when slice type changes
+    if (Object.keys(runDataMap).length > 0) {
+      setRunDataMap({});
+    }
+    
+    // Map slice type to tag prefix
+    const mapSliceTypeToTagPrefix = (sliceType: SliceType): string => {
+      switch (sliceType) {
+        case 'linear-interpolation': return 'linear_interpolation/';
+        case 'random-direction': return 'random_direction/';
+        case 'axis-parallel': return 'axis_parallel/';
+        default: return '';
+      }
+    };
+    
+    const tagPrefix = mapSliceTypeToTagPrefix(activeSliceType);
     
     selectedRuns.forEach(run => {
-      // Use the fetchSliceData function from API
-      fetchSliceData(run, selectedTag)
-        .then(data => {
+      // Start loading state
+      setRunDataMap(prev => ({
+        ...prev,
+        [run]: {
+          isLoading: true,
+          isError: false,
+          data: null
+        }
+      }));
+      
+      // First get all tags for this run
+      fetchRunsAndTags()
+        .then((runsAndTags: Record<string, string[]>) => {
+          const tags = runsAndTags[run] || [];
+          const tag = tags.find((t: string) => t.startsWith(tagPrefix));
+          
+          if (!tag) {
+            throw new Error(`No ${activeSliceType} data found for run ${run}`);
+          }
+          
+          // Then fetch the actual slice data with the found tag
+          return fetchSliceData(run, tag);
+        })
+        .then((data: SliceData) => {
           updateRunData(run, {
             isLoading: false,
             isError: false,
-            data: data
+            data
           });
         })
-        .catch(error => {
+        .catch((error: Error) => {
           updateRunData(run, {
             isLoading: false,
             isError: true,
@@ -128,13 +206,13 @@ export function SliceChart() {
           });
         });
     });
-  }, [selectedRuns, selectedTag]);
+  }, [selectedRuns, activeSliceType]);
 
-  if (!selectedTag || selectedRuns.length === 0) {
+  if (selectedRuns.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
-          Select runs and a tag from the sidebar to view your data
+          Select runs from the sidebar to view your data
         </CardContent>
       </Card>
     );
@@ -176,7 +254,7 @@ export function SliceChart() {
       <CardHeader>
         <CardTitle>Loss Surface Slice</CardTitle>
         <CardDescription>
-          Showing loss values along linear interpolation for {selectedRuns.length} run(s) with tag: {selectedTag}
+          Showing loss values for {formatSliceType(activeSliceType)} slicing method with {selectedRuns.length} run(s)
           {errors.length > 0 && (
             <span className="text-destructive ml-2">
               (Failed to load {errors.length} run(s))
