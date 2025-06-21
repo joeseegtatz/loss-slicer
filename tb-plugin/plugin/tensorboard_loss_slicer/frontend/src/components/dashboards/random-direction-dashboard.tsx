@@ -1,6 +1,6 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, RandomDirection2DSliceData } from "@/lib/api";
@@ -13,9 +13,8 @@ interface RunData {
 }
 
 export function RandomDirectionDashboard() {
-  const { selectedRuns } = useSliceDataContext();
+  const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
-  const [selectedRun, setSelectedRun] = useState<string | null>(null);
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -24,19 +23,6 @@ export function RandomDirectionDashboard() {
       [run]: { ...prev[run], ...data }
     }));
   };
-
-  // Select the first run with data automatically
-  useEffect(() => {
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.data !== null && !runDataMap[run]?.isLoading && !runDataMap[run]?.isError
-    );
-    
-    if (runsWithData.length > 0 && (!selectedRun || !runsWithData.includes(selectedRun))) {
-      setSelectedRun(runsWithData[0]);
-    } else if (runsWithData.length === 0) {
-      setSelectedRun(null);
-    }
-  }, [selectedRuns, runDataMap, selectedRun]);
 
   // Calculate overall loading state
   const isAnyLoading = useMemo(() => {
@@ -50,62 +36,50 @@ export function RandomDirectionDashboard() {
       .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
   }, [selectedRuns, runDataMap]);
 
-  // Prepare plotly data for contour plot
-  const plotData = useMemo(() => {
-    if (!selectedRun || !runDataMap[selectedRun]?.data) return [];
-    
-    const sliceData = runDataMap[selectedRun].data;
+  // Get runs with valid data
+  // const runsWithData = useMemo(() => {
+  //   return selectedRuns.filter(run => 
+  //     runDataMap[run]?.data !== null && !runDataMap[run]?.isLoading && !runDataMap[run]?.isError
+  //   );
+  // }, [selectedRuns, runDataMap]);
+
+  // Create a 3D surface plot for a specific run
+  const create3DSurfacePlot = (run: string) => {
+    const sliceData = runDataMap[run]?.data;
     
     if (!sliceData) return [];
     
-    return [
-      {
-        type: 'contour' as const,
-        z: sliceData.grid_data,
-        x: sliceData.x_coordinates,
-        y: sliceData.y_coordinates,
-        colorscale: 'Viridis',
-        contours: {
-          coloring: 'heatmap' as const,
-        },
-        colorbar: {
-          title: { text: 'Loss' },
-          titleside: 'right' as const,
-        }
-      },
-      {
-        type: 'scatter' as const,
-        mode: 'markers' as const,
-        name: 'Center Point',
-        x: [0], // Center is at origin
-        y: [0],
-        marker: {
-          size: 10,
-          color: 'red',
-          symbol: 'x'
-        }
-      }
-    ];
-  }, [selectedRun, runDataMap]);
+    return [{
+      type: 'surface' as const,
+      z: sliceData.grid_data,
+      x: sliceData.x_coordinates,
+      y: sliceData.y_coordinates,
+      colorscale: 'Viridis',
+      showscale: false // Removed the colorbar/scale indicator
+    } as any];
+  };
 
-  // Plotly layout configuration
-  const plotLayout = useMemo(() => {
+  // Plotly layout configuration for 3D plots
+  const create3DPlotLayout = () => {
     return {
       autosize: true,
-      margin: { l: 50, r: 50, b: 50, t: 30, pad: 4 },
-      xaxis: {
-        title: { text: 'Direction 1' }
+      margin: { l: 0, r: 0, b: 0, t: 0, pad: 4 },
+      scene: {
+        xaxis: { title: { text: 'Direction 1' } },
+        yaxis: { title: { text: 'Direction 2' } },
+        zaxis: { title: { text: 'Loss' } },
+        camera: {
+          eye: { x: 1.5, y: 1.5, z: 1.5 },
+          center: { x: 0, y: 0, z: -0.1 } // Adjust view to center vertically
+        }
       },
-      yaxis: {
-        title: { text: 'Direction 2' }
-      },
-      hovermode: 'closest' as const,
-    };
-  }, []);
+      height: 400 // Reduced height as requested
+    } as any;
+  };
 
   const plotConfig = {
     responsive: true,
-    displayModeBar: true,
+    displayModeBar: false, // Hide the mode bar completely
     displaylogo: false,
     modeBarButtonsToRemove: ['lasso2d', 'select2d'] as any
   };
@@ -168,29 +142,46 @@ export function RandomDirectionDashboard() {
     });
   }, [selectedRuns, runDataMap]);
 
-  // Render run selection buttons
-  const renderRunSelector = () => {
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.data !== null && !runDataMap[run]?.isError
+  // Render a metadata table for a run's slice data
+  const renderMetadata = (run: string) => {
+    const sliceData = runDataMap[run]?.data;
+    if (!sliceData) return null;
+    
+    // Use the color directly from the context's runColors
+    const colorIndicator = (
+      <div 
+        className="h-3 w-3 rounded-full mr-2 inline-block" 
+        style={{ backgroundColor: runColors[run] || '#888888' }}
+      ></div>
     );
     
-    if (runsWithData.length <= 1) return null;
+    const minLoss = Math.min(...sliceData.grid_data.flat());
+    const maxLoss = Math.max(...sliceData.grid_data.flat());
     
     return (
-      <div className="flex flex-wrap gap-2 mb-4">
-        {runsWithData.map(run => (
-          <button 
-            key={run}
-            className={`px-3 py-1 text-sm rounded-md ${
-              selectedRun === run 
-                ? 'bg-primary text-primary-foreground' 
-                : 'bg-secondary text-secondary-foreground'
-            }`}
-            onClick={() => setSelectedRun(run)}
-          >
-            {run}
-          </button>
-        ))}
+      <div className="border-t border-border bg-card">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="py-1.5 px-2 text-left font-medium">Run</th>
+                <th className="py-1.5 px-2 text-right font-medium">Value</th>
+                <th className="py-1.5 px-2 text-right font-medium">Min</th>
+                <th className="py-1.5 px-2 text-right font-medium">Max</th>
+                <th className="py-1.5 px-2 text-right font-medium">Grid</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="py-1.5 px-2 flex items-center">{colorIndicator} {run.split('/').pop()}</td>
+                <td className="py-1.5 px-2 text-right">{sliceData.center_loss.toFixed(6)}</td>
+                <td className="py-1.5 px-2 text-right">{minLoss.toFixed(6)}</td>
+                <td className="py-1.5 px-2 text-right">{maxLoss.toFixed(6)}</td>
+                <td className="py-1.5 px-2 text-right">{sliceData.grid_data.length} × {sliceData.grid_data[0]?.length || 0}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };
@@ -205,7 +196,7 @@ export function RandomDirectionDashboard() {
     );
   }
 
-  if (isAnyLoading && !selectedRun) {
+  if (isAnyLoading && selectedRuns.length > 0 && Object.keys(runDataMap).length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="flex flex-col items-center gap-2">
@@ -226,7 +217,12 @@ export function RandomDirectionDashboard() {
     );
   }
 
-  if (!selectedRun) {
+  // Calculate the valid runs to display
+  const validRuns = selectedRuns.filter(run => 
+    runDataMap[run]?.data !== null && !runDataMap[run]?.isError
+  );
+
+  if (validRuns.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
@@ -236,30 +232,36 @@ export function RandomDirectionDashboard() {
     );
   }
 
+  // Create a set of cards, one per run
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Random Direction 2D</CardTitle>
-        <CardDescription>
-          Showing loss contours in 2D random directions for run: {selectedRun}
-          {errors.length > 0 && (
-            <span className="text-destructive ml-2">
-              (Failed to load {errors.length} run(s))
-            </span>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {renderRunSelector()}
-        <div className="h-[400px]">
-          <Plot
-            data={plotData}
-            layout={plotLayout}
-            config={plotConfig}
-            style={{ width: '100%', height: '100%' }}
-          />
+    <div className="space-y-6">
+      {/* TensorBoard style grid layout with responsive sizing */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {validRuns.map(run => (
+          <Card key={run} className="w-full overflow-hidden border border-border shadow-sm">
+            <CardHeader className="py-2 px-4 border-b">
+              <CardTitle className="text-base font-medium">
+                {run}
+              </CardTitle>
+            </CardHeader>
+            <div className="h-[400px] w-full flex items-center justify-center">
+              <Plot
+                data={create3DSurfacePlot(run)}
+                layout={create3DPlotLayout()}
+                config={plotConfig}
+                style={{ width: '100%', height: '100%' }}
+              />
+            </div>
+            {renderMetadata(run)}
+          </Card>
+        ))}
+      </div>
+
+      {errors.length > 0 && (
+        <div className="text-destructive text-sm">
+          Failed to load data for {errors.length} run(s): {errors.map(e => e.run).join(', ')}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }
