@@ -30,6 +30,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__), "../../.."))
 
 from tensorboard_loss_slicer import summary_v2
 from pysclice.slicers import LinearInterpolationSlicer
+from pysclice.slicers import RandomDirectionSlicer
 from pysclice.core import ModelWrapper
 
 
@@ -185,6 +186,63 @@ def generate_slice(model, initial_params, final_params, checkpoint_params=None,
     return result
 
 
+def generate_random_direction_slice_2d(model, center_params, n_samples_per_dim=31):
+    """Generate 2D slicing data along random directions with the model parameters as center.
+    
+    Args:
+        model: PyTorch model
+        center_params: Parameter values to use as center point for slicing
+        n_samples_per_dim: Number of samples per dimension
+        
+    Returns:
+        Dictionary containing 2D slice data
+    """
+    # Create test data for ModelWrapper
+    input_size = model.layer1.weight.shape[1]
+    test_inputs = torch.randn(20, input_size)
+    test_targets = torch.randn(20, 1)
+    
+    # Define loss function for ModelWrapper
+    criterion = nn.MSELoss()
+    def loss_fn(output, target):
+        # Make sure we return a tensor, not a float
+        loss_val = criterion(output, target)
+        if isinstance(loss_val, torch.Tensor):
+            return loss_val
+        else:
+            return torch.tensor(loss_val, device=output.device)
+    
+    # Create ModelWrapper
+    model_wrapper = ModelWrapper(
+        model=model,
+        loss_fn=loss_fn,
+        train_data=(test_inputs, test_targets)
+    )
+    
+    # Create RandomDirectionSlicer
+    slicer = RandomDirectionSlicer(model_wrapper)
+    
+    # Flatten parameter arrays if they're not already flattened
+    if isinstance(center_params[0], np.ndarray):
+        flat_center_params = np.concatenate([p.flatten() for p in center_params])
+    else:
+        flat_center_params = center_params
+    
+    print("\n📊 Generating 2D random direction slice...")
+    # Get 2D slicing data
+    slice_data = slicer.slice_2d(
+        center_point=flat_center_params,
+        n_samples_per_dim=n_samples_per_dim,
+        x_range=(-1.0, 1.0),
+        y_range=(-1.0, 1.0),
+        normalize_directions=True,
+        ensure_orthogonal=True
+    )
+    
+    print(f"2D slice generated with {n_samples_per_dim}x{n_samples_per_dim} points")
+    return slice_data
+
+
 def main(unused_argv):
     print("\n" + "="*50)
     print("🔍 Loss Slicer TensorBoard Plugin Demo - Multiple Runs")
@@ -263,6 +321,23 @@ def main(unused_argv):
             alpha_range=(-0.5, 1.5)  # Extend beyond the endpoints
         )
         
+        # Generate 2D random direction slices for initial and final parameters
+        print("\n📊 Generating random direction slices for initial and final parameters...")
+        
+        # Slice around initial parameters
+        initial_slice_2d = generate_random_direction_slice_2d(
+            model=model,
+            center_params=initial_params,
+            n_samples_per_dim=31
+        )
+        
+        # Slice around final parameters
+        final_slice_2d = generate_random_direction_slice_2d(
+            model=model,
+            center_params=final_params,
+            n_samples_per_dim=31
+        )
+        
         # Log the slices
         with writer.as_default():
             print(f"\n📋 Logging slice data for {run_name} to TensorBoard...")
@@ -281,6 +356,21 @@ def main(unused_argv):
                 slice_data=extended_slice,
                 step=len(training_losses),
                 description=f"{run_name} - Extended linear interpolation beyond endpoints"
+            )
+            
+            # Log the 2D random direction slices
+            summary_v2.random_direction_slice_2d(
+                name="loss_slice/initial_random_2d",
+                slice_data=initial_slice_2d,
+                step=len(training_losses),
+                description=f"{run_name} - 2D random direction slice around initial parameters"
+            )
+            
+            summary_v2.random_direction_slice_2d(
+                name="loss_slice/final_random_2d",
+                slice_data=final_slice_2d,
+                step=len(training_losses),
+                description=f"{run_name} - 2D random direction slice around final parameters"
             )
             
             # Force flush to disk

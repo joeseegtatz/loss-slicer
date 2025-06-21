@@ -65,3 +65,43 @@ def slice_data(name, slice_data, step=None, description=None):
         step=step,
         metadata=summary_metadata,
     )
+
+
+def random_direction_slice_2d(name, slice_data, step=None, description=None):
+    """Log 2D random direction slice data for the loss slicer plugin.
+    
+    Args:
+        name: A name for this 2D slice data.
+        slice_data: A dictionary containing 2D slicing data as returned by 
+                  RandomDirectionSlicer.slice_2d, including 'x_coordinates', 'y_coordinates',
+                  'grid_data', 'center_point', 'direction1', 'direction2', etc.
+        step: Optional global step for this training step.
+        description: Optional description for this slice data.
+        
+    Returns:
+        A serialized TF summary for the 2D slice data.
+    """
+    description = description or ""
+    summary_metadata = _create_summary_metadata(description)
+    
+    # Convert data to JSON format
+    tensor_data = {
+        "x_coordinates": slice_data["x_coordinates"].tolist() if isinstance(slice_data["x_coordinates"], np.ndarray) else slice_data["x_coordinates"],
+        "y_coordinates": slice_data["y_coordinates"].tolist() if isinstance(slice_data["y_coordinates"], np.ndarray) else slice_data["y_coordinates"],
+        "grid_data": slice_data["grid_data"].tolist() if isinstance(slice_data["grid_data"], np.ndarray) else slice_data["grid_data"],
+        "center_point": slice_data["center_point"].tolist() if isinstance(slice_data["center_point"], np.ndarray) else slice_data["center_point"],
+        "center_loss": float(slice_data["center_loss"]),
+        "direction1": slice_data["direction1"].tolist() if isinstance(slice_data["direction1"], np.ndarray) else slice_data["direction1"],
+        "direction2": slice_data["direction2"].tolist() if isinstance(slice_data["direction2"], np.ndarray) else slice_data["direction2"],
+        "type": "random_direction_2d"
+    }
+    
+    tensor_str = json.dumps(tensor_data)
+    tensor = tf.constant(tensor_str)
+    
+    return tf.summary.write(
+        tag=name,
+        tensor=tensor,
+        step=step,
+        metadata=summary_metadata,
+    )

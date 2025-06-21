@@ -222,7 +222,7 @@ def main():
     
     # Adjust layout and save
     plt.tight_layout()
-    plt.savefig('parabola_comparison_rds.png', dpi=300, bbox_inches='tight')
+    # plt.savefig('parabola_comparison_rds.png', dpi=300, bbox_inches='tight')
     print("Comparison plot saved as 'parabola_comparison_rds.png'")
     
     # Calculate the maximum difference between numerical and analytical
