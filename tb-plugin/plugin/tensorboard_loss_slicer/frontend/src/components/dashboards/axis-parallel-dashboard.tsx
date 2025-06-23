@@ -2,7 +2,8 @@ import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData } from "@/lib/api";
+import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
+import { ParameterSliceChart } from "@/components/parameter-slice-chart";
 
 interface RunData {
   isLoading: boolean;
@@ -16,7 +17,6 @@ export function AxisParallelDashboard() {
   const { selectedRuns } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
-  const [selectedParameterIndex, setSelectedParameterIndex] = useState<number>(0);
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -50,31 +50,6 @@ export function AxisParallelDashboard() {
       .filter(run => runDataMap[run]?.isError)
       .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
   }, [selectedRuns, runDataMap]);
-
-  // Remove code already replaced by the new parameterIndices function below
-
-  // Get available parameter indices, handling both standard and multi-focus data formats
-  const parameterIndices = useMemo(() => {
-    if (!selectedRun || !runDataMap[selectedRun]?.data) return [];
-    
-    const sliceData = runDataMap[selectedRun].data;
-    if (!sliceData) return [];
-    
-    // Different handling based on data format
-    if (runDataMap[selectedRun]?.isMultiFocus) {
-      // For multi-focus data, get indices from first focus point
-      const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
-      if (multiFocusData.focus_point_slices.length > 0) {
-        const firstSlices = multiFocusData.focus_point_slices[0].slices.slices;
-        return firstSlices.map((slice: any) => slice.parameter_index);
-      }
-      return [];
-    } else {
-      // For standard data, get all parameter indices
-      const standardData = sliceData as AxisParallelSliceData;
-      return standardData.slices.map((slice: any) => slice.parameter_index);
-    }
-  }, [selectedRun, runDataMap]);
 
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
@@ -168,35 +143,59 @@ export function AxisParallelDashboard() {
     );
   };
 
-  // Render parameter selection buttons
-  const renderParameterSelector = () => {
-    if (!selectedRun || parameterIndices.length === 0) return null;
+  // Generate charts for each parameter
+  const renderParameterList = () => {
+    if (!selectedRun || !runDataMap[selectedRun]?.data) return null;
     
+    const sliceData = runDataMap[selectedRun].data;
+    if (!sliceData) return null;
+    
+    let parameterSlices: ParameterSlice[] = [];
+    
+    if (runDataMap[selectedRun]?.isMultiFocus) {
+      // For multi-focus data, get slices from first focus point
+      const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
+      if (multiFocusData.focus_point_slices.length > 0) {
+        parameterSlices = multiFocusData.focus_point_slices[0].slices.slices;
+      }
+    } else {
+      // For standard data, get all parameter slices
+      const standardData = sliceData as AxisParallelSliceData;
+      parameterSlices = standardData.slices;
+    }
+    
+    // Sort parameters by index for consistent display
+    parameterSlices.sort((a, b) => a.parameter_index - b.parameter_index);
+    
+    // Group parameters by layer to organize visualization
+    const groupedByLayer = parameterSlices.reduce<Record<string, ParameterSlice[]>>((acc, slice) => {
+      const layerName = slice.layer_name || 'Other Parameters';
+      if (!acc[layerName]) {
+        acc[layerName] = [];
+      }
+      acc[layerName].push(slice);
+      return acc;
+    }, {});
+
     return (
-      <div className="mb-4">
-        <p className="text-sm font-medium mb-2">Select Parameter:</p>
-        <div className="flex flex-wrap gap-2">
-          {parameterIndices.map(index => (
-            <button 
-              key={index}
-              className={`px-3 py-1 text-sm rounded-md ${
-                selectedParameterIndex === index 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary text-secondary-foreground'
-              }`}
-              onClick={() => setSelectedParameterIndex(index)}
-            >
-              Parameter {index}
-            </button>
-          ))}
-        </div>
+      <div className="space-y-8">
+        {Object.entries(groupedByLayer).map(([layerName, slices]) => (
+          <div key={layerName} className="space-y-3">
+            <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {slices.map((slice) => (
+                <ParameterSliceChart key={`${slice.parameter_index}`} slice={slice} />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   };
 
   if (selectedRuns.length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
+      <Card className="w-full p-10">
         <CardContent className="text-center text-muted-foreground">
           Select runs from the sidebar to view axis parallel data
         </CardContent>
@@ -206,7 +205,7 @@ export function AxisParallelDashboard() {
 
   if (isAnyLoading && !selectedRun) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
+      <Card className="w-full p-10">
         <CardContent className="flex flex-col items-center gap-2">
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
           <p className="text-muted-foreground">Loading axis parallel data...</p>
@@ -217,7 +216,7 @@ export function AxisParallelDashboard() {
 
   if (errors.length === selectedRuns.length) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
+      <Card className="w-full p-10">
         <CardContent className="text-center text-destructive">
           Error loading data for all runs
         </CardContent>
@@ -227,7 +226,7 @@ export function AxisParallelDashboard() {
 
   if (!selectedRun) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
+      <Card className="w-full p-10">
         <CardContent className="text-center text-muted-foreground">
           No axis parallel data available for this selection
         </CardContent>
@@ -240,7 +239,7 @@ export function AxisParallelDashboard() {
       <CardHeader>
         <CardTitle>Axis Parallel Slices</CardTitle>
         <CardDescription>
-          Showing loss along parameter axes for run: {selectedRun}
+          Parameter list for run: {selectedRun}
           {errors.length > 0 && (
             <span className="text-destructive ml-2">
               (Failed to load {errors.length} run(s))
@@ -250,13 +249,7 @@ export function AxisParallelDashboard() {
       </CardHeader>
       <CardContent className="space-y-4">
         {renderRunSelector()}
-        {renderParameterSelector()}
-        <div className="h-[350px] border rounded-md flex items-center justify-center bg-muted/20">
-          <div className="text-center text-muted-foreground">
-            <p>Visualization placeholder</p>
-            <p className="text-sm mt-1">Selected parameter: {selectedParameterIndex}</p>
-          </div>
-        </div>
+        {renderParameterList()}
       </CardContent>
     </Card>
   );
