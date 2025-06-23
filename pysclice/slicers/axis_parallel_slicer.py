@@ -48,6 +48,13 @@ class AxisParallelSlicer(Slicer):
         results = []
         center_loss = self.model.compute_loss(center_point, use_test_data=use_test_data)
         
+        param_metadata = []
+        start_idx = 0
+        for name, param in self.model.model.named_parameters():
+            numel = param.numel()
+            param_metadata.append({'name': name, 'start': start_idx, 'end': start_idx + numel})
+            start_idx += numel
+
         for dim in params_to_slice:
             samples = []
             for i in range(n_samples):
@@ -62,8 +69,16 @@ class AxisParallelSlicer(Slicer):
                 loss = self.model.compute_loss(params, use_test_data=use_test_data)
                 samples.append((param_value, loss))
             
+            param_name = next((meta['name'] for meta in param_metadata if meta['start'] <= dim < meta['end']), "Unknown")
+            name_parts = param_name.split(".")
+            layer_name = ".".join(name_parts[:2]) if len(name_parts) > 1 else name_parts[0]
+            param_type = name_parts[-1]
+
             results.append({
                 'parameter_index': dim,
+                'parameter_name': param_name,
+                'layer_name': layer_name,
+                'param_type': param_type,
                 'samples': samples,
                 'center_point': center_point.copy(),
                 'center_loss': center_loss,
