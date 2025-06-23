@@ -274,16 +274,15 @@ def generate_random_direction_slice_2d(model, center_params, n_samples_per_dim=3
     return slice_data
 
 
-def generate_axis_parallel_slice(model, center_params, n_samples=31):
-    """Generate axis-parallel slicing data around a parameter vector.
+def generate_multi_focus_slice(model, center_params):
+    """Generate multi-focus axis-parallel slicing data around a parameter vector.
     
     Args:
         model: PyTorch model
         center_params: Parameter values to use as center point for slicing
-        n_samples: Number of samples per parameter
         
     Returns:
-        Dictionary containing axis-parallel slice data
+        Dictionary containing the full multi-focus axis-parallel slice data.
     """
     # Create test data for ModelWrapper
     input_size = model.layer1.weight.shape[1]
@@ -293,12 +292,7 @@ def generate_axis_parallel_slice(model, center_params, n_samples=31):
     # Define loss function for ModelWrapper
     criterion = nn.MSELoss()
     def loss_fn(output, target):
-        # Make sure we return a tensor, not a float
-        loss_val = criterion(output, target)
-        if isinstance(loss_val, torch.Tensor):
-            return loss_val
-        else:
-            return torch.tensor(loss_val, device=output.device)
+        return criterion(output, target)
     
     # Create ModelWrapper
     model_wrapper = ModelWrapper(
@@ -316,15 +310,20 @@ def generate_axis_parallel_slice(model, center_params, n_samples=31):
     else:
         flat_center_params = center_params
     
-    print("\n📊 Generating axis-parallel slice...")
-    # Get axis-parallel slicing data
-    slice_data = slicer.slice(
+    print("\n\U0001f4ca Generating multi-focus axis-parallel slices...")
+    # Get axis-parallel slicing data from multiple focus points, using settings from the notebook
+    slice_data = slicer.sample_focus_points_and_slice(
         center_point=flat_center_params,
-        bounds=(-1.0, 1.0),
-        n_samples=n_samples
+        n_points=200,
+        sampling_method="lhs classic",
+        radius=1.0,
+        bounds=(-10.0, 10.0),
+        n_samples_per_slice=101,
+        use_test_data=False
     )
     
-    print(f"Axis-parallel slice generated with {n_samples} samples per parameter")
+    print("Multi-focus axis-parallel slice generated for 200 points.")
+
     return slice_data
 
 
@@ -458,23 +457,20 @@ def main(unused_argv):
                 description=f"{run_name} - 2D random direction slice around final parameters"
             )
             
-            # Generate axis-parallel slice for final parameters (new)
-            axis_parallel_slice = generate_axis_parallel_slice(
-                model=model,
-                center_params=final_params,
-                n_samples=31
+            # Generate and log multi-focus axis-parallel slice at the final parameters
+            print("\n\U0001f4ca Generating multi-focus axis-parallel slice at final parameters...")
+            multi_focus_data = generate_multi_focus_slice(
+                model, 
+                center_params=final_params
             )
-            
-            # Log the axis-parallel slice
-            summary_v2.axis_parallel_slice(
-                name="parameter_sensitivity",
-                slice_data=axis_parallel_slice,
-                step=len(training_losses),
-                description=f"{run_name} - Axis-parallel slice showing parameter sensitivity"
+            summary_v2.multi_focus_axis_parallel_slice(
+                name="multi_focus_axis_parallel/final_params",
+                slice_data=multi_focus_data,
+                step=config["epochs"],
+                description="Multi-focus axis-parallel slice around the final model parameters."
             )
-            
-            # Force flush to disk
-            writer.flush()
+
+        writer.close()
     
     print("\n" + "="*50)
     print(f"✅ Data logged to {base_log_dir}")

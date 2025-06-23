@@ -162,6 +162,9 @@ def axis_parallel_slice(name, slice_data, step=None, description=None):
     for slice_item in slice_data["slices"]:
         processed_slice = {
             "parameter_index": slice_item["parameter_index"],
+            "parameter_name": slice_item.get("parameter_name"),
+            "layer_name": slice_item.get("layer_name"),
+            "param_type": slice_item.get("param_type"),
             "center_loss": float(slice_item["center_loss"]),
             "bounds": slice_item["bounds"],
             "samples": []
@@ -178,6 +181,68 @@ def axis_parallel_slice(name, slice_data, step=None, description=None):
     
     tensor_data["type"] = "axis_parallel"
     
+    tensor_str = json.dumps(tensor_data)
+    tensor = tf.constant(tensor_str)
+    
+    return tf.summary.write(
+        tag=name,
+        tensor=tensor,
+        step=step,
+        metadata=summary_metadata,
+    )
+
+
+def multi_focus_axis_parallel_slice(name, slice_data, step=None, description=None):
+    """Log multi-focus axis-parallel slice data for the loss slicer plugin."""
+    description = description or ""
+    summary_metadata = _create_summary_metadata(description)
+    
+    if not name.startswith("axis_parallel/"):
+        name = f"axis_parallel/{name}"
+
+    def process_slice_item(slice_item):
+        processed = {
+            "type": slice_item.get("type"),
+            "center_point": slice_item["center_point"].tolist() if isinstance(slice_item["center_point"], np.ndarray) else slice_item["center_point"],
+            "center_loss": float(slice_item["center_loss"]),
+            "bounds": slice_item["bounds"],
+            "n_samples": slice_item["n_samples"],
+            "slices": []
+        }
+        for s in slice_item["slices"]:
+            processed_s = {
+                "parameter_index": s["parameter_index"],
+                "parameter_name": s.get("parameter_name"),
+                "layer_name": s.get("layer_name"),
+                "param_type": s.get("param_type"),
+                "center_loss": float(s["center_loss"]),
+                "bounds": s["bounds"],
+                "samples": [[float(p), float(l)] for p, l in s["samples"]]
+            }
+            processed["slices"].append(processed_s)
+        return processed
+
+    tensor_data = {
+        "type": "axis_parallel",
+        "center_point": slice_data["center_point"].tolist() if isinstance(slice_data["center_point"], np.ndarray) else slice_data["center_point"],
+        "sampling_method": slice_data["sampling_method"],
+        "radius": slice_data["radius"],
+        "focus_points": slice_data["focus_points"].tolist() if isinstance(slice_data["focus_points"], np.ndarray) else slice_data["focus_points"],
+        "n_points": slice_data["n_points"],
+        "bounds": slice_data["bounds"],
+        "n_samples_per_slice": slice_data["n_samples_per_slice"],
+        "focus_point_slices": []
+    }
+
+    for fp_slice in slice_data["focus_point_slices"]:
+        processed_fp_slice = {
+            "focus_point_index": fp_slice["focus_point_index"],
+            "focus_point": fp_slice["focus_point"].tolist() if isinstance(fp_slice["focus_point"], np.ndarray) else fp_slice["focus_point"],
+            "focus_point_loss": float(fp_slice["focus_point_loss"]),
+            "slices": process_slice_item(fp_slice["slices"])
+        }
+        tensor_data["focus_point_slices"].append(processed_fp_slice)
+
     tensor_str = json.dumps(tensor_data)
     tensor = tf.constant(tensor_str)
     
