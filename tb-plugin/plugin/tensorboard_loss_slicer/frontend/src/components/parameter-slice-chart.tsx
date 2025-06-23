@@ -4,32 +4,41 @@ import { useMemo } from "react";
 import Plot from 'react-plotly.js';
 
 interface ParameterSliceChartProps {
-  slice: ParameterSlice;
+  slices: ParameterSlice[];
+  parameterIndex: number;
+  parameterName?: string;
 }
 
-export function ParameterSliceChart({ slice }: ParameterSliceChartProps) {
+export function ParameterSliceChart({ slices, parameterIndex, parameterName }: ParameterSliceChartProps) {
   const plotData = useMemo(() => {
-    return [
-      {
+    const traces: any[] = [];
+    
+    // Add a line for each slice
+    slices.forEach((slice) => {
+      traces.push({
         type: 'scatter' as const,
-        mode: 'lines+markers' as const,
+        mode: 'lines' as const,
         x: slice.samples.map(sample => sample[0]),
         y: slice.samples.map(sample => sample[1]),
-        line: { width: 1.5, color: '#555' },
-        marker: { size: 3 },
+        line: { width: 1, color: '#666' },
         showlegend: false
-      },
-      {
+      });
+    });
+    
+    // Add center points
+    slices.forEach((slice) => {
+      traces.push({
         type: 'scatter' as const,
         mode: 'markers' as const,
-        x: [slice.samples.find(s => Math.abs(s[0]) < 1e-10)?.[0] || 0], // Find center point or use 0
+        x: [0], // Center is always at 0 for axis parallel
         y: [slice.center_loss],
-        marker: { size: 8, symbol: 'x', color: '#555' },
-        showlegend: false,
-        name: 'Center Point'
-      }
-    ];
-  }, [slice]);
+        marker: { size: 4, symbol: 'x', color: '#333' },
+        showlegend: false
+      });
+    });
+    
+    return traces;
+  }, [slices]);
 
   const plotLayout = useMemo(() => {
     return {
@@ -47,7 +56,8 @@ export function ParameterSliceChart({ slice }: ParameterSliceChartProps) {
       },
       hovermode: 'closest' as const,
       plot_bgcolor: 'rgba(0,0,0,0)',
-      paper_bgcolor: 'rgba(0,0,0,0)'
+      paper_bgcolor: 'rgba(0,0,0,0)',
+      showlegend: false
     };
   }, []);
 
@@ -57,7 +67,7 @@ export function ParameterSliceChart({ slice }: ParameterSliceChartProps) {
     displaylogo: false
   };
 
-  const displayName = slice.parameter_name || `Parameter ${slice.parameter_index}`;
+  const displayName = parameterName || `Parameter ${parameterIndex}`;
 
   return (
     <Card className="w-full overflow-hidden">

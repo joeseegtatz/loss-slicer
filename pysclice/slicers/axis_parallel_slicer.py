@@ -86,7 +86,7 @@ class AxisParallelSlicer(Slicer):
             })
             
         return {
-            'type': 'axis-parallel',
+            'type': 'axis_parallel',
             'center_point': center_point.copy(),
             'center_loss': center_loss,
             'slices': results,
@@ -194,7 +194,7 @@ class AxisParallelSlicer(Slicer):
             })
         
         return {
-            'type': 'multi_focus_parameter_wise',
+            'type': 'axis_parallel',
             'center_point': center_point.copy(),
             'sampling_method': sampling_method,
             'radius': radius,

@@ -150,41 +150,60 @@ export function AxisParallelDashboard() {
     const sliceData = runDataMap[selectedRun].data;
     if (!sliceData) return null;
     
-    let parameterSlices: ParameterSlice[] = [];
+    // Collect all slices grouped by parameter index
+    const parameterSlicesMap: Record<number, ParameterSlice[]> = {};
     
     if (runDataMap[selectedRun]?.isMultiFocus) {
-      // For multi-focus data, get slices from first focus point
+      // For multi-focus data, collect slices from all focus points
       const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
-      if (multiFocusData.focus_point_slices.length > 0) {
-        parameterSlices = multiFocusData.focus_point_slices[0].slices.slices;
-      }
+      multiFocusData.focus_point_slices.forEach(focusPointSlice => {
+        focusPointSlice.slices.slices.forEach(slice => {
+          if (!parameterSlicesMap[slice.parameter_index]) {
+            parameterSlicesMap[slice.parameter_index] = [];
+          }
+          parameterSlicesMap[slice.parameter_index].push(slice);
+        });
+      });
     } else {
-      // For standard data, get all parameter slices
+      // For standard data, collect all parameter slices
       const standardData = sliceData as AxisParallelSliceData;
-      parameterSlices = standardData.slices;
+      standardData.slices.forEach(slice => {
+        parameterSlicesMap[slice.parameter_index] = [slice];
+      });
     }
     
-    // Sort parameters by index for consistent display
-    parameterSlices.sort((a, b) => a.parameter_index - b.parameter_index);
+    // Group parameters by layer for organization
+    const groupedByLayer: Record<string, Array<{index: number, slices: ParameterSlice[]}>> = {};
     
-    // Group parameters by layer to organize visualization
-    const groupedByLayer = parameterSlices.reduce<Record<string, ParameterSlice[]>>((acc, slice) => {
-      const layerName = slice.layer_name || 'Other Parameters';
-      if (!acc[layerName]) {
-        acc[layerName] = [];
+    Object.entries(parameterSlicesMap).forEach(([paramIndex, slices]) => {
+      const layerName = slices[0]?.layer_name || 'Other Parameters';
+      if (!groupedByLayer[layerName]) {
+        groupedByLayer[layerName] = [];
       }
-      acc[layerName].push(slice);
-      return acc;
-    }, {});
+      groupedByLayer[layerName].push({
+        index: parseInt(paramIndex),
+        slices: slices
+      });
+    });
+
+    // Sort parameters within each layer
+    Object.values(groupedByLayer).forEach(params => {
+      params.sort((a, b) => a.index - b.index);
+    });
 
     return (
       <div className="space-y-8">
-        {Object.entries(groupedByLayer).map(([layerName, slices]) => (
+        {Object.entries(groupedByLayer).map(([layerName, parameters]) => (
           <div key={layerName} className="space-y-3">
             <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {slices.map((slice) => (
-                <ParameterSliceChart key={`${slice.parameter_index}`} slice={slice} />
+              {parameters.map(({ index, slices }) => (
+                <ParameterSliceChart 
+                  key={index} 
+                  slices={slices}
+                  parameterIndex={index}
+                  parameterName={slices[0]?.parameter_name}
+                />
               ))}
             </div>
           </div>
