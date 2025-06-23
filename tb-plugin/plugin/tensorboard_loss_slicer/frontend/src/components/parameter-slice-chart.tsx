@@ -7,38 +7,70 @@ interface ParameterSliceChartProps {
   slices: ParameterSlice[];
   parameterIndex: number;
   parameterName?: string;
+  focusPointIndices?: number[];
+  hoveredFocusPoint?: number | null;
+  onFocusPointHover?: (focusPointIndex: number | null) => void;
 }
 
-export function ParameterSliceChart({ slices, parameterIndex, parameterName }: ParameterSliceChartProps) {
+export function ParameterSliceChart({ 
+  slices, 
+  parameterIndex, 
+  parameterName,
+  focusPointIndices = [],
+  hoveredFocusPoint = null,
+  onFocusPointHover
+}: ParameterSliceChartProps) {
   const plotData = useMemo(() => {
     const traces: any[] = [];
     
     // Add a line for each slice
-    slices.forEach((slice) => {
+    slices.forEach((slice, sliceIndex) => {
+      const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
+      const isHighlighted = hoveredFocusPoint === focusPointIndex;
+      const shouldFade = hoveredFocusPoint !== null && !isHighlighted;
+      
       traces.push({
         type: 'scatter' as const,
         mode: 'lines' as const,
         x: slice.samples.map(sample => sample[0]),
         y: slice.samples.map(sample => sample[1]),
-        line: { width: 1, color: '#666' },
-        showlegend: false
+        line: { 
+          width: isHighlighted ? 2.5 : 1, 
+          color: isHighlighted ? '#3b82f6' : '#666'
+        },
+        opacity: shouldFade ? 0.3 : 1,
+        showlegend: false,
+        hoverinfo: 'x+y',
+        customdata: Array(slice.samples.length).fill(focusPointIndex),
+        name: `Focus Point ${focusPointIndex}`
       });
     });
     
     // Add center points
-    slices.forEach((slice) => {
+    slices.forEach((slice, sliceIndex) => {
+      const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
+      const isHighlighted = hoveredFocusPoint === focusPointIndex;
+      const shouldFade = hoveredFocusPoint !== null && !isHighlighted;
+      
       traces.push({
         type: 'scatter' as const,
         mode: 'markers' as const,
-        x: [0], // Center is always at 0 for axis parallel
+        x: [0],
         y: [slice.center_loss],
-        marker: { size: 4, symbol: 'x', color: '#333' },
-        showlegend: false
+        marker: { 
+          size: isHighlighted ? 6 : 4, 
+          symbol: 'x', 
+          color: isHighlighted ? '#3b82f6' : '#333'
+        },
+        opacity: shouldFade ? 0.4 : 1,
+        showlegend: false,
+        hoverinfo: 'x+y',
+        customdata: [focusPointIndex]
       });
     });
     
     return traces;
-  }, [slices]);
+  }, [slices, focusPointIndices, hoveredFocusPoint]);
 
   const plotLayout = useMemo(() => {
     return {
@@ -82,6 +114,17 @@ export function ParameterSliceChart({ slices, parameterIndex, parameterName }: P
           layout={plotLayout}
           config={plotConfig}
           style={{ width: '100%', height: '100%' }}
+          onHover={(data) => {
+            if (data.points && data.points.length > 0 && onFocusPointHover) {
+              const focusPointIndex = Number(data.points[0].customdata);
+              onFocusPointHover(focusPointIndex);
+            }
+          }}
+          onUnhover={() => {
+            if (onFocusPointHover) {
+              onFocusPointHover(null);
+            }
+          }}
         />
       </CardContent>
     </Card>

@@ -17,6 +17,7 @@ export function AxisParallelDashboard() {
   const { selectedRuns } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
+  const [hoveredFocusPoint, setHoveredFocusPoint] = useState<number | null>(null);
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -150,8 +151,8 @@ export function AxisParallelDashboard() {
     const sliceData = runDataMap[selectedRun].data;
     if (!sliceData) return null;
     
-    // Collect all slices grouped by parameter index
-    const parameterSlicesMap: Record<number, ParameterSlice[]> = {};
+    // Collect all slices grouped by parameter index, tracking focus point indices
+    const parameterSlicesMap: Record<number, {slices: ParameterSlice[], focusPointIndices: number[]}> = {};
     
     if (runDataMap[selectedRun]?.isMultiFocus) {
       // For multi-focus data, collect slices from all focus points
@@ -159,30 +160,39 @@ export function AxisParallelDashboard() {
       multiFocusData.focus_point_slices.forEach(focusPointSlice => {
         focusPointSlice.slices.slices.forEach(slice => {
           if (!parameterSlicesMap[slice.parameter_index]) {
-            parameterSlicesMap[slice.parameter_index] = [];
+            parameterSlicesMap[slice.parameter_index] = {slices: [], focusPointIndices: []};
           }
-          parameterSlicesMap[slice.parameter_index].push(slice);
+          parameterSlicesMap[slice.parameter_index].slices.push(slice);
+          parameterSlicesMap[slice.parameter_index].focusPointIndices.push(focusPointSlice.focus_point_index);
         });
       });
     } else {
-      // For standard data, collect all parameter slices
+      // For standard data, collect all parameter slices (single focus point = index 0)
       const standardData = sliceData as AxisParallelSliceData;
       standardData.slices.forEach(slice => {
-        parameterSlicesMap[slice.parameter_index] = [slice];
+        parameterSlicesMap[slice.parameter_index] = {
+          slices: [slice],
+          focusPointIndices: [0]
+        };
       });
     }
     
     // Group parameters by layer for organization
-    const groupedByLayer: Record<string, Array<{index: number, slices: ParameterSlice[]}>> = {};
+    const groupedByLayer: Record<string, Array<{
+      index: number, 
+      slices: ParameterSlice[], 
+      focusPointIndices: number[]
+    }>> = {};
     
-    Object.entries(parameterSlicesMap).forEach(([paramIndex, slices]) => {
+    Object.entries(parameterSlicesMap).forEach(([paramIndex, {slices, focusPointIndices}]) => {
       const layerName = slices[0]?.layer_name || 'Other Parameters';
       if (!groupedByLayer[layerName]) {
         groupedByLayer[layerName] = [];
       }
       groupedByLayer[layerName].push({
         index: parseInt(paramIndex),
-        slices: slices
+        slices: slices,
+        focusPointIndices: focusPointIndices
       });
     });
 
@@ -197,12 +207,15 @@ export function AxisParallelDashboard() {
           <div key={layerName} className="space-y-3">
             <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {parameters.map(({ index, slices }) => (
+              {parameters.map(({ index, slices, focusPointIndices }) => (
                 <ParameterSliceChart 
                   key={index} 
                   slices={slices}
                   parameterIndex={index}
                   parameterName={slices[0]?.parameter_name}
+                  focusPointIndices={focusPointIndices}
+                  hoveredFocusPoint={hoveredFocusPoint}
+                  onFocusPointHover={setHoveredFocusPoint}
                 />
               ))}
             </div>
