@@ -38,13 +38,16 @@ export interface AxisParallelSample {
  */
 export interface ParameterSlice {
   parameter_index: number;
+  parameter_name?: string;
+  layer_name?: string;
+  param_type?: string;
   center_loss: number;
   bounds: [number, number];
   samples: AxisParallelSample[];
 }
 
 /**
- * Axis Parallel Slice Data
+ * Standard Axis Parallel Slice Data (single focus point)
  * Varies parameters one at a time along each parameter axis
  */
 export interface AxisParallelSliceData {
@@ -57,12 +60,46 @@ export interface AxisParallelSliceData {
 }
 
 /**
+ * Focus point slice data structure for multi-focus view
+ */
+export interface FocusPointSlice {
+  focus_point_index: number;
+  focus_point: number[];
+  focus_point_loss: number;
+  slices: {
+    type: string;
+    center_point: number[];
+    center_loss: number;
+    bounds: [number, number];
+    n_samples: number;
+    slices: ParameterSlice[];
+  };
+}
+
+/**
+ * Multi-focus Axis Parallel Slice Data
+ * Contains multiple focus points with their own slices
+ */
+export interface MultiFocusAxisParallelSliceData {
+  type: 'axis_parallel';
+  center_point: number[];
+  sampling_method: string;
+  radius: number;
+  focus_points: number[][];
+  n_points: number;
+  bounds: [number, number];
+  n_samples_per_slice: number;
+  focus_point_slices: FocusPointSlice[];
+}
+
+/**
  * Union type for all slice data types
  */
 export type SliceData = 
   | LinearInterpolationSliceData 
   | RandomDirection2DSliceData 
-  | AxisParallelSliceData;
+  | AxisParallelSliceData
+  | MultiFocusAxisParallelSliceData;
 
 /**
  * Fetch all available runs and their tags

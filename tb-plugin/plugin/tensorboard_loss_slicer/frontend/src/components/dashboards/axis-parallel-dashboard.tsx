@@ -1,19 +1,19 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
-import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData } from "@/lib/api";
+import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData } from "@/lib/api";
 
 interface RunData {
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
-  data: AxisParallelSliceData | null;
+  data: AxisParallelSliceData | MultiFocusAxisParallelSliceData | null;
+  isMultiFocus?: boolean;
 }
 
 export function AxisParallelDashboard() {
-  const { selectedRuns, runColors } = useSliceDataContext();
+  const { selectedRuns } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
   const [selectedParameterIndex, setSelectedParameterIndex] = useState<number>(0);
@@ -51,77 +51,30 @@ export function AxisParallelDashboard() {
       .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
   }, [selectedRuns, runDataMap]);
 
-  // Get available parameter indices
+  // Remove code already replaced by the new parameterIndices function below
+
+  // Get available parameter indices, handling both standard and multi-focus data formats
   const parameterIndices = useMemo(() => {
     if (!selectedRun || !runDataMap[selectedRun]?.data) return [];
     
     const sliceData = runDataMap[selectedRun].data;
     if (!sliceData) return [];
     
-    return sliceData.slices.map(slice => slice.parameter_index);
-  }, [selectedRun, runDataMap]);
-
-  // Prepare plotly data for axis parallel plot
-  const plotData = useMemo(() => {
-    if (!selectedRun || !runDataMap[selectedRun]?.data) return [];
-    
-    const sliceData = runDataMap[selectedRun].data;
-    if (!sliceData) return [];
-    
-    // Find the selected parameter slice
-    const paramSlice = sliceData.slices.find(slice => 
-      slice.parameter_index === selectedParameterIndex
-    );
-    
-    if (!paramSlice) return [];
-    
-    // Create scatter plot for parameter vs loss
-    return [
-      {
-        type: 'scatter' as const,
-        mode: 'lines+markers' as const,
-        name: `Parameter ${selectedParameterIndex}`,
-        x: paramSlice.samples.map(sample => sample[0]),
-        y: paramSlice.samples.map(sample => sample[1]),
-        line: { color: runColors[selectedRun], width: 2 },
-        marker: { size: 6 }
-      },
-      {
-        type: 'scatter' as const,
-        mode: 'markers' as const,
-        name: 'Center Point',
-        x: [sliceData.center_point[selectedParameterIndex]], // Only one point
-        y: [sliceData.center_loss],
-        marker: { 
-          size: 10,
-          color: 'red',
-          symbol: 'x'
-        }
+    // Different handling based on data format
+    if (runDataMap[selectedRun]?.isMultiFocus) {
+      // For multi-focus data, get indices from first focus point
+      const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
+      if (multiFocusData.focus_point_slices.length > 0) {
+        const firstSlices = multiFocusData.focus_point_slices[0].slices.slices;
+        return firstSlices.map((slice: any) => slice.parameter_index);
       }
-    ];
-  }, [selectedRun, runDataMap, selectedParameterIndex, runColors]);
-
-  // Plotly layout configuration
-  const plotLayout = useMemo(() => {
-    return {
-      autosize: true,
-      margin: { l: 50, r: 30, b: 50, t: 10, pad: 4 },
-      xaxis: {
-        title: { text: `Parameter ${selectedParameterIndex} Value` }
-      },
-      yaxis: {
-        title: { text: 'Loss Value' }
-      },
-      hovermode: 'closest' as const,
-    };
-  }, [selectedParameterIndex]);
-
-  const plotConfig = {
-    responsive: true,
-    displayModeBar: true,
-    displaylogo: false,
-    modeBarButtonsToRemove: ['lasso2d', 'select2d'] as any
-  };
+      return [];
+    } else {
+      // For standard data, get all parameter indices
+      const standardData = sliceData as AxisParallelSliceData;
+      return standardData.slices.map((slice: any) => slice.parameter_index);
+    }
+  }, [selectedRun, runDataMap]);
 
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
@@ -165,10 +118,14 @@ export function AxisParallelDashboard() {
             throw new Error(`Expected axis_parallel data but received ${data.type}`);
           }
           
+          // Check if this is multi-focus data
+          const isMultiFocus = 'focus_point_slices' in data;
+          
           updateRunData(run, {
             isLoading: false,
             isError: false,
-            data: data as AxisParallelSliceData
+            data: data,
+            isMultiFocus: isMultiFocus
           });
         })
         .catch((error: Error) => {
@@ -294,13 +251,11 @@ export function AxisParallelDashboard() {
       <CardContent className="space-y-4">
         {renderRunSelector()}
         {renderParameterSelector()}
-        <div className="h-[350px]">
-          <Plot
-            data={plotData}
-            layout={plotLayout}
-            config={plotConfig}
-            style={{ width: '100%', height: '100%' }}
-          />
+        <div className="h-[350px] border rounded-md flex items-center justify-center bg-muted/20">
+          <div className="text-center text-muted-foreground">
+            <p>Visualization placeholder</p>
+            <p className="text-sm mt-1">Selected parameter: {selectedParameterIndex}</p>
+          </div>
         </div>
       </CardContent>
     </Card>
