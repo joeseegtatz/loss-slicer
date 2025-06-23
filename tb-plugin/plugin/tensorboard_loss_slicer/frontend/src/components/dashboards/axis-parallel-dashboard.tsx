@@ -17,7 +17,7 @@ export function AxisParallelDashboard() {
   const { selectedRuns } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
-  const [hoveredFocusPoint, setHoveredFocusPoint] = useState<number | null>(null);
+  const [selectedFocusPoint, setSelectedFocusPoint] = useState<number | null>(null);
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -214,8 +214,8 @@ export function AxisParallelDashboard() {
                   parameterIndex={index}
                   parameterName={slices[0]?.parameter_name}
                   focusPointIndices={focusPointIndices}
-                  hoveredFocusPoint={hoveredFocusPoint}
-                  onFocusPointHover={setHoveredFocusPoint}
+                  selectedFocusPoint={selectedFocusPoint}
+                  onFocusPointClick={setSelectedFocusPoint}
                 />
               ))}
             </div>

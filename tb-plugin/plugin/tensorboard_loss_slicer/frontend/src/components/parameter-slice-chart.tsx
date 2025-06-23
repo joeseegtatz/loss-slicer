@@ -8,8 +8,8 @@ interface ParameterSliceChartProps {
   parameterIndex: number;
   parameterName?: string;
   focusPointIndices?: number[];
-  hoveredFocusPoint?: number | null;
-  onFocusPointHover?: (focusPointIndex: number | null) => void;
+  selectedFocusPoint?: number | null;
+  onFocusPointClick?: (focusPointIndex: number | null) => void;
 }
 
 export function ParameterSliceChart({ 
@@ -17,8 +17,8 @@ export function ParameterSliceChart({
   parameterIndex, 
   parameterName,
   focusPointIndices = [],
-  hoveredFocusPoint = null,
-  onFocusPointHover
+  selectedFocusPoint = null,
+  onFocusPointClick
 }: ParameterSliceChartProps) {
   const plotData = useMemo(() => {
     const traces: any[] = [];
@@ -26,8 +26,7 @@ export function ParameterSliceChart({
     // Add a line for each slice
     slices.forEach((slice, sliceIndex) => {
       const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
-      const isHighlighted = hoveredFocusPoint === focusPointIndex;
-      const shouldFade = hoveredFocusPoint !== null && !isHighlighted;
+      const isHighlighted = selectedFocusPoint === focusPointIndex;
       
       traces.push({
         type: 'scatter' as const,
@@ -36,9 +35,9 @@ export function ParameterSliceChart({
         y: slice.samples.map(sample => sample[1]),
         line: { 
           width: isHighlighted ? 2.5 : 1, 
-          color: isHighlighted ? '#3b82f6' : '#666'
+          color: isHighlighted ? '#3b82f6' : '#999'
         },
-        opacity: shouldFade ? 0.3 : 1,
+        opacity: isHighlighted ? 1 : 0.3,
         showlegend: false,
         hoverinfo: 'x+y',
         customdata: Array(slice.samples.length).fill(focusPointIndex),
@@ -49,8 +48,7 @@ export function ParameterSliceChart({
     // Add center points
     slices.forEach((slice, sliceIndex) => {
       const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
-      const isHighlighted = hoveredFocusPoint === focusPointIndex;
-      const shouldFade = hoveredFocusPoint !== null && !isHighlighted;
+      const isHighlighted = selectedFocusPoint === focusPointIndex;
       
       traces.push({
         type: 'scatter' as const,
@@ -60,9 +58,9 @@ export function ParameterSliceChart({
         marker: { 
           size: isHighlighted ? 6 : 4, 
           symbol: 'x', 
-          color: isHighlighted ? '#3b82f6' : '#333'
+          color: isHighlighted ? '#3b82f6' : '#999'
         },
-        opacity: shouldFade ? 0.4 : 1,
+        opacity: isHighlighted ? 1 : 0.4,
         showlegend: false,
         hoverinfo: 'x+y',
         customdata: [focusPointIndex]
@@ -70,7 +68,7 @@ export function ParameterSliceChart({
     });
     
     return traces;
-  }, [slices, focusPointIndices, hoveredFocusPoint]);
+  }, [slices, focusPointIndices, selectedFocusPoint]);
 
   const plotLayout = useMemo(() => {
     return {
@@ -114,15 +112,15 @@ export function ParameterSliceChart({
           layout={plotLayout}
           config={plotConfig}
           style={{ width: '100%', height: '100%' }}
-          onHover={(data) => {
-            if (data.points && data.points.length > 0 && onFocusPointHover) {
+          onClick={(data) => {
+            if (data.points && data.points.length > 0 && onFocusPointClick) {
               const focusPointIndex = Number(data.points[0].customdata);
-              onFocusPointHover(focusPointIndex);
-            }
-          }}
-          onUnhover={() => {
-            if (onFocusPointHover) {
-              onFocusPointHover(null);
+              // Toggle selection: if already selected, deselect; otherwise select
+              if (selectedFocusPoint === focusPointIndex) {
+                onFocusPointClick(null);
+              } else {
+                onFocusPointClick(focusPointIndex);
+              }
             }
           }}
         />
