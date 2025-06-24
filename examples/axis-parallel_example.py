@@ -16,49 +16,20 @@ The example:
 
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-import torch.nn as nn
+import numpy as np
 from pysclice.slicers import AxisParallelSlicer
 from pysclice.core import ModelWrapper
 from pysclice.visualization.visualization import plot_slices, plot_top_slices
+from example_models import MultiParameterQuadratic, create_dummy_data, identity_loss
 
 def main():
     print("=== PySlice Parameter-wise Slicing Example ===")
     print("Analyzing a multi-parameter quadratic function\n")
 
-    # Create a simple PyTorch model with multiple parameters
-    class MultiParamModel(nn.Module):
-        def __init__(self):
-            super().__init__()
-            # Initialize with different values to create an asymmetric loss landscape
-            self.params = nn.Parameter(torch.tensor([1.0, -0.5, 0.0, 2.0, -1.0]))
-        
-        def forward(self, inputs=None):
-            # Each parameter contributes differently to the loss:
-            # - param[0]: quadratic (x^2) with minimum at x=0
-            # - param[1]: quadratic with minimum at x=1
-            # - param[2]: quartic (x^4) with minimum at x=0
-            # - param[3]: shifted quadratic with minimum at x=-2
-            # - param[4]: flatter quadratic (0.5*x^2) with minimum at x=0
-            loss = (
-                self.params[0]**2 +                      # x^2 term
-                (self.params[1] - 1.0)**2 +              # (x-1)^2 term
-                self.params[2]**4 +                      # x^4 term
-                (self.params[3] + 2.0)**2 +              # (x+2)^2 term
-                0.5 * self.params[4]**2                  # 0.5*x^2 term
-            )
-            return loss
-
-    # Create model and wrapper
-    model = MultiParamModel()
-    
-    # Create dummy data (required by ModelWrapper but not used in this example)
-    dummy_inputs = torch.tensor([[1.0]])
-    dummy_targets = torch.tensor([0.0])
-    
-    # Simple loss function that just returns the model output
-    def identity_loss(output, target):
-        return output
+    # Create model and dummy data
+    model = MultiParameterQuadratic()
+    dummy_inputs, dummy_targets = create_dummy_data()
+    expected_minima = model.get_expected_minima()
     
     # Wrap the model
     try:
@@ -105,7 +76,7 @@ def main():
     print(f"Center point loss: {center_loss:.4f}")
     
     # Expected minimum positions for each parameter
-    expected_minima = [0.0, 1.0, 0.0, -2.0, 0.0]
+    expected_minima = model.get_expected_minima()
     
     # Check if the loss has the expected shape for each parameter
     for s in slice_data['slices']:
