@@ -13,46 +13,26 @@ The parabola model is simply f(p1, p2) = p1^2 + p2^2, which has a
 minimum at (0,0) and exhibits the same curvature in all directions.
 """
 
-import torch
-import torch.nn as nn
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-import os
-import sys
 
 # Import the slicer and ModelWrapper
 from pysclice.slicers import RandomDirectionSlicer
 from pysclice.core import ModelWrapper
-
-# Define the parabola model
-class ParabolaModel(nn.Module):
-    def __init__(self):
-        super(ParabolaModel, self).__init__()
-        # Two parameters that we'll vary
-        self.param1 = nn.Parameter(torch.tensor([0.0]))
-        self.param2 = nn.Parameter(torch.tensor([0.0]))
-    
-    def forward(self, x=None):
-        # For this example, we don't use input x, just return sum of squares
-        return self.param1[0] ** 2 + self.param2[0] ** 2
-
-# Identity loss function - returns the model output as the loss
-def identity_loss(output, target):
-    return output
+from example_models import Simple2DParabola, create_dummy_data, identity_loss
 
 def main():
     print("=== Example: Slicing a Parabola Model with RandomDirectionSlicer ===")
     
-    # Create the model
-    model = ParabolaModel()
+    # Create the model using shared example model
+    model = Simple2DParabola(initial_x=1.0, initial_y=1.0)
     print("Created model with initial parameters:", 
           model.param1.item(), model.param2.item())
     
-    # Create dummy data (not really used, but required by ModelWrapper)
-    dummy_inputs = torch.zeros(1, 1)
-    dummy_targets = torch.zeros(1)
+    # Create dummy data using helper function
+    dummy_inputs, dummy_targets = create_dummy_data()
     
     # Create the model wrapper
     model_wrapper = ModelWrapper(

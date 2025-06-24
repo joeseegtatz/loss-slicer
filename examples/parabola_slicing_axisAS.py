@@ -1,52 +1,29 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-import torch.nn as nn
 from pysclice.slicers import AxisParallelSlicer
 from pysclice.core import ModelWrapper
+from example_models import Simple2DParabola, create_dummy_data, identity_loss
 
-# Define a simple parabolic function as a PyTorch model
-class ParabolaModel(nn.Module):
-    def __init__(self):
-        super(ParabolaModel, self).__init__()
-        # Single parameter that we'll vary
-        self.param1 = nn.Parameter(torch.tensor([0.0]))
-        self.param2 = nn.Parameter(torch.tensor([0.0]))
-    
-    def forward(self, x=None):
-        # For this example, we don't use input x, just return param^2
-        return self.param1[0] ** 2 + self.param2[0] ** 2
-
-# Create the model and loss function
-model = ParabolaModel()
-loss_fn = lambda output, target: output  # Identity loss since we want to analyze param^2
-
-# Create some dummy data (not actually used in this example)
-dummy_inputs = torch.tensor([[1.0]])
-dummy_targets = torch.tensor([0.0])
-train_data = (dummy_inputs, dummy_targets)
+# Create the model and data using shared components
+model = Simple2DParabola()
+dummy_inputs, dummy_targets = create_dummy_data()
 
 # Wrap the model in ModelWrapper
-model_wrapper = ModelWrapper(model, loss_fn, train_data=train_data)
+model_wrapper = ModelWrapper(model, identity_loss, train_data=(dummy_inputs, dummy_targets))
 
-# Define the start and end points for the linear path slicing
-# For a 1D parabola y = x^2, let's slice from x = -2 to x = 2
+# Define the start and end points for the axis-parallel slicing
 start_point = np.array([-2.0, -2.0])
 end_point = np.array([0.0, 0.0])
 
-# Create a ParameterWise instance
+# Create an AxisParallelSlicer instance
 slicer = AxisParallelSlicer(model_wrapper)
 
 # Perform the slicing
-# LinearInterpolationSlicer.slice() takes start_point and end_point as parameters
-num_points = 50
-slice_data = linear_slicer.slice(
-    start_point=start_point,
-    end_point=end_point,
-    n_samples=num_points
+slice_data = slicer.slice(
+    center_point=start_point,
+    bounds=(-2.0, 2.0),
+    n_samples=50
 )
-
-slicer.slice()
 
 # The slice_data object contains information about the slice
 # For LinearInterpolationSlicer, it contains:

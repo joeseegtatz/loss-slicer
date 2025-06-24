@@ -26,37 +26,22 @@ The example:
 
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-import torch.nn as nn
 from pysclice.slicers import AxisParallelSlicer
 from pysclice.core import ModelWrapper
+from example_models import SinusoidalModel, create_dummy_data, identity_loss
 
 def main():
     print("=== PySlice Multi-Focus Parameter-wise Slicing Example ===")
-    print("Analyzing multiple focus points on a multi-parameter quadratic function\n")
+    print("Analyzing multiple focus points on a sinusoidal function\n")
 
-    # Create a simple PyTorch model with multiple parameters
-    class ParabolaModel(nn.Module):
-        def __init__(self):
-            super(ParabolaModel, self).__init__()
-            # Single parameter that we'll vary
-            self.param1 = nn.Parameter(torch.tensor([0.0]))
-            self.param2 = nn.Parameter(torch.tensor([0.0]))
-        
-        def forward(self, x=None):
-            # For this example, we don't use input x, just return param^2
-            return np.sin(self.param1[0])  + np.sin(self.param1[0] + self.param2[0]) 
-
-
-    # Create model and data
-    model = ParabolaModel()
-    loss_fn = lambda output, target: output  # Identity loss since we're using the model's output directly
-    dummy_input = torch.zeros(1)  # Dummy input since our model doesn't use inputs
-    dummy_target = torch.zeros(1)  # Dummy target
-    train_data = (dummy_input, dummy_target)
+    # Create model using shared example model
+    model = SinusoidalModel()
+    
+    # Create dummy data using helper function
+    dummy_inputs, dummy_targets = create_dummy_data()
     
     # Wrap the model with ModelWrapper
-    model_wrapper = ModelWrapper(model, loss_fn, train_data=train_data)
+    model_wrapper = ModelWrapper(model, identity_loss, train_data=(dummy_inputs, dummy_targets))
     
     # Create a parameter-wise slicer
     pw_slicer = AxisParallelSlicer(model_wrapper)

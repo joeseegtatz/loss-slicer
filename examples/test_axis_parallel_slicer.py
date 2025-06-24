@@ -3,33 +3,21 @@ import torch
 import torch.nn as nn
 from pysclice.slicers import AxisParallelSlicer
 from pysclice.core import ModelWrapper
+from example_models import SimpleNeuralNetwork, generate_sample_data
 
 def main():
-    print("=== PySlice Axis-Parallel Slicing Test with Parabola ===")
+    print("=== PySlice Axis-Parallel Slicing Test with Neural Network ===")
 
-    class SimpleModel(nn.Module):
-        """A simple model with two linear layers for demo purposes."""
-        def __init__(self, input_size=3, hidden_size=1, output_size=1):
-            super().__init__()
-            self.layer1 = nn.Linear(input_size, hidden_size)
-            self.activation = nn.ReLU()
-            self.layer2 = nn.Linear(hidden_size, output_size)
+    # Create model using shared neural network
+    model = SimpleNeuralNetwork(input_size=3, hidden_size=5, output_size=1)
 
-        def forward(self, x):
-            x = self.layer1(x)
-            x = self.activation(x)
-            x = self.layer2(x)
-            return x
+    # Create sample data using helper function
+    test_inputs, test_targets = generate_sample_data(input_size=3, num_samples=20)
 
-    model = SimpleModel()
-
+    # Use standard MSE loss
     criterion = nn.MSELoss()
     def loss_fn(output, target):
         return criterion(output, target)
-
-    input_size = model.layer1.weight.shape[1]
-    test_inputs = torch.randn(20, input_size)
-    test_targets = torch.randn(20, 1)
     
     model_wrapper = ModelWrapper(
         model=model,

@@ -15,35 +15,19 @@ The example:
 
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-import torch.nn as nn
 from pysclice.slicers import LinearInterpolationSlicer
 from pysclice.core import ModelWrapper
+from example_models import Simple1DParabola, create_dummy_data, identity_loss
 
 def main():
     print("=== PySlice Linear Path Slicing Example ===")
     print("Analyzing a simple parabolic function: y = x²\n")
 
-    # Create a simple PyTorch model with one parameter
-    class SimpleParabola(nn.Module):
-        def __init__(self, initial_value=0.0):
-            super().__init__()
-            self.x = nn.Parameter(torch.tensor([initial_value]))
-        
-        def forward(self, inputs=None):
-            # Return x^2 (we ignore inputs for this example)
-            return self.x[0] ** 2
-
-    # Create model and wrapper
-    model = SimpleParabola()
+    # Create model using shared example model
+    model = Simple1DParabola()
     
-    # Create dummy data (required by ModelWrapper but not used in this example)
-    dummy_inputs = torch.tensor([[1.0]])
-    dummy_targets = torch.tensor([0.0])
-    
-    # Simple loss function that just returns the model output
-    def identity_loss(output, target):
-        return output
+    # Create dummy data using helper function
+    dummy_inputs, dummy_targets = create_dummy_data()
     
     # Wrap the model
     model_wrapper = ModelWrapper(
