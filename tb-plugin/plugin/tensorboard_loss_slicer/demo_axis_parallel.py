@@ -35,7 +35,7 @@ from pysclice.core import ModelWrapper
 
 class SimpleModel(nn.Module):
     """A simple model with two linear layers for demo purposes."""
-    def __init__(self, input_size=10, hidden_size=5, output_size=1):
+    def __init__(self, input_size=5, hidden_size=2, output_size=1):
         super().__init__()
         self.layer1 = nn.Linear(input_size, hidden_size)
         self.activation = nn.ReLU()
@@ -174,9 +174,9 @@ def main(unused_argv):
     print("="*50)
     
     config = {
-        "name": "axis_parallel_demo_3",
-        "input_size": 10,
-        "hidden_size": 5,
+        "name": "axis_parallel_demo_5",
+        "input_size": 3,
+        "hidden_size": 1,
         "output_size": 1,
         "learning_rate": 0.01,
         "epochs": 25,
