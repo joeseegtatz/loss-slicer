@@ -1,10 +1,10 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, LinearInterpolationSliceData } from "@/lib/api";
 import { TagFilter } from "@/components/tag-filter";
+import { MessageCard } from "@/components/message-card";
 
 interface RunData {
   isLoading: boolean;
@@ -233,42 +233,31 @@ export function LinearInterpolationDashboard() {
 
   if (selectedRuns.length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center bo">
-        <CardContent className="text-center text-muted-foreground">
-          Select runs from the sidebar to view linear interpolation data
-        </CardContent>
-      </Card>
+      <MessageCard message="Select runs from the sidebar to view linear interpolation data" />
     );
   }
 
   if (isAnyLoading) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading linear interpolation data...</p>
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Loading linear interpolation data..." 
+        type="loading" 
+      />
     );
   }
 
   if (errors.length === selectedRuns.length) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="text-center text-destructive">
-          Error loading data for all runs
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Error loading data for all runs" 
+        type="error" 
+      />
     );
   }
 
   if (Object.keys(tagPlotData).length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="text-center text-muted-foreground">
-          No linear interpolation data available for this selection
-        </CardContent>
-      </Card>
+      <MessageCard message="No linear interpolation data available for this selection" />
     );
   }
 

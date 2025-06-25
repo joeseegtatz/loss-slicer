@@ -1,9 +1,9 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, RandomDirection2DSliceData } from "@/lib/api";
+import { MessageCard } from "@/components/message-card";
 
 interface RunData {
   isLoading: boolean;
@@ -188,32 +188,25 @@ export function RandomDirectionDashboard() {
 
   if (selectedRuns.length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="text-center text-muted-foreground">
-          Select runs from the sidebar to view random direction data
-        </CardContent>
-      </Card>
+      <MessageCard message="Select runs from the sidebar to view random direction data" />
     );
   }
 
   if (isAnyLoading && selectedRuns.length > 0 && Object.keys(runDataMap).length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading random direction data...</p>
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Loading random direction data..." 
+        type="loading" 
+      />
     );
   }
 
   if (errors.length === selectedRuns.length) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="text-center text-destructive">
-          Error loading data for all runs
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Error loading data for all runs" 
+        type="error" 
+      />
     );
   }
 
@@ -224,11 +217,7 @@ export function RandomDirectionDashboard() {
 
   if (validRuns.length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
-        <CardContent className="text-center text-muted-foreground">
-          No random direction data available for this selection
-        </CardContent>
-      </Card>
+      <MessageCard message="No random direction data available for this selection" />
     );
   }
 

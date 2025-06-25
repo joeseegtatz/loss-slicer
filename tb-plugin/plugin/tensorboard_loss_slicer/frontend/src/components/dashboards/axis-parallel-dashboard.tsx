@@ -1,9 +1,9 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
 import { ParameterSliceChart } from "@/components/parameter-slice-chart";
+import { MessageCard } from "@/components/message-card";
 
 interface RunData {
   isLoading: boolean;
@@ -227,42 +227,31 @@ export function AxisParallelDashboard() {
 
   if (selectedRuns.length === 0) {
     return (
-      <Card className="w-full p-10">
-        <CardContent className="text-center text-muted-foreground">
-          Select runs from the sidebar to view axis parallel data
-        </CardContent>
-      </Card>
+      <MessageCard message="Select runs from the sidebar to view axis parallel data" />
     );
   }
 
   if (isAnyLoading && !selectedRun) {
     return (
-      <Card className="w-full p-10">
-        <CardContent className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
-          <p className="text-muted-foreground">Loading axis parallel data...</p>
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Loading axis parallel data..." 
+        type="loading" 
+      />
     );
   }
 
   if (errors.length === selectedRuns.length) {
     return (
-      <Card className="w-full p-10">
-        <CardContent className="text-center text-destructive">
-          Error loading data for all runs
-        </CardContent>
-      </Card>
+      <MessageCard 
+        message="Error loading data for all runs" 
+        type="error" 
+      />
     );
   }
 
   if (!selectedRun) {
     return (
-      <Card className="w-full p-10">
-        <CardContent className="text-center text-muted-foreground">
-          No axis parallel data available for this selection
-        </CardContent>
-      </Card>
+      <MessageCard message="No axis parallel data available for this selection" />
     );
   }
 
