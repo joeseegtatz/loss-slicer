@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Demo script showing how to use summary_v2 to log linear interpolation slicing results.
+Demo script showing how to use summary_v2 to log PySlice slicing results.
 
 This script demonstrates:
 1. Creating a simple 2D parabolic function
-2. Setting up PySlice ModelWrapper and LinearInterpolationSlicer
-3. Performing linear interpolation between different points
+2. Setting up PySlice ModelWrapper and all three main slicers
+3. Performing linear interpolation, random direction, and axis-parallel slicing
 4. Logging results to TensorBoard using the unified log_slice() interface
 
 To run this demo:
@@ -21,7 +21,7 @@ import torch.nn as nn
 import tensorflow as tf
 
 # Import PySlice components
-from pysclice.slicers import LinearInterpolationSlicer
+from pysclice.slicers import LinearInterpolationSlicer, RandomDirectionSlicer, AxisParallelSlicer
 from pysclice.core import ModelWrapper
 
 # Import the summary_v2 logging interface
@@ -53,8 +53,6 @@ def create_dummy_data():
 
 def main():
     """Main demo function."""
-    print("=== PySlice + TensorBoard Linear Interpolation Demo ===\n")
-    
     # Set up TensorBoard logging
     log_dir = "./demo_logs"
     os.makedirs(log_dir, exist_ok=True)
@@ -74,12 +72,10 @@ def main():
             train_data=(dummy_inputs, dummy_targets)
         )
         
-        print(f"Created 2D parabola: f(x,y) = x² + y²")
-        print(f"Initial parameters: x={model.param1.item():.2f}, y={model.param2.item():.2f}")
-        print(f"Initial loss: {model_wrapper.compute_loss():.4f}\n")
-        
-        # Create linear interpolation slicer
+        # Create all three slicers
         linear_slicer = LinearInterpolationSlicer(model_wrapper)
+        random_slicer = RandomDirectionSlicer(model_wrapper)
+        axis_slicer = AxisParallelSlicer(model_wrapper)
         
         # Define interesting points in parameter space
         points = {
@@ -90,11 +86,9 @@ def main():
             "symmetric": np.array([1.5, 1.5]),        # Symmetric point
         }
         
-        print("Defined reference points:")
-        for name, point in points.items():
-            loss = point[0]**2 + point[1]**2  # Analytical loss for verification
-            print(f"  {name}: {point} (expected loss: {loss:.4f})")
-        print()
+        # =================================================================
+        # 1. LINEAR INTERPOLATION SLICING
+        # =================================================================
         
         # Perform linear interpolations between different point pairs
         interpolations = [
@@ -108,24 +102,12 @@ def main():
             start_point = points[start_name]
             end_point = points[end_name]
             
-            print(f"Step {step}: {description}")
-            print(f"  From {start_name} {start_point} to {end_name} {end_point}")
-            
             # Perform linear interpolation slicing
             slice_data = linear_slicer.slice(
                 start_point=start_point,
                 end_point=end_point,
                 n_samples=50  # 50 points along the path
             )
-            
-            # Extract some statistics
-            samples = slice_data['samples']
-            losses = [sample[1] for sample in samples]
-            min_loss = min(losses)
-            max_loss = max(losses)
-            
-            print(f"  Completed slice with {len(samples)} samples")
-            print(f"  Loss range: {min_loss:.4f} to {max_loss:.4f}")
             
             # Log to TensorBoard using the unified interface
             slice_name = f"path_{start_name}_to_{end_name}"
@@ -135,12 +117,8 @@ def main():
                 step=step,
                 description=f"{description}. Linear interpolation from {start_name} to {end_name}."
             )
-            
-            print(f"  Logged to TensorBoard as 'linear_interpolation/{slice_name}'\n")
         
-        # Also demonstrate logging multiple slices at the same step
-        print("Logging additional analysis at step 10...")
-        
+        # Additional linear interpolation: axis cross-sections
         # Create a slice through the center along x-axis
         center_slice_data = linear_slicer.slice(
             start_point=np.array([-2.0, 0.0]),
@@ -169,15 +147,57 @@ def main():
             description="Cross-section along y-axis through the center (x=0)"
         )
         
-        print("Logged axis cross-sections to TensorBoard")
+        # =================================================================
+        # 2. RANDOM DIRECTION SLICING (2D)
+        # =================================================================
+        # Perform 2D random direction slicing around different points
+        random_centers = [
+            ("current_state", model_wrapper.get_parameters()),
+            ("near_minimum", np.array([0.5, 0.5])),
+            ("high_loss_region", np.array([2.0, -1.5]))
+        ]
         
-    print(f"\n=== Demo Complete ===")
-    print(f"TensorBoard logs saved to: {os.path.abspath(log_dir)}")
-    print(f"To view results:")
-    print(f"  1. Run: tensorboard --logdir={log_dir}")
-    print(f"  2. Open: http://localhost:6006")
-    print(f"  3. Look for 'linear_interpolation' in the plugin list")
-
+        for step_offset, (center_name, center_point) in enumerate(random_centers):
+            # Perform 2D random direction slicing
+            random_slice_data = random_slicer.slice(
+                center_point=center_point,
+                n_samples=25,  # 25x25 grid for reasonable resolution
+                x_range=(-2.0, 2.0),
+                y_range=(-2.0, 2.0),
+                normalize_directions=True,
+                ensure_orthogonal=True
+            )
+            
+            # Log to TensorBoard
+            log_slice(
+                name=f"landscape_2d_{center_name}",
+                slice_data=random_slice_data,
+                step=20 + step_offset,
+                description=f"2D loss landscape around {center_name} using random orthogonal directions"
+            )
+        
+        # =================================================================
+        # 3. AXIS-PARALLEL SLICING
+        # =================================================================
+        
+        # Multi-focus axis-parallel slicing
+        multi_axis_data = axis_slicer.sample_focus_points_and_slice(
+            center_point=np.array([0.0, 0.0]),  # Center around minimum
+            n_points=15,  # 15 focus points for good coverage
+            sampling_method="lhs",  # Latin Hypercube Sampling
+            radius=2.0,  # Sampling radius
+            bounds=(-3.0, 3.0),
+            n_samples_per_slice=40,
+            seed=42  # Reproducible results
+        )
+        
+        # Log multi-focus axis-parallel slice
+        log_slice(
+            name="multi_focus_analysis",
+            slice_data=multi_axis_data,
+            step=30,
+            description=f"Multi-focus axis-parallel analysis with {len(multi_axis_data['focus_points'])} focus points using {multi_axis_data['sampling_method']} sampling"
+        )
 
 if __name__ == "__main__":
     main()

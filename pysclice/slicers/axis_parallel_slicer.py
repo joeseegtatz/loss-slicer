@@ -17,7 +17,7 @@ from skopt.sampler import Grid
 class AxisParallelSlicer(Slicer):
     """Slice the loss landscape by varying parameters one at a time."""
     
-    def slice(self, 
+    def _slice(self, 
              center_point: Optional[np.ndarray] = None, 
              bounds: Tuple[float, float] = (-5.0, 5.0), 
              n_samples: int = 101, 
@@ -204,7 +204,7 @@ class AxisParallelSlicer(Slicer):
             point_loss = self.model.compute_loss(point, use_test_data=use_test_data)
             
             # Generate slices for this focus point
-            slices = self.slice(
+            slices = self._slice(
                 center_point=point,
                 bounds=bounds,
                 n_samples=n_samples_per_slice,
