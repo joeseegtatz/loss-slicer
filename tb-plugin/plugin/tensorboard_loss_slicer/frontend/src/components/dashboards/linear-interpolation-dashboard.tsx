@@ -28,6 +28,32 @@ export function LinearInterpolationDashboard() {
   const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Force re-render when component becomes visible (tab switch)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Tab became visible, force re-render
+        setRenderKey(prev => prev + 1);
+        
+        // Also trigger window resize to help plots recalculate dimensions
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 100);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also listen for focus events as backup
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, []);
 
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -215,12 +241,13 @@ export function LinearInterpolationDashboard() {
     };
 
     return (
-      <Card key={tagName} className="w-full">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-lg">{tagName.replace(/_/g, ' ')}</CardTitle>
+      <Card key={tagName} className="w-full overflow-hidden border border-border shadow-sm">
+        <CardHeader className="py-2 px-4 border-b">
+          <CardTitle className="text-base font-medium">{tagName.replace(/_/g, ' ')}</CardTitle>
         </CardHeader>
         <CardContent className="h-[250px]">
           <Plot
+            key={`${tagName}-${selectedRuns.join(',')}-${Array.from(selectedTags).join(',')}-${renderKey}-linear-interp`}
             data={traces}
             layout={plotLayout}
             config={plotConfig}

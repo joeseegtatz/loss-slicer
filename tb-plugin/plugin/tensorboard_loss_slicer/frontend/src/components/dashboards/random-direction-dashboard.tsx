@@ -21,6 +21,32 @@ export function RandomDirectionDashboard() {
   const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const [renderKey, setRenderKey] = useState(0);
+  
+  // Force re-render when component becomes visible (tab switch)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // Tab became visible, force re-render
+        setRenderKey(prev => prev + 1);
+        
+        // Also trigger window resize to help plots recalculate dimensions
+        setTimeout(() => {
+          window.dispatchEvent(new Event('resize'));
+        }, 100);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // Also listen for focus events as backup
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, []);
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -206,6 +232,7 @@ export function RandomDirectionDashboard() {
         <CardContent className="p-0">
           <div className="h-[380px] w-full flex items-center justify-center">
             <Plot
+              key={`${tag}-${run}-${Array.from(selectedTags).join(',')}-${renderKey}-random-dir`}
               data={traces}
               layout={layout}
               config={config}
