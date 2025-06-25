@@ -167,30 +167,25 @@ export function LinearInterpolationDashboard() {
 
     const plotLayout = {
       xaxis: {
-        title: { text: 'Interpolation Factor (α)' },
+        title: { text: 'Interpolation Factor (α)', font: { size: 11 } },
         showgrid: true,
         gridcolor: '#f0f0f0',
-        zeroline: false
+        zeroline: false,
+        tickfont: { size: 10 }
       },
       yaxis: {
-        title: { text: 'Loss Value' },
+        title: { text: 'Loss Value', font: { size: 11 } },
         showgrid: true,
         gridcolor: '#f0f0f0',
-        zeroline: false
+        zeroline: false,
+        tickfont: { size: 10 }
       },
       hovermode: 'x unified' as const,
-      margin: { l: 60, r: 40, t: 20, b: 60 },
+      margin: { l: 50, r: 20, t: 10, b: 40 },
       plot_bgcolor: 'white',
       paper_bgcolor: 'white',
       font: { family: 'Arial, sans-serif', size: 12 },
-      legend: {
-        orientation: 'h' as const,
-        x: 0,
-        y: -0.2,
-        bgcolor: 'rgba(255,255,255,0.9)',
-        bordercolor: '#ddd',
-        borderwidth: 1
-      },
+      showlegend: false,
       hoverlabel: {
         bgcolor: 'rgba(0,0,0,0.8)',
         bordercolor: 'rgba(0,0,0,0.8)',
@@ -200,17 +195,16 @@ export function LinearInterpolationDashboard() {
 
     const plotConfig = {
       responsive: true,
-      displayModeBar: true,
-      modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'] as any,
+      displayModeBar: false,
       displaylogo: false
     };
 
     return (
-      <Card key={tagName} className="w-full mb-6">
+      <Card key={tagName} className="w-full">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">{tagName.replace(/_/g, ' ')}</CardTitle>
         </CardHeader>
-        <CardContent className="h-[400px]">
+        <CardContent className="h-[300px]">
           <Plot
             data={traces}
             layout={plotLayout}
@@ -267,7 +261,7 @@ export function LinearInterpolationDashboard() {
   const sortedTags = Object.keys(tagPlotData).sort();
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full space-y-6">
       <Card>
         <CardHeader>
           <CardTitle>Linear Interpolation Slicing Results</CardTitle>
@@ -282,10 +276,12 @@ export function LinearInterpolationDashboard() {
         </CardHeader>
       </Card>
       
-      {/* Render a separate plot for each tag */}
-      {sortedTags.map(tagName => 
-        createPlotForTag(tagName, tagPlotData[tagName])
-      )}
+      {/* Responsive grid for plots */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        {sortedTags.map(tagName => 
+          createPlotForTag(tagName, tagPlotData[tagName])
+        )}
+      </div>
     </div>
   );
 }
