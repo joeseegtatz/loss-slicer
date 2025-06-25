@@ -131,7 +131,7 @@ def _plot_linear_path_slice(slice_data: Dict[str, Any],
     # Left plot: Loss vs interpolation parameter
     ax1 = axes[0]
     ax1.plot(alpha_values, loss_values, 'b-', linewidth=2, marker='o', 
-            markersize=4, label='PySlice Result')
+            markersize=4,)
     
     # Add analytical verification if provided
     if show_verification and analytical_losses is not None:

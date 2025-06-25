@@ -67,6 +67,8 @@ def create_run(run_name, model_config, log_base_dir):
         
         # Create slicers
         linear_slicer = LinearInterpolationSlicer(model_wrapper)
+        random_slicer = RandomDirectionSlicer(model_wrapper)
+        axis_slicer = AxisParallelSlicer(model_wrapper)
         
         # Define common points for comparison across runs
         points = {
@@ -128,6 +130,51 @@ def create_run(run_name, model_config, log_base_dir):
             step=10,
             description=f"Y-axis cross-section for {run_name}"
         )
+        
+        # Add random direction 2D slicing
+        # Create a 2D slice in random directions
+        random_2d_data = random_slicer.slice(
+            center_point=model_wrapper.get_parameters(),
+            n_samples=30,  # 30x30 grid
+            x_range=(-2.0, 2.0),
+            y_range=(-2.0, 2.0),
+            normalize_directions=True,
+            ensure_orthogonal=True
+        )
+        
+        log_slice(
+            name="random_2d_surface",
+            slice_data=random_2d_data,
+            step=20,
+            description=f"Random direction 2D surface for {run_name}"
+        )
+
+        # Add axis parallel slicing with focus points
+        # Create several axis parallel slices with different sampling methods
+        focus_methods = [
+            ("random", "random_focus"),
+            ("sobol", "sobol_focus"),
+            ("lhs", "lhs_focus")
+        ]
+        
+        for step, (method, slice_name) in enumerate(focus_methods):
+            axis_data = axis_slicer.sample_focus_points_and_slice(
+                center_point=model_wrapper.get_parameters(),
+                n_points=10,  # Sample 3 focus points (including center)
+                sampling_method=method,
+                radius=1.5,  # Radius around center for sampling focus points
+                bounds=(-5.0, 5),  # Bounds for parameter slicing
+                n_samples_per_slice=40,  # Samples per parameter slice
+                bounds_mode="relative",
+                seed=42  # For reproducibility
+            )
+            
+            log_slice(
+                name=slice_name,
+                slice_data=axis_data,
+                step=30 + step,
+                description=f"Axis parallel slicing with {method} focus points for {run_name}"
+            )
 
 
 def main():
