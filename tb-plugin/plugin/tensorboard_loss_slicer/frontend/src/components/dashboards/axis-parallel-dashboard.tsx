@@ -10,7 +10,6 @@ interface RunData {
   isError: boolean;
   errorMessage?: string;
   data: AxisParallelSliceData | MultiFocusAxisParallelSliceData | null;
-  isMultiFocus?: boolean;
 }
 
 export function AxisParallelDashboard() {
@@ -83,7 +82,7 @@ export function AxisParallelDashboard() {
           const tag = tags.find((t: string) => t.startsWith(tagPrefix));
           
           if (!tag) {
-            throw new Error(`No axis parallel data found for run ${run}`);
+            throw new Error(`No axis parallel data found for run ${run}. Available tags: ${tags.join(', ')}`);
           }
           
           // Then fetch the actual slice data with the found tag
@@ -94,17 +93,14 @@ export function AxisParallelDashboard() {
             throw new Error(`Expected axis_parallel data but received ${data.type}`);
           }
           
-          // Check if this is multi-focus data
-          const isMultiFocus = 'focus_point_slices' in data;
-          
           updateRunData(run, {
             isLoading: false,
             isError: false,
-            data: data,
-            isMultiFocus: isMultiFocus
+            data: data
           });
         })
         .catch((error: Error) => {
+          console.error(`Failed to load axis parallel data for run ${run}:`, error);
           updateRunData(run, {
             isLoading: false,
             isError: true,
@@ -151,14 +147,19 @@ export function AxisParallelDashboard() {
     const sliceData = runDataMap[selectedRun].data;
     if (!sliceData) return null;
     
+    // Check if this is multi-focus data based on the presence of focus_point_slices
+    const isMultiFocus = 'focus_point_slices' in sliceData;
+    
     // Collect all slices grouped by parameter index, tracking focus point indices
     const parameterSlicesMap: Record<number, {slices: ParameterSlice[], focusPointIndices: number[]}> = {};
     
-    if (runDataMap[selectedRun]?.isMultiFocus) {
+    if (isMultiFocus) {
       // For multi-focus data, collect slices from all focus points
       const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
-      multiFocusData.focus_point_slices.forEach(focusPointSlice => {
-        focusPointSlice.slices.slices.forEach(slice => {
+      multiFocusData.focus_point_slices?.forEach(focusPointSlice => {
+        // Access the slices correctly - the structure has slices.slices according to the API
+        const slices = focusPointSlice.slices?.slices || [];
+        slices.forEach(slice => {
           if (!parameterSlicesMap[slice.parameter_index]) {
             parameterSlicesMap[slice.parameter_index] = {slices: [], focusPointIndices: []};
           }
@@ -169,7 +170,7 @@ export function AxisParallelDashboard() {
     } else {
       // For standard data, collect all parameter slices (single focus point = index 0)
       const standardData = sliceData as AxisParallelSliceData;
-      standardData.slices.forEach(slice => {
+      standardData.slices?.forEach(slice => {
         parameterSlicesMap[slice.parameter_index] = {
           slices: [slice],
           focusPointIndices: [0]
@@ -241,9 +242,10 @@ export function AxisParallelDashboard() {
   }
 
   if (errors.length === selectedRuns.length) {
+    const errorMessages = errors.map(e => `${e.run}: ${e.message}`).join('; ');
     return (
       <MessageCard 
-        message="Error loading data for all runs" 
+        message={`Error loading data for all runs: ${errorMessages}`} 
         type="error" 
       />
     );

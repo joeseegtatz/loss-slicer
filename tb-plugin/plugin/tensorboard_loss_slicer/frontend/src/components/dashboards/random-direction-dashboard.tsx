@@ -257,7 +257,7 @@ export function RandomDirectionDashboard() {
   if (errors.length === selectedRuns.length) {
     return (
       <MessageCard 
-        message="Error loading data for all runs" 
+        message={`Error loading data for all runs: ${errors.map(e => `${e.run}: ${e.message}`).join('; ')}`}
         type="error" 
       />
     );

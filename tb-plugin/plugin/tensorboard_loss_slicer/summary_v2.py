@@ -129,7 +129,7 @@ def _process_axis_parallel_slice(slice_data: Dict[str, Any]) -> Dict[str, Any]:
 def _process_multi_focus_slice(slice_data: Dict[str, Any]) -> Dict[str, Any]:
     """Process multi-focus axis-parallel slice data."""
     tensor_data = {
-        "type": "axis_parallel_multi",
+        "type": "axis_parallel",
         "center_point": _convert_to_serializable(slice_data["center_point"]),
         "sampling_method": slice_data["sampling_method"],
         "radius": slice_data["radius"],
