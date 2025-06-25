@@ -10,8 +10,16 @@ export function RunSelector() {
   const { data: runsAndTags, isLoading, error } = useRunsAndTags();
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Handler to select all filtered runs
+  // Handler to select all filtered runs and deselect others
   const handleSelectFilteredRuns = () => {
+    // First, deselect any currently selected runs that don't match the filter
+    selectedRuns.forEach(run => {
+      if (!filteredRuns.includes(run)) {
+        toggleRun(run);
+      }
+    });
+    
+    // Then, select all filtered runs that aren't already selected
     filteredRuns.forEach(run => {
       if (!selectedRuns.includes(run)) {
         toggleRun(run);
