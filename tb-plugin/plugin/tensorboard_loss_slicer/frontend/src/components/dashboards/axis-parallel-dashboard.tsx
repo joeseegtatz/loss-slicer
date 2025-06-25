@@ -228,7 +228,16 @@ export function AxisParallelDashboard() {
 
   if (selectedRuns.length === 0) {
     return (
-      <MessageCard message="Select runs from the sidebar to view axis parallel data" />
+      <MessageCard message="Select a run from the sidebar to view axis parallel data" />
+    );
+  }
+
+  if (selectedRuns.length > 1) {
+    return (
+      <MessageCard 
+        message="Axis parallel visualization works best with a single run. Please select one run to explore its parameter space in detail." 
+        type="info"
+      />
     );
   }
 
