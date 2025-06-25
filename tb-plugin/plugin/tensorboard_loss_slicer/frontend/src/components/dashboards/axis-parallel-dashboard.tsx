@@ -20,7 +20,7 @@ export function AxisParallelDashboard() {
   const [selectedFocusPoint, setSelectedFocusPoint] = useState<number | null>(null);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
-  
+
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
     setRunDataMap(prev => ({
@@ -41,15 +41,15 @@ export function AxisParallelDashboard() {
       .then((runsAndTags: Record<string, string[]>) => {
         const tagPrefix = 'axis_parallel/';
         const allTags = new Set<string>();
-        
+
         selectedRuns.forEach(run => {
           const tags = runsAndTags[run] || [];
           tags.filter(tag => tag.startsWith(tagPrefix)).forEach(tag => allTags.add(tag));
         });
-        
+
         const tagsArray = Array.from(allTags).sort();
         setAvailableTags(tagsArray);
-        
+
         // Auto-select first tag if none are selected (single select mode)
         if (selectedTags.size === 0 && tagsArray.length > 0) {
           setSelectedTags(new Set([tagsArray[0]]));
@@ -85,15 +85,11 @@ export function AxisParallelDashboard() {
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
     if (selectedRuns.length === 0 || selectedTags.size === 0) return;
-    
-    // Clear previous data when runs or tags change
-    if (Object.keys(runDataMap).length > 0 && !selectedRuns.some(run => runDataMap[run])) {
-      setRunDataMap({});
-    }
-    
+
+    // Clear previous data when runs or tags change to force refetch
+    setRunDataMap({});
+
     selectedRuns.forEach(run => {
-      if (runDataMap[run]) return;  // Skip if we already have data for this run
-      
       // Start loading state
       setRunDataMap(prev => ({
         ...prev,
@@ -103,7 +99,7 @@ export function AxisParallelDashboard() {
           data: null
         }
       }));
-      
+
       // Get the first selected tag for this run
       const selectedTagsArray = Array.from(selectedTags);
       if (selectedTagsArray.length === 0) {
@@ -114,16 +110,16 @@ export function AxisParallelDashboard() {
         });
         return;
       }
-      
+
       const tag = selectedTagsArray[0]; // Use the first selected tag
-      
+
       // Fetch the actual slice data with the selected tag
       fetchSliceData(run, tag)
         .then((data) => {
           if (data.type !== 'axis_parallel') {
             throw new Error(`Expected axis_parallel data but received ${data.type}`);
           }
-          
+
           updateRunData(run, {
             isLoading: false,
             isError: false,
@@ -139,21 +135,21 @@ export function AxisParallelDashboard() {
           });
         });
     });
-  }, [selectedRuns, selectedTags, runDataMap]);
+  }, [selectedRuns, selectedTags]);
 
   // Generate charts for each parameter
   const renderParameterList = () => {
     if (!selectedRun || !runDataMap[selectedRun]?.data) return null;
-    
+
     const sliceData = runDataMap[selectedRun].data;
     if (!sliceData) return null;
-    
+
     // Check if this is multi-focus data based on the presence of focus_point_slices
     const isMultiFocus = 'focus_point_slices' in sliceData;
-    
+
     // Collect all slices grouped by parameter index, tracking focus point indices
-    const parameterSlicesMap: Record<number, {slices: ParameterSlice[], focusPointIndices: number[]}> = {};
-    
+    const parameterSlicesMap: Record<number, { slices: ParameterSlice[], focusPointIndices: number[] }> = {};
+
     if (isMultiFocus) {
       // For multi-focus data, collect slices from all focus points
       const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
@@ -162,7 +158,7 @@ export function AxisParallelDashboard() {
         const slices = focusPointSlice.slices?.slices || [];
         slices.forEach(slice => {
           if (!parameterSlicesMap[slice.parameter_index]) {
-            parameterSlicesMap[slice.parameter_index] = {slices: [], focusPointIndices: []};
+            parameterSlicesMap[slice.parameter_index] = { slices: [], focusPointIndices: [] };
           }
           parameterSlicesMap[slice.parameter_index].slices.push(slice);
           parameterSlicesMap[slice.parameter_index].focusPointIndices.push(focusPointSlice.focus_point_index);
@@ -178,15 +174,15 @@ export function AxisParallelDashboard() {
         };
       });
     }
-    
+
     // Group parameters by layer for organization
     const groupedByLayer: Record<string, Array<{
-      index: number, 
-      slices: ParameterSlice[], 
+      index: number,
+      slices: ParameterSlice[],
       focusPointIndices: number[]
     }>> = {};
-    
-    Object.entries(parameterSlicesMap).forEach(([paramIndex, {slices, focusPointIndices}]) => {
+
+    Object.entries(parameterSlicesMap).forEach(([paramIndex, { slices, focusPointIndices }]) => {
       const layerName = slices[0]?.layer_name || 'Other Parameters';
       if (!groupedByLayer[layerName]) {
         groupedByLayer[layerName] = [];
@@ -210,8 +206,8 @@ export function AxisParallelDashboard() {
             <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {parameters.map(({ index, slices, focusPointIndices }) => (
-                <ParameterSliceChart 
-                  key={index} 
+                <ParameterSliceChart
+                  key={index}
                   slices={slices}
                   parameterIndex={index}
                   parameterName={slices[0]?.parameter_name}
@@ -235,8 +231,8 @@ export function AxisParallelDashboard() {
 
   if (selectedRuns.length > 1) {
     return (
-      <MessageCard 
-        message="Axis parallel visualization works best with a single run. Please select one run to explore its parameter space in detail." 
+      <MessageCard
+        message="Axis parallel visualization works best with a single run. Please select one run to explore its parameter space in detail."
         type="info"
       />
     );
@@ -244,9 +240,9 @@ export function AxisParallelDashboard() {
 
   if (isAnyLoading && !selectedRun) {
     return (
-      <MessageCard 
-        message="Loading axis parallel data..." 
-        type="loading" 
+      <MessageCard
+        message="Loading axis parallel data..."
+        type="loading"
       />
     );
   }
@@ -254,9 +250,9 @@ export function AxisParallelDashboard() {
   if (errors.length === selectedRuns.length) {
     const errorMessages = errors.map(e => `${e.run}: ${e.message}`).join('; ');
     return (
-      <MessageCard 
-        message={`Error loading data for all runs: ${errorMessages}`} 
-        type="error" 
+      <MessageCard
+        message={`Error loading data for all runs: ${errorMessages}`}
+        type="error"
       />
     );
   }
@@ -281,14 +277,21 @@ export function AxisParallelDashboard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <TagFilter
-          availableTags={availableTags}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-          singleSelect={true}
-          placeholder="Select a tag..."
-        />
+        <div className="flex items-center justify-between py-3 border-b border-border">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground">Filter tags:</span>
+            <TagFilter
+              availableTags={availableTags}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              singleSelect={true}
+              placeholder="Select a tag..."
+              className="flex-1"
+            />
+          </div>
+        </div>
         {renderParameterList()}
+
       </CardContent>
     </Card>
   );
