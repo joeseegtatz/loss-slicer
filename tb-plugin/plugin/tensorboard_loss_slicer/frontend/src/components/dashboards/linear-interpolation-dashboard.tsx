@@ -1,7 +1,6 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, LinearInterpolationSliceData } from "@/lib/api";
@@ -17,10 +16,16 @@ interface RunData {
   }>;
 }
 
+interface TagPlotData {
+  [tagName: string]: Array<{
+    run: string;
+    data: LinearInterpolationSliceData;
+  }>;
+}
+
 export function LinearInterpolationDashboard() {
   const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
-  const [selectedTraces, setSelectedTraces] = useState<Set<string>>(new Set());
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -30,26 +35,30 @@ export function LinearInterpolationDashboard() {
     }));
   };
 
-  // Get all unique trace names across all runs
-  const allTraceNames = useMemo(() => {
-    const traceNames = new Set<string>();
+  // Organize data by tag/slice name for separate plots
+  const tagPlotData = useMemo(() => {
+    const tagData: TagPlotData = {};
+    
     selectedRuns.forEach(run => {
       const runData = runDataMap[run];
       if (runData?.traces) {
         runData.traces.forEach(trace => {
-          traceNames.add(trace.name);
+          const tagName = trace.name || trace.tag.replace('linear_interpolation/', '');
+          
+          if (!tagData[tagName]) {
+            tagData[tagName] = [];
+          }
+          
+          tagData[tagName].push({
+            run,
+            data: trace.data
+          });
         });
       }
     });
-    return Array.from(traceNames).sort();
+    
+    return tagData;
   }, [selectedRuns, runDataMap]);
-
-  // Initialize selectedTraces when allTraceNames changes
-  useEffect(() => {
-    if (allTraceNames.length > 0 && selectedTraces.size === 0) {
-      setSelectedTraces(new Set(allTraceNames));
-    }
-  }, [allTraceNames, selectedTraces.size]);
 
   // Calculate overall loading state
   const isAnyLoading = useMemo(() => {
@@ -62,73 +71,6 @@ export function LinearInterpolationDashboard() {
       .filter(run => runDataMap[run]?.isError)
       .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
   }, [selectedRuns, runDataMap]);
-
-  // Prepare plotly data
-  const plotData = useMemo(() => {
-    // Find all runs that have traces
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.traces && runDataMap[run].traces.length > 0
-    );
-    
-    if (runsWithData.length === 0) return [];
-    
-    // Create traces for each run and each of its slices (filtered by selection)
-    const allTraces: any[] = [];
-    
-    runsWithData.forEach(run => {
-      const runData = runDataMap[run];
-      if (!runData?.traces) return;
-      
-      runData.traces
-        .filter(trace => selectedTraces.has(trace.name)) // Only include selected traces
-        .forEach((trace) => {
-          const sliceName = trace.name || trace.tag.replace('linear_interpolation/', '');
-          
-          allTraces.push({
-            type: 'scatter' as const,
-            mode: 'lines+markers' as const,
-            name: `${run} - ${sliceName}`,
-            x: trace.data.alphas,
-            y: trace.data.losses,
-            line: { 
-              color: runColors[run], 
-              width: 2
-            },
-            marker: { size: 4 },
-            hovertemplate: `<b style="color: ${runColors[run]}">${run}</b><br>` +
-                          `<span style="font-weight: 500">${sliceName}</span><br>` +
-                          `<span style="color: #666">α:</span> %{x:.3f}<br>` +
-                          `<span style="color: #666">Loss:</span> %{y:.4f}` +
-                          `<extra></extra>`
-          });
-        });
-    });
-    
-    return allTraces;
-  }, [selectedRuns, runDataMap, runColors, selectedTraces]);
-
-  // Plotly layout configuration
-  const plotLayout = useMemo(() => {
-    return {
-      autosize: true,
-      margin: { l: 50, r: 30, b: 50, t: 10, pad: 4 },
-      xaxis: {
-        title: { text: 'Interpolation Factor (α)' }
-      },
-      yaxis: {
-        title: { text: 'Loss Value' }
-      },
-      hovermode: 'closest' as const,
-      legend: { orientation: 'h' as const, y: -0.2 }
-    };
-  }, []);
-
-  const plotConfig = {
-    responsive: true,
-    displayModeBar: true,
-    displaylogo: false,
-    modeBarButtonsToRemove: ['lasso2d', 'select2d'] as any
-  };
 
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
@@ -199,6 +141,87 @@ export function LinearInterpolationDashboard() {
     });
   }, [selectedRuns]);
 
+  // Create a plot for a specific tag/slice
+  const createPlotForTag = (tagName: string, tagRunData: Array<{ run: string; data: LinearInterpolationSliceData }>) => {
+    // Create traces for this tag - one per run
+    const traces = tagRunData.map(({ run, data }) => ({
+      type: 'scatter' as const,
+      mode: 'lines+markers' as const,
+      name: run,
+      x: data.alphas,
+      y: data.losses,
+      line: { 
+        color: runColors[run], 
+        width: 2
+      },
+      marker: { 
+        color: runColors[run],
+        size: 4
+      },
+      hovertemplate: 
+        '<b>%{fullData.name}</b><br>' +
+        'α: %{x:.3f}<br>' +
+        'Loss: %{y:.6f}<br>' +
+        '<extra></extra>',
+    }));
+
+    const plotLayout = {
+      xaxis: {
+        title: { text: 'Interpolation Factor (α)' },
+        showgrid: true,
+        gridcolor: '#f0f0f0',
+        zeroline: false
+      },
+      yaxis: {
+        title: { text: 'Loss Value' },
+        showgrid: true,
+        gridcolor: '#f0f0f0',
+        zeroline: false
+      },
+      hovermode: 'x unified' as const,
+      margin: { l: 60, r: 40, t: 20, b: 60 },
+      plot_bgcolor: 'white',
+      paper_bgcolor: 'white',
+      font: { family: 'Arial, sans-serif', size: 12 },
+      legend: {
+        orientation: 'h' as const,
+        x: 0,
+        y: -0.2,
+        bgcolor: 'rgba(255,255,255,0.9)',
+        bordercolor: '#ddd',
+        borderwidth: 1
+      },
+      hoverlabel: {
+        bgcolor: 'rgba(0,0,0,0.8)',
+        bordercolor: 'rgba(0,0,0,0.8)',
+        font: { color: 'white', size: 12 }
+      }
+    };
+
+    const plotConfig = {
+      responsive: true,
+      displayModeBar: true,
+      modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'] as any,
+      displaylogo: false
+    };
+
+    return (
+      <Card key={tagName} className="w-full mb-6">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg">{tagName.replace(/_/g, ' ')}</CardTitle>
+        </CardHeader>
+        <CardContent className="h-[400px]">
+          <Plot
+            data={traces}
+            layout={plotLayout}
+            config={plotConfig}
+            style={{ width: '100%', height: '100%' }}
+          />
+        </CardContent>
+      </Card>
+    );
+  };
+
   if (selectedRuns.length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
@@ -230,7 +253,7 @@ export function LinearInterpolationDashboard() {
     );
   }
 
-  if (plotData.length === 0) {
+  if (Object.keys(tagPlotData).length === 0) {
     return (
       <Card className="w-full h-[450px] flex items-center justify-center">
         <CardContent className="text-center text-muted-foreground">
@@ -240,75 +263,29 @@ export function LinearInterpolationDashboard() {
     );
   }
 
+  // Sort tags for consistent ordering
+  const sortedTags = Object.keys(tagPlotData).sort();
+
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Linear Interpolation</CardTitle>
-        <CardDescription>
-          Showing loss values along linear interpolation paths. Each run may contain multiple traces (paths, cross-sections, etc.)
-          {errors.length > 0 && (
-            <span className="text-destructive ml-2">
-              (Failed to load {errors.length} run(s))
-            </span>
-          )}
-        </CardDescription>
-        
-        {/* Trace Selector */}
-        {allTraceNames.length > 1 && (
-          <div className="mt-4 space-y-2">
-            <div className="text-sm font-medium">Show traces:</div>
-            <div className="flex flex-wrap gap-4">
-              {allTraceNames.map((traceName) => (
-                <div key={traceName} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`trace-${traceName}`}
-                    checked={selectedTraces.has(traceName)}
-                    onCheckedChange={(checked) => {
-                      setSelectedTraces(prev => {
-                        const newSet = new Set(prev);
-                        if (checked) {
-                          newSet.add(traceName);
-                        } else {
-                          newSet.delete(traceName);
-                        }
-                        return newSet;
-                      });
-                    }}
-                  />
-                  <label
-                    htmlFor={`trace-${traceName}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                  >
-                    {traceName.replace(/_/g, ' ')}
-                  </label>
-                </div>
-              ))}
-            </div>
-            <div className="flex gap-2 text-xs">
-              <button
-                onClick={() => setSelectedTraces(new Set(allTraceNames))}
-                className="text-blue-600 hover:text-blue-800 underline"
-              >
-                Select All
-              </button>
-              <button
-                onClick={() => setSelectedTraces(new Set())}
-                className="text-blue-600 hover:text-blue-800 underline"
-              >
-                Deselect All
-              </button>
-            </div>
-          </div>
-        )}
-      </CardHeader>
-      <CardContent className="h-[400px]">
-        <Plot
-          data={plotData}
-          layout={plotLayout}
-          config={plotConfig}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </CardContent>
-    </Card>
+    <div className="w-full space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Linear Interpolation Slicing Results</CardTitle>
+          <CardDescription>
+            Showing loss values along linear interpolation paths. Each plot shows all selected runs for a specific slice.
+            {errors.length > 0 && (
+              <span className="text-destructive ml-2">
+                (Failed to load {errors.length} run(s))
+              </span>
+            )}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+      
+      {/* Render a separate plot for each tag */}
+      {sortedTags.map(tagName => 
+        createPlotForTag(tagName, tagPlotData[tagName])
+      )}
+    </div>
   );
 }
