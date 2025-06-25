@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
 import { ParameterSliceChart } from "@/components/parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
+import { TagFilter } from "@/components/tag-filter";
 
 interface RunData {
   isLoading: boolean;
@@ -17,6 +18,8 @@ export function AxisParallelDashboard() {
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
   const [selectedRun, setSelectedRun] = useState<string | null>(null);
   const [selectedFocusPoint, setSelectedFocusPoint] = useState<number | null>(null);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -26,18 +29,46 @@ export function AxisParallelDashboard() {
     }));
   };
 
-  // Select the first run with data automatically
+  // Fetch available tags when selected runs change
   useEffect(() => {
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.data !== null && !runDataMap[run]?.isLoading && !runDataMap[run]?.isError
-    );
-    
-    if (runsWithData.length > 0 && (!selectedRun || !runsWithData.includes(selectedRun))) {
-      setSelectedRun(runsWithData[0]);
-    } else if (runsWithData.length === 0) {
+    if (selectedRuns.length === 0) {
+      setAvailableTags([]);
+      setSelectedTags(new Set());
+      return;
+    }
+
+    fetchRunsAndTags()
+      .then((runsAndTags: Record<string, string[]>) => {
+        const tagPrefix = 'axis_parallel/';
+        const allTags = new Set<string>();
+        
+        selectedRuns.forEach(run => {
+          const tags = runsAndTags[run] || [];
+          tags.filter(tag => tag.startsWith(tagPrefix)).forEach(tag => allTags.add(tag));
+        });
+        
+        const tagsArray = Array.from(allTags).sort();
+        setAvailableTags(tagsArray);
+        
+        // Auto-select all tags if none are selected
+        if (selectedTags.size === 0 && tagsArray.length > 0) {
+          setSelectedTags(new Set(tagsArray));
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch tags:', error);
+        setAvailableTags([]);
+      });
+  }, [selectedRuns]);
+
+  // Set selected run to the first (and only) selected run
+  useEffect(() => {
+    if (selectedRuns.length === 1) {
+      setSelectedRun(selectedRuns[0]);
+    } else {
       setSelectedRun(null);
     }
-  }, [selectedRuns, runDataMap, selectedRun]);
+  }, [selectedRuns]);
 
   // Calculate overall loading state
   const isAnyLoading = useMemo(() => {
@@ -53,14 +84,12 @@ export function AxisParallelDashboard() {
 
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
-    if (selectedRuns.length === 0) return;
+    if (selectedRuns.length === 0 || selectedTags.size === 0) return;
     
-    // Clear previous data when runs change
+    // Clear previous data when runs or tags change
     if (Object.keys(runDataMap).length > 0 && !selectedRuns.some(run => runDataMap[run])) {
       setRunDataMap({});
     }
-    
-    const tagPrefix = 'axis_parallel/';
     
     selectedRuns.forEach(run => {
       if (runDataMap[run]) return;  // Skip if we already have data for this run
@@ -75,19 +104,21 @@ export function AxisParallelDashboard() {
         }
       }));
       
-      // First get all tags for this run
-      fetchRunsAndTags()
-        .then((runsAndTags: Record<string, string[]>) => {
-          const tags = runsAndTags[run] || [];
-          const tag = tags.find((t: string) => t.startsWith(tagPrefix));
-          
-          if (!tag) {
-            throw new Error(`No axis parallel data found for run ${run}. Available tags: ${tags.join(', ')}`);
-          }
-          
-          // Then fetch the actual slice data with the found tag
-          return fetchSliceData(run, tag);
-        })
+      // Get the first selected tag for this run
+      const selectedTagsArray = Array.from(selectedTags);
+      if (selectedTagsArray.length === 0) {
+        updateRunData(run, {
+          isLoading: false,
+          isError: true,
+          errorMessage: 'No tags selected'
+        });
+        return;
+      }
+      
+      const tag = selectedTagsArray[0]; // Use the first selected tag
+      
+      // Fetch the actual slice data with the selected tag
+      fetchSliceData(run, tag)
         .then((data) => {
           if (data.type !== 'axis_parallel') {
             throw new Error(`Expected axis_parallel data but received ${data.type}`);
@@ -108,37 +139,7 @@ export function AxisParallelDashboard() {
           });
         });
     });
-  }, [selectedRuns, runDataMap]);
-
-  // Render run selection buttons
-  const renderRunSelector = () => {
-    const runsWithData = selectedRuns.filter(run => 
-      runDataMap[run]?.data !== null && !runDataMap[run]?.isError
-    );
-    
-    if (runsWithData.length <= 1) return null;
-    
-    return (
-      <div className="mb-4">
-        <p className="text-sm font-medium mb-2">Select Run:</p>
-        <div className="flex flex-wrap gap-2">
-          {runsWithData.map(run => (
-            <button 
-              key={run}
-              className={`px-3 py-1 text-sm rounded-md ${
-                selectedRun === run 
-                  ? 'bg-primary text-primary-foreground' 
-                  : 'bg-secondary text-secondary-foreground'
-              }`}
-              onClick={() => setSelectedRun(run)}
-            >
-              {run}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
+  }, [selectedRuns, selectedTags, runDataMap]);
 
   // Generate charts for each parameter
   const renderParameterList = () => {
@@ -280,7 +281,11 @@ export function AxisParallelDashboard() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {renderRunSelector()}
+        <TagFilter
+          availableTags={availableTags}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+        />
         {renderParameterList()}
       </CardContent>
     </Card>
