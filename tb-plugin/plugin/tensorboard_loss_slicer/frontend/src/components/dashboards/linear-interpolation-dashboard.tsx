@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, LinearInterpolationSliceData } from "@/lib/api";
+import { TagFilter } from "@/components/tag-filter";
 
 interface RunData {
   isLoading: boolean;
@@ -26,7 +27,8 @@ interface TagPlotData {
 export function LinearInterpolationDashboard() {
   const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
-  
+  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
     setRunDataMap(prev => ({
@@ -38,17 +40,17 @@ export function LinearInterpolationDashboard() {
   // Organize data by tag/slice name for separate plots
   const tagPlotData = useMemo(() => {
     const tagData: TagPlotData = {};
-    
+
     selectedRuns.forEach(run => {
       const runData = runDataMap[run];
       if (runData?.traces) {
         runData.traces.forEach(trace => {
           const tagName = trace.name || trace.tag.replace('linear_interpolation/', '');
-          
+
           if (!tagData[tagName]) {
             tagData[tagName] = [];
           }
-          
+
           tagData[tagName].push({
             run,
             data: trace.data
@@ -56,7 +58,7 @@ export function LinearInterpolationDashboard() {
         });
       }
     });
-    
+
     return tagData;
   }, [selectedRuns, runDataMap]);
 
@@ -75,14 +77,14 @@ export function LinearInterpolationDashboard() {
   // For each selected run, fetch data using the fetchSliceData function
   useEffect(() => {
     if (selectedRuns.length === 0) return;
-    
+
     // Clear previous data when slice type changes
     if (Object.keys(runDataMap).length > 0) {
       setRunDataMap({});
     }
-    
+
     const tagPrefix = 'linear_interpolation/';
-    
+
     selectedRuns.forEach(run => {
       // Start loading state
       setRunDataMap(prev => ({
@@ -93,22 +95,22 @@ export function LinearInterpolationDashboard() {
           traces: []
         }
       }));
-      
+
       // First get all tags for this run
       fetchRunsAndTags()
         .then((runsAndTags: Record<string, string[]>) => {
           const tags = runsAndTags[run] || [];
           const linearTags = tags.filter((t: string) => t.startsWith(tagPrefix));
-          
+
           if (linearTags.length === 0) {
             throw new Error(`No linear interpolation data found for run ${run}`);
           }
-          
+
           // Fetch data for all linear interpolation tags
-          const promises = linearTags.map(tag => 
+          const promises = linearTags.map(tag =>
             fetchSliceData(run, tag).then(data => ({ tag, data }))
           );
-          
+
           return Promise.all(promises);
         })
         .then((results) => {
@@ -116,14 +118,14 @@ export function LinearInterpolationDashboard() {
             if (data.type !== 'linear_interpolation') {
               throw new Error(`Expected linear_interpolation data but received ${data.type} for tag ${tag}`);
             }
-            
+
             return {
               tag,
               name: tag.replace('linear_interpolation/', ''),
               data: data as LinearInterpolationSliceData
             };
           });
-          
+
           updateRunData(run, {
             isLoading: false,
             isError: false,
@@ -141,6 +143,19 @@ export function LinearInterpolationDashboard() {
     });
   }, [selectedRuns]);
 
+  // Sort tags for consistent ordering
+  const sortedTags = Object.keys(tagPlotData).sort();
+
+  // Initialize selected tags when tags become available
+  useEffect(() => {
+    if (sortedTags.length > 0 && selectedTags.size === 0) {
+      setSelectedTags(new Set(sortedTags));
+    }
+  }, [sortedTags, selectedTags.size]);
+
+  // Filter tags based on selection
+  const filteredTags = sortedTags.filter(tag => selectedTags.has(tag));
+
   // Create a plot for a specific tag/slice
   const createPlotForTag = (tagName: string, tagRunData: Array<{ run: string; data: LinearInterpolationSliceData }>) => {
     // Create traces for this tag - one per run
@@ -150,15 +165,15 @@ export function LinearInterpolationDashboard() {
       name: run,
       x: data.alphas,
       y: data.losses,
-      line: { 
-        color: runColors[run], 
+      line: {
+        color: runColors[run],
         width: 2
       },
-      marker: { 
+      marker: {
         color: runColors[run],
         size: 4
       },
-      hovertemplate: 
+      hovertemplate:
         '<b>%{fullData.name}</b><br>' +
         'α: %{x:.3f}<br>' +
         'Loss: %{y:.6f}<br>' +
@@ -218,7 +233,7 @@ export function LinearInterpolationDashboard() {
 
   if (selectedRuns.length === 0) {
     return (
-      <Card className="w-full h-[450px] flex items-center justify-center">
+      <Card className="w-full h-[450px] flex items-center justify-center bo">
         <CardContent className="text-center text-muted-foreground">
           Select runs from the sidebar to view linear interpolation data
         </CardContent>
@@ -257,9 +272,6 @@ export function LinearInterpolationDashboard() {
     );
   }
 
-  // Sort tags for consistent ordering
-  const sortedTags = Object.keys(tagPlotData).sort();
-
   return (
     <div className="w-full space-y-6">
       <Card>
@@ -275,10 +287,21 @@ export function LinearInterpolationDashboard() {
           </CardDescription>
         </CardHeader>
       </Card>
-      
+
+      {/* Tag Filter */}
+      {sortedTags.length > 0 && (
+        <TagFilter
+          availableTags={sortedTags}
+          selectedTags={selectedTags}
+          onTagsChange={setSelectedTags}
+          placeholder="Filter slices by name (regex supported)"
+        />
+
+      )}
+
       {/* Responsive grid for plots */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {sortedTags.map(tagName => 
+        {filteredTags.map(tagName =>
           createPlotForTag(tagName, tagPlotData[tagName])
         )}
       </div>
