@@ -22,7 +22,8 @@ class AxisParallelSlicer(Slicer):
              bounds: Tuple[float, float] = (-5.0, 5.0), 
              n_samples: int = 101, 
              params_to_slice: Optional[List[int]] = None,
-             use_test_data: bool = False) -> Dict[str, Any]:
+             use_test_data: bool = False,
+             bounds_mode: str = "relative") -> Dict[str, Any]:
         """
         Generate axis parallel slices.
         
@@ -32,6 +33,8 @@ class AxisParallelSlicer(Slicer):
             n_samples: Number of samples per parameter
             params_to_slice: List of parameter indices to slice. If None, slices all parameters.
             use_test_data: Whether to use test data for loss computation
+            bounds_mode: How to interpret bounds. "relative" (default) means bounds are relative 
+                        to the center point value. "absolute" means bounds are absolute values.
             
         Returns:
             Dictionary containing slice data for each parameter
@@ -41,6 +44,9 @@ class AxisParallelSlicer(Slicer):
             
         if bounds[0] >= bounds[1]:
             raise ValueError(f"Invalid bounds: {bounds}. Min bound must be less than max bound.")
+            
+        if bounds_mode not in ["relative", "absolute"]:
+            raise ValueError(f"Invalid bounds_mode: {bounds_mode}. Must be 'relative' or 'absolute'.")
             
         if params_to_slice is None:
             params_to_slice = list(range(len(center_point)))
@@ -57,9 +63,20 @@ class AxisParallelSlicer(Slicer):
 
         for dim in params_to_slice:
             samples = []
+            
+            # Calculate actual bounds for this parameter
+            if bounds_mode == "relative":
+                # Bounds are relative to the center point value
+                actual_min = center_point[dim] + bounds[0]
+                actual_max = center_point[dim] + bounds[1]
+            else:  # bounds_mode == "absolute"
+                # Bounds are absolute values
+                actual_min = bounds[0]
+                actual_max = bounds[1]
+            
             for i in range(n_samples):
                 alpha = i / (n_samples - 1)
-                param_value = bounds[0] + alpha * (bounds[1] - bounds[0])
+                param_value = actual_min + alpha * (actual_max - actual_min)
                 
                 # Create modified parameter vector
                 params = center_point.copy()
@@ -82,7 +99,8 @@ class AxisParallelSlicer(Slicer):
                 'samples': samples,
                 'center_point': center_point.copy(),
                 'center_loss': center_loss,
-                'bounds': bounds
+                'bounds': bounds,
+                'bounds_mode': bounds_mode
             })
             
         return {
@@ -91,6 +109,7 @@ class AxisParallelSlicer(Slicer):
             'center_loss': center_loss,
             'slices': results,
             'bounds': bounds,
+            'bounds_mode': bounds_mode,
             'n_samples': n_samples
         }
     
@@ -103,6 +122,7 @@ class AxisParallelSlicer(Slicer):
                           n_samples_per_slice: int = 101,
                           params_to_slice: Optional[List[int]] = None,
                           use_test_data: bool = False,
+                          bounds_mode: str = "relative",
                           seed: Optional[int] = None) -> Dict[str, Any]:
         """
         Generate and slice multiple focus points around a center point.
@@ -122,6 +142,8 @@ class AxisParallelSlicer(Slicer):
             n_samples_per_slice: Number of samples per parameter slice
             params_to_slice: List of parameter indices to slice. If None, slices all parameters.
             use_test_data: Whether to use test data for loss computation
+            bounds_mode: How to interpret bounds. "relative" (default) means bounds are relative 
+                        to the focus point value. "absolute" means bounds are absolute values.
             seed: Random seed for reproducibility
             
         Returns:
@@ -139,11 +161,12 @@ class AxisParallelSlicer(Slicer):
             np.random.seed(seed)
         
         # Sample points using specified method with skopt samplers
+        # Generate n_points-1 points, then add center point as first point
         if sampling_method.lower() == "random":
-            focus_points = space.rvs(n_points)
+            focus_points = space.rvs(n_points - 1) if n_points > 1 else []
         elif sampling_method.lower() == "grid":
             grid_sampler = Grid(border="include", use_full_layout=False)
-            focus_points = grid_sampler.generate(space.dimensions, n_points)
+            focus_points = grid_sampler.generate(space.dimensions, n_points - 1) if n_points > 1 else []
         elif sampling_method.lower().startswith("lhs"):
             # Parse LHS options
             if sampling_method.lower() == "lhs classic" or sampling_method.lower() == "lhs":
@@ -158,18 +181,21 @@ class AxisParallelSlicer(Slicer):
                 lhs_sampler = Lhs(criterion="ratio", iterations=10000)
             else:
                 lhs_sampler = Lhs(lhs_type="classic", criterion=None)
-            focus_points = lhs_sampler.generate(space.dimensions, n_points)
+            focus_points = lhs_sampler.generate(space.dimensions, n_points - 1) if n_points > 1 else []
         elif sampling_method.lower() == "sobol":
             sobol_sampler = Sobol()
-            focus_points = sobol_sampler.generate(space.dimensions, n_points)
+            focus_points = sobol_sampler.generate(space.dimensions, n_points - 1) if n_points > 1 else []
         elif sampling_method.lower() == "halton":
             halton_sampler = Halton()
-            focus_points = halton_sampler.generate(space.dimensions, n_points)
+            focus_points = halton_sampler.generate(space.dimensions, n_points - 1) if n_points > 1 else []
         elif sampling_method.lower() == "hammersly":
             hammersly_sampler = Hammersly()
-            focus_points = hammersly_sampler.generate(space.dimensions, n_points)
+            focus_points = hammersly_sampler.generate(space.dimensions, n_points - 1) if n_points > 1 else []
         else:
             raise ValueError(f"Unknown sampling method: {sampling_method}")
+        
+        # Always include center point as the first focus point
+        focus_points = [center_point.copy()] + focus_points
         
         # Slice each focus point
         focus_point_slices = []
@@ -183,7 +209,8 @@ class AxisParallelSlicer(Slicer):
                 bounds=bounds,
                 n_samples=n_samples_per_slice,
                 params_to_slice=params_to_slice,
-                use_test_data=use_test_data
+                use_test_data=use_test_data,
+                bounds_mode=bounds_mode
             )
             
             focus_point_slices.append({
@@ -202,5 +229,6 @@ class AxisParallelSlicer(Slicer):
             'focus_point_slices': focus_point_slices,
             'n_points': n_points,
             'bounds': bounds,
+            'bounds_mode': bounds_mode,
             'n_samples_per_slice': n_samples_per_slice
         }
