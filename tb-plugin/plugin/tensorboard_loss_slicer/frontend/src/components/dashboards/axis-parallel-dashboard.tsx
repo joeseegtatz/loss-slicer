@@ -50,9 +50,9 @@ export function AxisParallelDashboard() {
         const tagsArray = Array.from(allTags).sort();
         setAvailableTags(tagsArray);
         
-        // Auto-select all tags if none are selected
+        // Auto-select first tag if none are selected (single select mode)
         if (selectedTags.size === 0 && tagsArray.length > 0) {
-          setSelectedTags(new Set(tagsArray));
+          setSelectedTags(new Set([tagsArray[0]]));
         }
       })
       .catch(error => {
@@ -285,6 +285,8 @@ export function AxisParallelDashboard() {
           availableTags={availableTags}
           selectedTags={selectedTags}
           onTagsChange={setSelectedTags}
+          singleSelect={true}
+          placeholder="Select a tag..."
         />
         {renderParameterList()}
       </CardContent>

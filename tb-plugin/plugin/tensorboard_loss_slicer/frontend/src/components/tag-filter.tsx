@@ -10,6 +10,7 @@ interface TagFilterProps {
   onTagsChange: (tags: Set<string>) => void;
   placeholder?: string;
   className?: string;
+  singleSelect?: boolean;
 }
 
 export function TagFilter({ 
@@ -17,7 +18,8 @@ export function TagFilter({
   selectedTags, 
   onTagsChange, 
   placeholder = "Select tags..." ,
-  className = ""
+  className = "",
+  singleSelect = false
 }: TagFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -37,13 +39,24 @@ export function TagFilter({
   }, []);
 
   const toggleTag = (tag: string) => {
-    const newSelectedTags = new Set(selectedTags);
-    if (newSelectedTags.has(tag)) {
-      newSelectedTags.delete(tag);
+    if (singleSelect) {
+      // In single select mode, only one tag can be selected at a time
+      const newSelectedTags = new Set<string>();
+      if (!selectedTags.has(tag)) {
+        newSelectedTags.add(tag);
+      }
+      onTagsChange(newSelectedTags);
+      // Keep dropdown open in single select mode for consistency
     } else {
-      newSelectedTags.add(tag);
+      // Multi-select mode (original behavior)
+      const newSelectedTags = new Set(selectedTags);
+      if (newSelectedTags.has(tag)) {
+        newSelectedTags.delete(tag);
+      } else {
+        newSelectedTags.add(tag);
+      }
+      onTagsChange(newSelectedTags);
     }
-    onTagsChange(newSelectedTags);
   };
 
   if (availableTags.length === 0) {
@@ -73,7 +86,9 @@ export function TagFilter({
         <span className="text-sm">
           {selectedTags.size === 0 
             ? placeholder 
-            : `${selectedTags.size} tag${selectedTags.size === 1 ? '' : 's'} selected`
+            : singleSelect 
+              ? Array.from(selectedTags)[0]?.replace(/_/g, ' ') || placeholder
+              : `${selectedTags.size} tag${selectedTags.size === 1 ? '' : 's'} selected`
           }
         </span>
         <ChevronDown className={cn(
