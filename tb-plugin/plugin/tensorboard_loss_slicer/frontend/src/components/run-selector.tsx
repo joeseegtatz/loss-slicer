@@ -10,6 +10,22 @@ export function RunSelector() {
   const { data: runsAndTags, isLoading, error } = useRunsAndTags();
   const [searchTerm, setSearchTerm] = useState("");
   
+  // Handler to select all filtered runs
+  const handleSelectFilteredRuns = () => {
+    filteredRuns.forEach(run => {
+      if (!selectedRuns.includes(run)) {
+        toggleRun(run);
+      }
+    });
+  };
+  
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && filteredRuns.length > 0) {
+      handleSelectFilteredRuns();
+    }
+  };
+  
   // Filter runs based on search term (supports regex)
   const filteredRuns = useMemo(() => {
     if (!runsAndTags) return [];
@@ -77,10 +93,11 @@ export function RunSelector() {
       <div className="relative">
         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
         <Input 
-          placeholder="Filter runs (regex)"
+          placeholder="Write regex to filter runs"
           className="pl-8 h-9 text-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyDown={handleKeyDown}
         />
       </div>
       
