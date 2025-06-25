@@ -171,7 +171,7 @@ export function RandomDirectionDashboard() {
         yaxis: { title: { text: 'Direction 2' } },
         zaxis: { title: { text: 'Loss' } },
         camera: {
-          eye: { x: 1.5, y: 1.5, z: 1.5 },
+          eye: { x: 2.0, y: 2.0, z: 2.0 },
           center: { x: 0, y: 0, z: -0.1 }
         }
       },
@@ -204,7 +204,7 @@ export function RandomDirectionDashboard() {
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <div className="h-[400px] w-full flex items-center justify-center">
+          <div className="h-[380px] w-full flex items-center justify-center">
             <Plot
               data={traces}
               layout={layout}
