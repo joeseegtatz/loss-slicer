@@ -26,27 +26,21 @@ function MainContent() {
       id: "linear-interpolation",
       label: "Linear Interpolation",
       content: (
-        <div className="pt-4">
-          <LinearInterpolationDashboard />
-        </div>
+        <LinearInterpolationDashboard />
       ),
     },
     {
       id: "random-direction",
       label: "Random Direction",
       content: (
-        <div className="pt-4">
-          <RandomDirectionDashboard />
-        </div>
+        <RandomDirectionDashboard />
       ),
     },
     {
       id: "axis-parallel",
       label: "Axis Parallel",
       content: (
-        <div className="pt-4">
-          <AxisParallelDashboard />
-        </div>
+        <AxisParallelDashboard />
       ),
     },
   ];
@@ -56,11 +50,10 @@ function MainContent() {
   };
   
   return (
-    <main className="flex-1 overflow-auto p-4">
+    <main className="flex-1 overflow-auto p-4 space-y-4">
       <SimpleTabs 
         defaultValue="linear-interpolation" 
         tabs={slicingMethodTabs} 
-        className="mb-4"
         onTabChange={handleTabChange}
       />
     </main>

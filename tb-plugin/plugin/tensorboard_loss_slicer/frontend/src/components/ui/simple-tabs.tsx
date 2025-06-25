@@ -47,7 +47,7 @@ export function SimpleTabs({ defaultValue, tabs, className, onTabChange }: TabsP
           </button>
         ))}
       </div>
-      <div className="mt-2">
+      <div className="mt-4">
         {tabs.map((tab) => (
           <div
             key={tab.id}

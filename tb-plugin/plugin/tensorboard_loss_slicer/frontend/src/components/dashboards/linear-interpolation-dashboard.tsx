@@ -1,6 +1,6 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, LinearInterpolationSliceData } from "@/lib/api";
@@ -219,7 +219,7 @@ export function LinearInterpolationDashboard() {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">{tagName.replace(/_/g, ' ')}</CardTitle>
         </CardHeader>
-        <CardContent className="h-[300px]">
+        <CardContent className="h-[250px]">
           <Plot
             data={traces}
             layout={plotLayout}
@@ -273,34 +273,30 @@ export function LinearInterpolationDashboard() {
   }
 
   return (
-    <div className="w-full space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle>Linear Interpolation Slicing Results</CardTitle>
-          <CardDescription>
-            Showing loss values along linear interpolation paths. Each plot shows all selected runs for a specific slice.
-            {errors.length > 0 && (
-              <span className="text-destructive ml-2">
-                (Failed to load {errors.length} run(s))
-              </span>
-            )}
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {/* Tag Filter */}
+    <div className="w-full space-y-4">
+      {/* Horizontal Tag Filter Bar */}
       {sortedTags.length > 0 && (
-        <TagFilter
-          availableTags={sortedTags}
-          selectedTags={selectedTags}
-          onTagsChange={setSelectedTags}
-          placeholder="Filter slices by name (regex supported)"
-        />
-
+        <div className="flex items-center justify-between py-3 border-b border-border">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium text-muted-foreground">Filter tags:</span>
+            <TagFilter
+              availableTags={sortedTags}
+              selectedTags={selectedTags}
+              onTagsChange={setSelectedTags}
+              placeholder="Select slices to display"
+              className="w-72"
+            />
+          </div>
+          {errors.length > 0 && (
+            <div className="text-sm text-destructive">
+              Failed to load {errors.length} run(s)
+            </div>
+          )}
+        </div>
       )}
 
       {/* Responsive grid for plots */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {filteredTags.map(tagName =>
           createPlotForTag(tagName, tagPlotData[tagName])
         )}
