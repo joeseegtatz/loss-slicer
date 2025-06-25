@@ -1,6 +1,7 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import Plot from 'react-plotly.js';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, LinearInterpolationSliceData } from "@/lib/api";
@@ -9,12 +10,17 @@ interface RunData {
   isLoading: boolean;
   isError: boolean;
   errorMessage?: string;
-  data: LinearInterpolationSliceData | null;
+  traces: Array<{
+    tag: string;
+    name: string;
+    data: LinearInterpolationSliceData;
+  }>;
 }
 
 export function LinearInterpolationDashboard() {
   const { selectedRuns, runColors } = useSliceDataContext();
   const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
+  const [selectedTraces, setSelectedTraces] = useState<Set<string>>(new Set());
   
   // Function to update run data when queries complete
   const updateRunData = (run: string, data: Partial<RunData>) => {
@@ -23,6 +29,27 @@ export function LinearInterpolationDashboard() {
       [run]: { ...prev[run], ...data }
     }));
   };
+
+  // Get all unique trace names across all runs
+  const allTraceNames = useMemo(() => {
+    const traceNames = new Set<string>();
+    selectedRuns.forEach(run => {
+      const runData = runDataMap[run];
+      if (runData?.traces) {
+        runData.traces.forEach(trace => {
+          traceNames.add(trace.name);
+        });
+      }
+    });
+    return Array.from(traceNames).sort();
+  }, [selectedRuns, runDataMap]);
+
+  // Initialize selectedTraces when allTraceNames changes
+  useEffect(() => {
+    if (allTraceNames.length > 0 && selectedTraces.size === 0) {
+      setSelectedTraces(new Set(allTraceNames));
+    }
+  }, [allTraceNames, selectedTraces.size]);
 
   // Calculate overall loading state
   const isAnyLoading = useMemo(() => {
@@ -38,37 +65,47 @@ export function LinearInterpolationDashboard() {
 
   // Prepare plotly data
   const plotData = useMemo(() => {
-    // Find all runs that have data
-    const runsWithData = selectedRuns.filter(run => runDataMap[run]?.data !== null);
+    // Find all runs that have traces
+    const runsWithData = selectedRuns.filter(run => 
+      runDataMap[run]?.traces && runDataMap[run].traces.length > 0
+    );
     
     if (runsWithData.length === 0) return [];
     
-    // Create a trace for each run
-    return runsWithData.map(run => {
-      const sliceData = runDataMap[run]?.data;
+    // Create traces for each run and each of its slices (filtered by selection)
+    const allTraces: any[] = [];
+    
+    runsWithData.forEach(run => {
+      const runData = runDataMap[run];
+      if (!runData?.traces) return;
       
-      if (sliceData) {
-        return {
-          type: 'scatter' as const,
-          mode: 'lines+markers' as const,
-          name: run,
-          x: sliceData.alphas,
-          y: sliceData.losses,
-          line: { color: runColors[run], width: 2 },
-          marker: { size: 6 }
-        };
-      }
-      
-      // Default empty trace if data is null
-      return {
-        type: 'scatter' as const,
-        name: run,
-        x: [],
-        y: [],
-        line: { color: runColors[run], width: 2 }
-      };
+      runData.traces
+        .filter(trace => selectedTraces.has(trace.name)) // Only include selected traces
+        .forEach((trace) => {
+          const sliceName = trace.name || trace.tag.replace('linear_interpolation/', '');
+          
+          allTraces.push({
+            type: 'scatter' as const,
+            mode: 'lines+markers' as const,
+            name: `${run} - ${sliceName}`,
+            x: trace.data.alphas,
+            y: trace.data.losses,
+            line: { 
+              color: runColors[run], 
+              width: 2
+            },
+            marker: { size: 4 },
+            hovertemplate: `<b style="color: ${runColors[run]}">${run}</b><br>` +
+                          `<span style="font-weight: 500">${sliceName}</span><br>` +
+                          `<span style="color: #666">α:</span> %{x:.3f}<br>` +
+                          `<span style="color: #666">Loss:</span> %{y:.4f}` +
+                          `<extra></extra>`
+          });
+        });
     });
-  }, [selectedRuns, runDataMap, runColors]);
+    
+    return allTraces;
+  }, [selectedRuns, runDataMap, runColors, selectedTraces]);
 
   // Plotly layout configuration
   const plotLayout = useMemo(() => {
@@ -111,7 +148,7 @@ export function LinearInterpolationDashboard() {
         [run]: {
           isLoading: true,
           isError: false,
-          data: null
+          traces: []
         }
       }));
       
@@ -119,31 +156,44 @@ export function LinearInterpolationDashboard() {
       fetchRunsAndTags()
         .then((runsAndTags: Record<string, string[]>) => {
           const tags = runsAndTags[run] || [];
-          const tag = tags.find((t: string) => t.startsWith(tagPrefix));
+          const linearTags = tags.filter((t: string) => t.startsWith(tagPrefix));
           
-          if (!tag) {
+          if (linearTags.length === 0) {
             throw new Error(`No linear interpolation data found for run ${run}`);
           }
           
-          // Then fetch the actual slice data with the found tag
-          return fetchSliceData(run, tag);
+          // Fetch data for all linear interpolation tags
+          const promises = linearTags.map(tag => 
+            fetchSliceData(run, tag).then(data => ({ tag, data }))
+          );
+          
+          return Promise.all(promises);
         })
-        .then((data) => {
-          if (data.type !== 'linear_interpolation') {
-            throw new Error(`Expected linear_interpolation data but received ${data.type}`);
-          }
+        .then((results) => {
+          const traces = results.map(({ tag, data }) => {
+            if (data.type !== 'linear_interpolation') {
+              throw new Error(`Expected linear_interpolation data but received ${data.type} for tag ${tag}`);
+            }
+            
+            return {
+              tag,
+              name: tag.replace('linear_interpolation/', ''),
+              data: data as LinearInterpolationSliceData
+            };
+          });
           
           updateRunData(run, {
             isLoading: false,
             isError: false,
-            data: data as LinearInterpolationSliceData
+            traces
           });
         })
         .catch((error: Error) => {
           updateRunData(run, {
             isLoading: false,
             isError: true,
-            errorMessage: error.message
+            errorMessage: error.message,
+            traces: []
           });
         });
     });
@@ -195,13 +245,61 @@ export function LinearInterpolationDashboard() {
       <CardHeader>
         <CardTitle>Linear Interpolation</CardTitle>
         <CardDescription>
-          Showing loss values along the linear interpolation path for {selectedRuns.length} run(s)
+          Showing loss values along linear interpolation paths. Each run may contain multiple traces (paths, cross-sections, etc.)
           {errors.length > 0 && (
             <span className="text-destructive ml-2">
               (Failed to load {errors.length} run(s))
             </span>
           )}
         </CardDescription>
+        
+        {/* Trace Selector */}
+        {allTraceNames.length > 1 && (
+          <div className="mt-4 space-y-2">
+            <div className="text-sm font-medium">Show traces:</div>
+            <div className="flex flex-wrap gap-4">
+              {allTraceNames.map((traceName) => (
+                <div key={traceName} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`trace-${traceName}`}
+                    checked={selectedTraces.has(traceName)}
+                    onCheckedChange={(checked) => {
+                      setSelectedTraces(prev => {
+                        const newSet = new Set(prev);
+                        if (checked) {
+                          newSet.add(traceName);
+                        } else {
+                          newSet.delete(traceName);
+                        }
+                        return newSet;
+                      });
+                    }}
+                  />
+                  <label
+                    htmlFor={`trace-${traceName}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                  >
+                    {traceName.replace(/_/g, ' ')}
+                  </label>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2 text-xs">
+              <button
+                onClick={() => setSelectedTraces(new Set(allTraceNames))}
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                Select All
+              </button>
+              <button
+                onClick={() => setSelectedTraces(new Set())}
+                className="text-blue-600 hover:text-blue-800 underline"
+              >
+                Deselect All
+              </button>
+            </div>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="h-[400px]">
         <Plot
