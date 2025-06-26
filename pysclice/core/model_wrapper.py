@@ -102,7 +102,7 @@ class ModelWrapper:
             total_samples = 0
             
             self.model.eval()  # Set model to evaluation mode
-            with torch.no_grad():
+            with torch.no_grad(): # no computational graph build
                 for inputs, targets in use_data:
                     inputs = inputs.to(self.device)
                     targets = targets.to(self.device)

@@ -12,9 +12,9 @@ interface ParameterSliceChartProps {
   onFocusPointClick?: (focusPointIndex: number | null) => void;
 }
 
-export function ParameterSliceChart({ 
-  slices, 
-  parameterIndex, 
+export function ParameterSliceChart({
+  slices,
+  parameterIndex,
   parameterName,
   focusPointIndices = [],
   selectedFocusPoint = null,
@@ -22,19 +22,19 @@ export function ParameterSliceChart({
 }: ParameterSliceChartProps) {
   const plotData = useMemo(() => {
     const traces: any[] = [];
-    
+
     // Add a line for each slice
     slices.forEach((slice, sliceIndex) => {
       const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
       const isHighlighted = selectedFocusPoint === focusPointIndex;
-      
+
       traces.push({
         type: 'scatter' as const,
         mode: 'lines' as const,
         x: slice.samples.map(sample => sample[0]),
         y: slice.samples.map(sample => sample[1]),
-        line: { 
-          width: isHighlighted ? 2.5 : 1, 
+        line: {
+          width: isHighlighted ? 2.5 : 1,
           color: isHighlighted ? '#3b82f6' : '#999'
         },
         opacity: isHighlighted ? 1 : 0.3,
@@ -44,20 +44,20 @@ export function ParameterSliceChart({
         name: `Focus Point ${focusPointIndex}`
       });
     });
-    
+
     // Add center points
     slices.forEach((slice, sliceIndex) => {
       const focusPointIndex = focusPointIndices[sliceIndex] ?? sliceIndex;
       const isHighlighted = selectedFocusPoint === focusPointIndex;
-      
+
       traces.push({
         type: 'scatter' as const,
         mode: 'markers' as const,
         x: [0],
         y: [slice.center_loss],
-        marker: { 
-          size: isHighlighted ? 6 : 4, 
-          symbol: 'x', 
+        marker: {
+          size: isHighlighted ? 6 : 4,
+          symbol: 'x',
           color: isHighlighted ? '#3b82f6' : '#999'
         },
         opacity: isHighlighted ? 1 : 0.4,
@@ -66,7 +66,7 @@ export function ParameterSliceChart({
         customdata: [focusPointIndex]
       });
     });
-    
+
     return traces;
   }, [slices, focusPointIndices, selectedFocusPoint]);
 
@@ -78,11 +78,13 @@ export function ParameterSliceChart({
       xaxis: {
         zeroline: true,
         zerolinecolor: '#ddd',
-        gridcolor: '#f0f0f0'
+        gridcolor: '#f0f0f0',
+        showgrid: true
       },
       yaxis: {
         title: { text: 'Loss', standoff: 10 },
-        gridcolor: '#f0f0f0'
+        gridcolor: '#f0f0f0',
+        showgrid: true
       },
       hovermode: 'closest' as const,
       plot_bgcolor: 'rgba(0,0,0,0)',
