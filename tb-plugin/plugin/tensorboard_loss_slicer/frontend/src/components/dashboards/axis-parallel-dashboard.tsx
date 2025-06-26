@@ -1,5 +1,4 @@
 import { useSliceDataContext } from "@/contexts/slice-data-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useEffect, useMemo, useState } from "react";
 import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
 import { ParameterSliceChart } from "@/components/parameter-slice-chart";
@@ -264,35 +263,22 @@ export function AxisParallelDashboard() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Axis Parallel Slices</CardTitle>
-        <CardDescription>
-          Parameter list for run: {selectedRun}
-          {errors.length > 0 && (
-            <span className="text-destructive ml-2">
-              (Failed to load {errors.length} run(s))
-            </span>
-          )}
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between py-3 border-b border-border">
-          <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-muted-foreground">Filter tags:</span>
-            <TagFilter
-              availableTags={availableTags}
-              selectedTags={selectedTags}
-              onTagsChange={setSelectedTags}
-              singleSelect={true}
-              placeholder="Select a tag..."
-              className="flex-1"
-            />
-          </div>
+    <div>
+      <div className="flex items-center justify-between py-3 border-b border-border">
+        <div className="flex items-center gap-4">
+          <span className="text-sm font-medium text-muted-foreground">Filter tags:</span>
+          <TagFilter
+            availableTags={availableTags}
+            selectedTags={selectedTags}
+            onTagsChange={setSelectedTags}
+            singleSelect={true}
+            placeholder="Select a tag..."
+            className="flex-1"
+          />
         </div>
-        {renderParameterList()}
+      </div>
+      {renderParameterList()}
+    </div>
 
-      </CardContent>
-    </Card>
   );
 }
