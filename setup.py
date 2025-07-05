@@ -5,7 +5,7 @@ setup(
     version="0.1.1",
     description="PySlice: A library for neural network loss landscape analysis",
     author="Joe",
-    packages=["pysclice", "pysclice.core", "pysclice.slicers", "pysclice.visualization", "pysclice.utils"],
+    packages=["pysclice", "pysclice.core", "pysclice.slicers", "pysclice.visualization"],
     install_requires=[
         "numpy",
         "torch",
