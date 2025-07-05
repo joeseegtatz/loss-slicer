@@ -52,9 +52,7 @@ def plot_slices(slice_data: Dict[str, Any],
 
 def _plot_linear_path_slice(slice_data: Dict[str, Any], 
                           title: Optional[str] = None, 
-                          figsize: Tuple[int, int] = (12, 5),
-                          show_verification: bool = False,
-                          analytical_losses: Optional[np.ndarray] = None) -> plt.Figure:
+                          figsize: Tuple[int, int] = (12, 5)) -> plt.Figure:
     """Plot linear path slice."""
     samples = slice_data['samples']
     alpha_values = [sample[0] for sample in samples]
@@ -66,17 +64,7 @@ def _plot_linear_path_slice(slice_data: Dict[str, Any],
     ax1 = axes[0]
     ax1.plot(alpha_values, loss_values, 'b-', linewidth=2, marker='o', 
             markersize=4,)
-    
-    # Add analytical verification if provided
-    if show_verification and analytical_losses is not None:
-        ax1.plot(alpha_values, analytical_losses, 'r--', linewidth=2, 
-                alpha=0.7, label='Analytical')
         
-        # Show error
-        max_error = np.max(np.abs(np.array(loss_values) - analytical_losses))
-        ax1.text(0.05, 0.95, f'Max Error: {max_error:.2e}', 
-                transform=ax1.transAxes, bbox=dict(boxstyle="round", facecolor='wheat'))
-    
     # Mark endpoints
     if 'start_loss' in slice_data and 'end_loss' in slice_data:
         ax1.scatter([0, 1], [slice_data['start_loss'], slice_data['end_loss']], 
@@ -203,62 +191,6 @@ def _plot_planar_slice(slice_data: Dict[str, Any],
     ax2.set_xlabel("Direction 1", fontsize=10)
     ax2.set_ylabel("Direction 2", fontsize=10)
     ax2.set_zlabel("Loss", fontsize=10)
-    
-    # 3. Direction vectors in parameter space (if available)
-    ax3 = fig.add_subplot(1, 3, 3)
-    
-    if 'direction1' in slice_data and 'direction2' in slice_data:
-        center_point = slice_data.get('center_point', np.zeros(2))
-        direction1 = slice_data['direction1']
-        direction2 = slice_data['direction2']
-        
-        # Show how the random directions map to parameter space
-        scale = 2.0
-        if len(center_point) >= 2 and len(direction1) >= 2 and len(direction2) >= 2:
-            ax3.arrow(center_point[0], center_point[1], 
-                     scale*direction1[0], scale*direction1[1], 
-                     head_width=0.1, head_length=0.1, fc='blue', ec='blue', 
-                     linewidth=2, label='Direction 1')
-            ax3.arrow(center_point[0], center_point[1], 
-                     scale*direction2[0], scale*direction2[1], 
-                     head_width=0.1, head_length=0.1, fc='green', ec='green', 
-                     linewidth=2, label='Direction 2')
-            
-            ax3.scatter(center_point[0], center_point[1], color='red', s=100, 
-                       marker='o', edgecolor='black', linewidth=1, label='Center')
-            
-            # Add true minimum if it's a 2D parabola at origin
-            if len(center_point) == 2:
-                ax3.scatter(0, 0, color='gold', s=150, marker='*', 
-                           edgecolor='black', linewidth=1, label='True Minimum')
-            
-            ax3.set_xlabel('Parameter X', fontsize=12)
-            ax3.set_ylabel('Parameter Y', fontsize=12)
-            ax3.set_title('Directions in Parameter Space', fontsize=14)
-            ax3.legend()
-            ax3.grid(True, alpha=0.3)
-            ax3.set_aspect('equal')
-        else:
-            ax3.text(0.5, 0.5, 'High-dimensional\nparameter space\n(visualization not available)', 
-                    ha='center', va='center', transform=ax3.transAxes, fontsize=12)
-            ax3.set_title('Parameter Space Directions', fontsize=14)
-    else:
-        # Show loss statistics
-        min_loss = np.min(grid_data)
-        max_loss = np.max(grid_data)
-        mean_loss = np.mean(grid_data)
-        
-        stats_text = f"""Loss Statistics:
-        Min: {min_loss:.4f}
-        Max: {max_loss:.4f}
-        Mean: {mean_loss:.4f}
-        Range: {max_loss - min_loss:.4f}"""
-        
-        ax3.text(0.1, 0.9, stats_text, transform=ax3.transAxes, 
-                fontsize=12, verticalalignment='top',
-                bbox=dict(boxstyle="round", facecolor='lightblue', alpha=0.8))
-        ax3.set_title('Loss Landscape Statistics', fontsize=14)
-        ax3.axis('off')
     
     plt.tight_layout()
     return fig
