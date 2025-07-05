@@ -1,7 +1,7 @@
 """
 Base class for all slicing techniques.
 """
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, Any
 import numpy as np
 from ..core.model_wrapper import ModelWrapper
 

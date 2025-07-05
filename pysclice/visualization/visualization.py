@@ -1,16 +1,14 @@
 """
 Visualization utilities for loss landscape analysis.
 """
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Dict, Any, Optional, Tuple
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
-from matplotlib import cm
-from mpl_toolkits.mplot3d import Axes3D
 
-# Set matplotlib parameters for better plots
+# Set matplotlib parameters
 matplotlib.rcParams.update({
-    'figure.figsize': [18, 12],
+    # 'figure.figsize': [12, 5],
     'font.size': 12,
     'axes.labelsize': 12,
     'axes.titlesize': 14,
@@ -21,18 +19,14 @@ matplotlib.rcParams.update({
 
 def plot_slices(slice_data: Dict[str, Any], 
                title: Optional[str] = None, 
-               max_slices: Optional[int] = None,
-               figsize: Tuple[int, int] = (18, 12),
-               show_legend: bool = True) -> plt.Figure:
+               figsize: Tuple[int, int] = (12, 5)) -> plt.Figure:
     """
     Plot slices of the loss landscape. Automatically calls plotting funciton for the respective slice type.
     
     Args:
         slice_data: Slice data from a slicer's slice() method
         title: Plot title
-        max_slices: Maximum number of slices to plot
         figsize: Figure size (width, height)
-        show_legend: Whether to show legend
         
     Returns:
         Matplotlib figure
@@ -75,8 +69,8 @@ def _plot_linear_path_slice(slice_data: Dict[str, Any],
     ax1.axvline(x=0, color='gray', linestyle='--', alpha=0.7)
     ax1.axvline(x=1, color='gray', linestyle='--', alpha=0.7)
     
-    ax1.set_xlabel('Interpolation Parameter α', fontsize=12)
-    ax1.set_ylabel('Loss', fontsize=12)
+    ax1.set_xlabel('Interpolation Parameter α')
+    ax1.set_ylabel('Loss')
     ax1.grid(True, alpha=0.3)
     ax1.legend()
     
@@ -104,8 +98,8 @@ def _plot_linear_path_slice(slice_data: Dict[str, Any],
             ax2.scatter(end_point[0], end_point[1], c='red', s=100, 
                        marker='*', label='End', edgecolor='black', linewidth=1)
             
-            ax2.set_xlabel('Parameter X', fontsize=12)
-            ax2.set_ylabel('Parameter Y', fontsize=12)
+            ax2.set_xlabel('Parameter X')
+            ax2.set_ylabel('Parameter Y')
             ax2.set_title('Path in Parameter Space')
             ax2.legend()
             ax2.grid(True, alpha=0.3)
@@ -166,10 +160,10 @@ def _plot_planar_slice(slice_data: Dict[str, Any],
     if title:
         ax1.set_title(title)
     else:
-        ax1.set_title("Loss Contours", fontsize=14)
+        ax1.set_title("Loss Contours")
         
-    ax1.set_xlabel("Direction 1", fontsize=12)
-    ax1.set_ylabel("Direction 2", fontsize=12)
+    ax1.set_xlabel("Direction 1")
+    ax1.set_ylabel("Direction 2")
     ax1.legend()
     ax1.grid(True, alpha=0.3)
     
@@ -187,10 +181,10 @@ def _plot_planar_slice(slice_data: Dict[str, Any],
     ax2.scatter([0], [0], [center_loss], color='red', s=50, 
                edgecolor='black', linewidth=1)
     
-    ax2.set_title("3D Loss Surface", fontsize=14)
-    ax2.set_xlabel("Direction 1", fontsize=10)
-    ax2.set_ylabel("Direction 2", fontsize=10)
-    ax2.set_zlabel("Loss", fontsize=10)
+    ax2.set_title("3D Loss Surface")
+    ax2.set_xlabel("Direction 1")
+    ax2.set_ylabel("Direction 2")
+    ax2.set_zlabel("Loss")
     
     plt.tight_layout()
     return fig
@@ -284,7 +278,7 @@ def _plot_multi_focus_parameter_slices(slice_data: Dict[str, Any],
     
     # Add main title
     fig.suptitle(f'Multi-Focus Parameter Analysis ({n_focus_points} focus points)', 
-                fontsize=16, y=0.98)
+                fontsize=14, y=0.98)
     
     plt.tight_layout()
     return fig

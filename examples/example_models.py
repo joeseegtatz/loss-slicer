@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Example models for demonstrating loss landscape slicing.
 
@@ -9,8 +8,6 @@ to have known analytical properties that make it easy to verify slicing results.
 
 import torch
 import torch.nn as nn
-import numpy as np
-
 
 class Simple1DParabola(nn.Module):
     """

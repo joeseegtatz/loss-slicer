@@ -1,10 +1,9 @@
 """
 Axis parallel slicing technique.
 """
-from typing import Dict, List, Any, Optional, Union, Tuple
+from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
 from .base import Slicer
-from ..core.model_wrapper import ModelWrapper
 
 # Import scikit-optimize (skopt) samplers
 from skopt.space import Space

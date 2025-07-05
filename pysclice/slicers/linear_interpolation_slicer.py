@@ -1,5 +1,5 @@
 """
-Linear path slicing technique.
+Linear interpolation slicing technique.
 """
 from typing import Dict, Any, Optional, Tuple
 import numpy as np

@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional, Tuple
 import numpy as np
 from .base import Slicer
 from ..core.model_wrapper import ModelWrapper
-from ..core.parameter_vector import normalize_direction, random_direction
+from ..core.utils import normalize_direction, random_direction
 
 class RandomDirectionSlicer(Slicer):
     """
@@ -16,7 +16,7 @@ class RandomDirectionSlicer(Slicer):
     For 2D slicing, it creates two random directions and evaluates the loss on a grid.
     """
     
-    def slice_1d(self,
+    def _slice_1d(self,
                 direction: Optional[np.ndarray] = None,
                 center_point: Optional[np.ndarray] = None,
                 n_samples: int = 51,
@@ -94,7 +94,7 @@ class RandomDirectionSlicer(Slicer):
             'normalized': normalize_directions
         }
         
-    def slice_2d(self,
+    def _slice_2d(self,
                 direction1: Optional[np.ndarray] = None,
                 direction2: Optional[np.ndarray] = None,
                 center_point: Optional[np.ndarray] = None,
@@ -234,7 +234,7 @@ class RandomDirectionSlicer(Slicer):
         """
         if y_range is None or direction2 is None and y_range is None:
             # If y_range is None, perform 1D slicing
-            return self.slice_1d(
+            return self._slice_1d(
                 direction=direction1,
                 center_point=center_point,
                 n_samples=n_samples,
@@ -244,7 +244,7 @@ class RandomDirectionSlicer(Slicer):
             )
         else:
             # Otherwise perform 2D slicing
-            return self.slice_2d(
+            return self._slice_2d(
                 direction1=direction1,
                 direction2=direction2,
                 center_point=center_point,
