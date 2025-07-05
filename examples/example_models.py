@@ -55,7 +55,6 @@ class MultiParameterQuadratic(nn.Module):
     - param[3]: (x+2)² (minimum at -2)
     - param[4]: 0.5x² (minimum at 0, wider)
     
-    Perfect for parameter-wise slicing examples.
     """
     def __init__(self):
         super().__init__()
@@ -98,7 +97,7 @@ class RosenbrockFunction(nn.Module):
     2D Rosenbrock function: f(x,y) = (a-x)² + b(y-x²)²
     
     With a=1, b=100, this creates the famous "Rosenbrock banana function"
-    with a global minimum at (1,1). This function is notoriously difficult
+    with a global minimum at (1,1). This function is difficult
     to optimize and provides an interesting test case for slicing.
     """
     def __init__(self, a=1.0, b=100.0):
