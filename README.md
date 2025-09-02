@@ -2,7 +2,7 @@
 
 ## Overview
 
-PySlice is a comprehensive PyTorch-focused library for analyzing neural network loss landscapes. It provides tools to visualize and understand how loss functions behave in parameter space, which is crucial for understanding optimization dynamics, generalization, and model behavior.
+PySlice is a PyTorch-focused library for analyzing neural network loss landscapes. It provides tools to visualize and understand how loss functions behave in parameter space, which is crucial for understanding optimization dynamics, generalization, and model behavior. Additionally a Tensorboard Plugin is provided which provides a web-based responsive UI for exploring the results of different slicing methods alongside other logged metrics in the training process.
 
 ## Core Concepts
 
@@ -40,41 +40,27 @@ Different methods for sampling and analyzing the loss landscape:
 loss-slicer/
 ├── slicing-library/             # Core PySlice library package
 │   ├── pysclice/                # Main library code
-│   │   ├── core/                # Model wrappers and utilities
-│   │   ├── slicers/             # Slicing algorithms
-│   │   └── visualization/       # Plotting and display tools
 │   ├── examples/                # Example notebooks and scripts
-│   │   ├── data/                # Sample datasets (MNIST, etc.)
-│   │   ├── example_models.py    # Model definitions for examples
-│   │   ├── pysclice_analytical_functions.ipynb
-│   │   └── pysclice_neural_network_demo.ipynb
 │   ├── benchmark/               # Performance benchmarks
-│   │   ├── performance_benchmark_axis_parallel.ipynb
-│   │   ├── performance_benchmark_random_dir.ipynb
-│   │   └── performance_test.py
 │   └── setup.py                 # Package installation script
 ├── tensorboard_plugin/          # TensorBoard integration
 │   ├── tensorboard_loss_slicer/ # Plugin implementation
-│   │   ├── demo_*.py            # Demo scripts for different slicing methods
-│   │   ├── frontend/            # React/TypeScript frontend
-│   │   ├── static/              # Static web assets
-│   │   ├── demo_logs/           # Example TensorBoard logs
-│   │   ├── hyperparameter_slicing_logs/ # Hyperparameter tuning examples
-│   │   ├── plugin.py            # Main plugin logic
-│   │   ├── summary_v2.py        # TensorBoard summary integration
-│   │   └── metadata.py          # Plugin metadata
 │   ├── setup.py                 # Plugin installation script
-│   └── README.md                # Plugin-specific documentation
-├── DEVELOPMENT.md               # Development setup guide
-├── EXAMPLES.md                  # Usage examples and tutorials
-├── requirements.txt             # Python dependencies
-└── README.md                    # Main documentation (this file)
+└── requirements.txt             # Python dependencies for venv
 ```
 
 
 ## Getting Started
 
-See `DEVELOPMENT.md` for setup instructions and `EXAMPLES.md` for usage examples.
+To get started with either the library or the tensorboard plugin please refer to the respective README files:
+- [PySlice Library](./slicing-library/README.md) - Core loss landscape analysis tools
+- [TensorBoard Plugin](./tensorboard_plugin/README.md) - Interactive visualization plugin
+
+## Development
+
+For detailed development information and contribution guidelines:
+- [PySlice Development Guide](./docs/PYSLICE-DEVELOPMENT.md) - Core library development
+- [Plugin Development Guide](./docs/PLUGIN-DEVELOPMENT.md) - TensorBoard plugin development
 
 ## Related Work
 
