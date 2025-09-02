@@ -187,4 +187,4 @@ See `example_models.py` for predefined model architectures suitable for loss lan
 
 ## Development
 
-For detailed development information, architecture details, and contribution guidelines, see the [PySlice Development Guide](../docs/PYSLICE-DEVELOPMENT.md).
+For detailed development information and architecture details see the [PySlice Development Guide](../docs/PYSLICE-DEVELOPMENT.md).

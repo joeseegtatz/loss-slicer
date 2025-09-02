@@ -182,5 +182,5 @@ Navigate to `http://localhost:6006` and click on the "Loss Slicer" tab.
 
 ## Development
 
-For detailed development information, build instructions, and contribution guidelines, see the [Plugin Development Guide](../docs/PLUGIN-DEVELOPMENT.md).
+For detailed development information and build instructions see the [Plugin Development Guide](../docs/PLUGIN-DEVELOPMENT.md).
 
