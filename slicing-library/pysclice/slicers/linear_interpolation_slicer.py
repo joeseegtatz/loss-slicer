@@ -13,7 +13,7 @@ class LinearInterpolationSlicer(Slicer):
              start_point: Optional[np.ndarray] = None, 
              end_point: Optional[np.ndarray] = None, 
              n_samples: int = 100, 
-             alpha_range: Tuple[float, float] = (-0.5, 1.5),
+             alpha_range: Tuple[float, float] = (-0.1, 1.1),
              use_test_data: bool = False,
              normalize_direction: bool = False) -> Dict[str, Any]:
         """

@@ -2,6 +2,9 @@
 /tb-plugin/tensorboard_test
 /data/
 
+#tensorboard log data
+*events.out*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
