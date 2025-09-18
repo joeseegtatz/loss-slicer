@@ -1,19 +1,22 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from '@/contexts/slice-data-context';
-import { fetchSliceDataByType, RandomDirection2DSliceData } from '@/lib/api';
+import { fetchSliceData, RandomDirection2DSliceData } from '@/lib/api';
 import { Plot3DCard } from '@/components/charts/Plot3DCard';
 import { MessageCard } from '@/components/message-card';
+import { TagSelector } from '@/components/tag-selector';
 
 export function RandomDirectionDashboard() {
-  const { selectedRuns, runColors } = useSliceDataContext();
+  const { selectedRuns, runColors, selectedTags } = useSliceDataContext();
 
-  // Create dynamic queries for all selected runs using the utility function
+  const selectedTag = selectedTags['random-direction'];
+
+  // Create queries for the specific selected tag
   const queries = useQueries({
     queries: selectedRuns.map(run => ({
-      queryKey: ['sliceData', run, 'random-direction'],
-      queryFn: () => fetchSliceDataByType(run, 'random-direction'),
-      enabled: !!run
+      queryKey: ['sliceData', run, selectedTag],
+      queryFn: () => fetchSliceData(run, selectedTag),
+      enabled: !!run && !!selectedTag
     }))
   });
 
@@ -61,7 +64,10 @@ export function RandomDirectionDashboard() {
   return (
     <div className="w-full space-y-4">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Random Direction Loss Landscape</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Random Direction Loss Landscape</h3>
+          <TagSelector sliceType="random-direction" />
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {plotData.map(({ run, data, color }) => (

@@ -104,7 +104,7 @@ export type SliceData =
 /**
  * Maps slice type to the corresponding tag prefix
  */
-function mapSliceTypeToTagPrefix(sliceType: string): string {
+export function mapSliceTypeToTagPrefix(sliceType: string): string {
   switch (sliceType) {
     case 'linear-interpolation':
       return 'linear_interpolation/';

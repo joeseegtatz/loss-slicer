@@ -23,8 +23,10 @@ interface RunColorMapping {
 interface SliceDataContextType {
   selectedRuns: string[];
   activeSliceType: SliceType;
+  selectedTags: Record<SliceType, string>;
   toggleRun: (run: string) => void;
   setActiveSliceType: (sliceType: SliceType) => void;
+  setSelectedTag: (sliceType: SliceType, tag: string) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
 }
@@ -38,6 +40,11 @@ interface SliceDataProviderProps {
 export function SliceDataProvider({ children }: SliceDataProviderProps) {
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [activeSliceType, setActiveSliceType] = useState<SliceType>('linear-interpolation');
+  const [selectedTags, setSelectedTags] = useState<Record<SliceType, string>>({
+    'linear-interpolation': '',
+    'random-direction': '',
+    'axis-parallel': ''
+  });
   const [runColors, setRunColors] = useState<RunColorMapping>({});
 
   const toggleRun = (run: string) => {
@@ -60,8 +67,20 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     });
   };
 
+  const setSelectedTag = (sliceType: SliceType, tag: string) => {
+    setSelectedTags(prev => ({
+      ...prev,
+      [sliceType]: tag
+    }));
+  };
+
   const resetSelections = () => {
     setSelectedRuns([]);
+    setSelectedTags({
+      'linear-interpolation': '',
+      'random-direction': '',
+      'axis-parallel': ''
+    });
   };
 
   return (
@@ -69,8 +88,10 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
       value={{
         selectedRuns,
         activeSliceType,
+        selectedTags,
         toggleRun,
         setActiveSliceType,
+        setSelectedTag,
         resetSelections,
         runColors
       }}
