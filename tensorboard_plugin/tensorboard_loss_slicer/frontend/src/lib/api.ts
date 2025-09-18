@@ -102,6 +102,39 @@ export type SliceData =
   | MultiFocusAxisParallelSliceData;
 
 /**
+ * Maps slice type to the corresponding tag prefix
+ */
+function mapSliceTypeToTagPrefix(sliceType: string): string {
+  switch (sliceType) {
+    case 'linear-interpolation':
+      return 'linear_interpolation/';
+    case 'random-direction':
+      return 'random_direction/';
+    case 'axis-parallel':
+      return 'axis_parallel/';
+    default:
+      return '';
+  }
+}
+
+/**
+ * Fetch slice data for a specific run and slice type
+ * This utility function handles the tag finding logic
+ */
+export async function fetchSliceDataByType(run: string, sliceType: string): Promise<SliceData> {
+  const runsAndTags = await fetchRunsAndTags();
+  const tagPrefix = mapSliceTypeToTagPrefix(sliceType);
+  const tags = runsAndTags[run] || [];
+  const tag = tags.find(t => t.startsWith(tagPrefix));
+  
+  if (!tag) {
+    throw new Error(`No ${sliceType} data found for run ${run}`);
+  }
+  
+  return fetchSliceData(run, tag);
+}
+
+/**
  * Fetch all available runs and their tags
  */
 export async function fetchRunsAndTags(): Promise<Record<string, string[]>> {
