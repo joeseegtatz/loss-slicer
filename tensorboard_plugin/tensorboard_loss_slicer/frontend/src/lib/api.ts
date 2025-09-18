@@ -139,6 +139,7 @@ export async function fetchSliceDataByType(run: string, sliceType: string): Prom
  */
 export async function fetchRunsAndTags(): Promise<Record<string, string[]>> {
   const response = await fetch(`/data/plugin/loss_slicer/tags`);
+
   
   if (!response.ok) {
     throw new Error(`Failed to load tags: ${response.statusText}`);

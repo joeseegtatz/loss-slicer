@@ -66,7 +66,7 @@ export function LinearInterpolationDashboard() {
           yLabel="Loss"
           showLegend={true}
           height={500}
-          className="border rounded-lg p-4"
+          className=""
           isLoading={isLoading && !hasData}
           error={errorMessage}
         />

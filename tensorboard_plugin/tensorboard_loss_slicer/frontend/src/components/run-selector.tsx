@@ -1,5 +1,5 @@
 import { useRunsAndTags } from "@/lib/queries";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Loader2, Search } from "lucide-react";
@@ -9,6 +9,15 @@ export function RunSelector() {
   const { selectedRuns, toggleRun, runColors } = useSliceDataContext();
   const { data: runsAndTags, isLoading, error } = useRunsAndTags();
   const [searchTerm, setSearchTerm] = useState("");
+
+  // ✅ Log raw data when it loads
+  useEffect(() => {
+    if (runsAndTags) {
+      console.log("RunSelector - Raw runsAndTags data:", runsAndTags);
+      console.log("RunSelector - Available runs:", Object.keys(runsAndTags));
+      console.log("RunSelector - Tags per run:", runsAndTags);
+    }
+  }, [runsAndTags]);
 
   const handleSelectFilteredRuns = () => {
     selectedRuns.forEach(run => {

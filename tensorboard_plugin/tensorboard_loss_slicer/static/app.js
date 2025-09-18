@@ -19010,7 +19010,11 @@ function tS() {
   return Pe;
 }
 function mX() {
-  const { selectedRuns: Pe, toggleRun: qe, runColors: ct } = tS(), { data: ht, isLoading: or, error: _r } = uX(), [qr, ta] = Qa.useState(""), ga = () => {
+  const { selectedRuns: Pe, toggleRun: qe, runColors: ct } = tS(), { data: ht, isLoading: or, error: _r } = uX(), [qr, ta] = Qa.useState("");
+  Qa.useEffect(() => {
+    ht && (console.log("RunSelector - Raw runsAndTags data:", ht), console.log("RunSelector - Available runs:", Object.keys(ht)), console.log("RunSelector - Tags per run:", ht));
+  }, [ht]);
+  const ga = () => {
     Pe.forEach((Ka) => {
       za.includes(Ka) || qe(Ka);
     }), za.forEach((Ka) => {
@@ -194332,7 +194336,7 @@ function CX() {
         yLabel: "Loss",
         showLegend: !0,
         height: 500,
-        className: "border rounded-lg p-4",
+        className: "",
         isLoading: ht && !_r,
         error: ta
       }
