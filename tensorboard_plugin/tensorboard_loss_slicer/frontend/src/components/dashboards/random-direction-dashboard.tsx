@@ -69,17 +69,14 @@ export function RandomDirectionDashboard() {
           <TagSelector sliceType="random-direction" />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {plotData.map(({ run, data, color }) => (
-            <Plot3DCard 
-              key={run} 
-              run={run} 
-              data={data} 
-              color={color}
-              isLoading={false}
-            />
-          ))}
-        </div>
+        {/* Single 3D plot showing all runs */}
+        {plotData.length > 0 && (
+          <Plot3DCard 
+            runs={plotData.map(({ run, data, color }) => ({ run, data, color }))}
+            isLoading={isLoading && !hasData}
+            title="Random Direction Loss Landscape Comparison"
+          />
+        )}
 
         {/* Show partial loading state */}
         {isLoading && hasData && (

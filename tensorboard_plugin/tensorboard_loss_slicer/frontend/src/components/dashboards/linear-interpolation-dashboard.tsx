@@ -1,18 +1,21 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from '@/contexts/slice-data-context';
-import { fetchSliceDataByType, LinearInterpolationSliceData } from '@/lib/api';
+import { fetchSliceData, LinearInterpolationSliceData } from '@/lib/api';
 import { LineChart, LineData } from '@/components/charts/LineChart';
+import { TagSelector } from '@/components/tag-selector';
 
 export function LinearInterpolationDashboard() {
-  const { selectedRuns, runColors } = useSliceDataContext();
+  const { selectedRuns, runColors, selectedTags } = useSliceDataContext();
 
-  // Create dynamic queries for all selected runs using the utility function
+  const selectedTag = selectedTags['linear-interpolation'];
+
+  // Create queries for the specific selected tag
   const queries = useQueries({
     queries: selectedRuns.map(run => ({
-      queryKey: ['sliceData', run, 'linear-interpolation'],
-      queryFn: () => fetchSliceDataByType(run, 'linear-interpolation'),
-      enabled: !!run
+      queryKey: ['sliceData', run, selectedTag],
+      queryFn: () => fetchSliceData(run, selectedTag),
+      enabled: !!run && !!selectedTag
     }))
   });
 
@@ -58,7 +61,10 @@ export function LinearInterpolationDashboard() {
   return (
     <div className="w-full space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-4">Linear Interpolation Loss Landscape</h3>
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Linear Interpolation Loss Landscape</h3>
+          <TagSelector sliceType="linear-interpolation" />
+        </div>
         <LineChart
           data={lineData}
           title="Linear Interpolation Loss Landscape"
