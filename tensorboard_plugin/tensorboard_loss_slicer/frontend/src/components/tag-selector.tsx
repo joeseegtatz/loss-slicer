@@ -1,99 +1,113 @@
 import { useRunsAndTags } from "@/lib/queries";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, ChevronDown } from "lucide-react";
 import { useSliceDataContext, SliceType } from "@/contexts/slice-data-context";
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { mapSliceTypeToTagPrefix } from "@/lib/api";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuCheckboxItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface TagSelectorProps {
   sliceType: SliceType;
 }
 
 export function TagSelector({ sliceType }: TagSelectorProps) {
-  const { selectedRuns, selectedTags, setSelectedTag } = useSliceDataContext();
+  const { selectedRuns, selectedTags, setSelectedTags, toggleTag } = useSliceDataContext();
   const { data: runsAndTags, isLoading } = useRunsAndTags();
   
-  // Get tags relevant to this slice type from ANY selected run
-  const availableTags = useMemo(() => {
-    if (!runsAndTags || selectedRuns.length === 0) return [];
-    
+  // Memoize all computed values together
+  const { availableTags, currentTags, tagPrefix, placeholder } = useMemo(() => {
     const tagPrefix = mapSliceTypeToTagPrefix(sliceType);
+    const placeholder = `Select ${sliceType.replace('-', ' ')} tags...`;
+    const currentTags = selectedTags[sliceType];
+    
+    if (!runsAndTags || selectedRuns.length === 0) {
+      return { availableTags: [], currentTags, tagPrefix, placeholder };
+    }
+    
     const allTags = selectedRuns.flatMap(run => 
       (runsAndTags[run] || []).filter(tag => tag.startsWith(tagPrefix))
     );
     
-    // Return unique tags, sorted
-    return [...new Set(allTags)].sort();
-  }, [runsAndTags, selectedRuns, sliceType]);
-
-  const currentTag = selectedTags[sliceType];
-
-  const handleTagChange = (tag: string) => {
-    setSelectedTag(sliceType, tag);
-  };
-
-  // Auto-select first available tag if none selected
-  useEffect(() => {
-    if (availableTags.length > 0 && !currentTag) {
-      handleTagChange(availableTags[0]);
+    const availableTags = [...new Set(allTags)].sort();
+    
+    // Auto-select first tag if none selected 
+    if (availableTags.length > 0 && currentTags.length === 0) {
+      setSelectedTags(sliceType, [availableTags[0]]);
     }
-  }, [availableTags, currentTag]);
+    
+    return { availableTags, currentTags, tagPrefix, placeholder };
+  }, [runsAndTags, selectedRuns, sliceType, selectedTags, setSelectedTags]);
 
-  // Reset tag selection when no runs are selected
-  useEffect(() => {
-    if (selectedRuns.length === 0 && currentTag) {
-      setSelectedTag(sliceType, '');
-    }
-  }, [selectedRuns, currentTag, sliceType, setSelectedTag]);
-  
-  if (isLoading) {
-    return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Loading tags...
-      </div>
-    );
-  }
+  // disabled button component
+  const DisabledButton = ({ children }: { children: React.ReactNode }) => (
+    <div className="w-[200px]">
+      <Button variant="outline" disabled className="w-full justify-between h-10 px-3 py-2">
+        <span className="text-sm text-muted-foreground">{children}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+      </Button>
+    </div>
+  );
 
-  if (selectedRuns.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        Select runs to view available tags
-      </div>
-    );
-  }
+  // conditional rendering
+  if (isLoading) return <DisabledButton><Loader2 className="h-4 w-4 animate-spin mr-2" />Loading tags...</DisabledButton>;
+  if (selectedRuns.length === 0) return <DisabledButton>Select runs first</DisabledButton>;
+  if (availableTags.length === 0) return <DisabledButton>No {sliceType.replace('-', ' ')} tags</DisabledButton>;
 
-  if (availableTags.length === 0) {
-    return (
-      <div className="text-sm text-muted-foreground">
-        No {sliceType} tags found for selected runs
-      </div>
-    );
-  }
+  const buttonText = currentTags.length === 0 
+    ? placeholder
+    : `${currentTags.length} tag${currentTags.length === 1 ? '' : 's'} selected`;
 
   return (
-    <div className="space-y-2">
-      <label className="text-sm font-medium">
-        Select {sliceType.replace('-', ' ')} tag
-      </label>
-      <Select value={currentTag} onValueChange={handleTagChange}>
-        <SelectTrigger className="h-9 w-[200px]">
-          <SelectValue placeholder="Select a tag" />
-        </SelectTrigger>
-        <SelectContent>
+    <div className="w-[200px]">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" className="w-full justify-between h-10 px-3 py-2">
+            <span className="text-sm">{buttonText}</span>
+            <ChevronDown className="h-4 w-4 shrink-0 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        
+        <DropdownMenuContent className="w-[200px]" align="start">
+          <DropdownMenuItem 
+            onClick={() => setSelectedTags(sliceType, availableTags)}
+            disabled={currentTags.length === availableTags.length}
+            className="text-blue-600 hover:text-blue-800"
+            onSelect={(e) => e.preventDefault()}
+          >
+            Select All
+          </DropdownMenuItem>
+          
+          <DropdownMenuItem 
+            onClick={() => setSelectedTags(sliceType, [])}
+            disabled={currentTags.length === 0}
+            className="text-red-600 hover:text-red-800"
+            onSelect={(e) => e.preventDefault()}
+          >
+            Clear All
+          </DropdownMenuItem>
+          
+          <DropdownMenuSeparator />
+          
           {availableTags.map((tag) => (
-            <SelectItem key={tag} value={tag}>
-              {tag.replace(mapSliceTypeToTagPrefix(sliceType), '')}
-            </SelectItem>
+            <DropdownMenuCheckboxItem
+              key={tag}
+              checked={currentTags.includes(tag)}
+              onCheckedChange={() => toggleTag(sliceType, tag)}
+              onSelect={(e) => e.preventDefault()}
+              className="cursor-pointer"
+            >
+              {tag.replace(tagPrefix, '').replace(/_/g, ' ')}
+            </DropdownMenuCheckboxItem>
           ))}
-        </SelectContent>
-      </Select>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

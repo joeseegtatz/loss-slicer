@@ -23,10 +23,11 @@ interface RunColorMapping {
 interface SliceDataContextType {
   selectedRuns: string[];
   activeSliceType: SliceType;
-  selectedTags: Record<SliceType, string>;
+  selectedTags: Record<SliceType, string[]>;
   toggleRun: (run: string) => void;
   setActiveSliceType: (sliceType: SliceType) => void;
-  setSelectedTag: (sliceType: SliceType, tag: string) => void;
+  setSelectedTags: (sliceType: SliceType, tags: string[]) => void;
+  toggleTag: (sliceType: SliceType, tag: string) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
 }
@@ -40,10 +41,10 @@ interface SliceDataProviderProps {
 export function SliceDataProvider({ children }: SliceDataProviderProps) {
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [activeSliceType, setActiveSliceType] = useState<SliceType>('linear-interpolation');
-  const [selectedTags, setSelectedTags] = useState<Record<SliceType, string>>({
-    'linear-interpolation': '',
-    'random-direction': '',
-    'axis-parallel': ''
+  const [selectedTags, setSelectedTagsState] = useState<Record<SliceType, string[]>>({
+    'linear-interpolation': [],
+    'random-direction': [],
+    'axis-parallel': []
   });
   const [runColors, setRunColors] = useState<RunColorMapping>({});
 
@@ -67,19 +68,40 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     });
   };
 
-  const setSelectedTag = (sliceType: SliceType, tag: string) => {
-    setSelectedTags(prev => ({
+  const setSelectedTags = (sliceType: SliceType, tags: string[]) => {
+    setSelectedTagsState(prev => ({
       ...prev,
-      [sliceType]: tag
+      [sliceType]: tags
     }));
+  };
+
+  const toggleTag = (sliceType: SliceType, tag: string) => {
+    setSelectedTagsState(prev => {
+      const currentTags = prev[sliceType];
+      const isSelected = currentTags.includes(tag);
+      
+      if (isSelected) {
+        // Remove tag
+        return {
+          ...prev,
+          [sliceType]: currentTags.filter(t => t !== tag)
+        };
+      } else {
+        // Add tag
+        return {
+          ...prev,
+          [sliceType]: [...currentTags, tag]
+        };
+      }
+    });
   };
 
   const resetSelections = () => {
     setSelectedRuns([]);
-    setSelectedTags({
-      'linear-interpolation': '',
-      'random-direction': '',
-      'axis-parallel': ''
+    setSelectedTagsState({
+      'linear-interpolation': [],
+      'random-direction': [],
+      'axis-parallel': []
     });
   };
 
@@ -91,7 +113,8 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
         selectedTags,
         toggleRun,
         setActiveSliceType,
-        setSelectedTag,
+        setSelectedTags,
+        toggleTag,
         resetSelections,
         runColors
       }}

@@ -8,15 +8,17 @@ import { TagSelector } from '@/components/tag-selector';
 export function LinearInterpolationDashboard() {
   const { selectedRuns, runColors, selectedTags } = useSliceDataContext();
 
-  const selectedTag = selectedTags['linear-interpolation'];
+  const selectedTagsForSlice = selectedTags['linear-interpolation'];
 
-  // Create queries for the specific selected tag
+  // Create queries for all combinations of selected runs and tags
   const queries = useQueries({
-    queries: selectedRuns.map(run => ({
-      queryKey: ['sliceData', run, selectedTag],
-      queryFn: () => fetchSliceData(run, selectedTag),
-      enabled: !!run && !!selectedTag
-    }))
+    queries: selectedRuns.flatMap(run =>
+      selectedTagsForSlice.map(tag => ({
+        queryKey: ['sliceData', run, tag],
+        queryFn: () => fetchSliceData(run, tag),
+        enabled: !!run && !!tag
+      }))
+    )
   });
 
   // Check loading and error states
@@ -25,21 +27,30 @@ export function LinearInterpolationDashboard() {
   const hasData = queries.some(query => query.data);
 
   // Transform data for LineChart
-  const lineData: LineData[] = useMemo(() => 
-    queries
-      .map((query, index) => ({ query, run: selectedRuns[index] }))
-      .filter(({ query }) => query.data)
-      .map(({ query, run }) => {
-        const data = query.data as LinearInterpolationSliceData;
-        
-        return {
-          x: data.alphas,
-          y: data.losses,
-          name: run,
-          color: runColors[run] || '#8884d8'
-        };
-      })
-  , [queries, selectedRuns, runColors]);
+  const lineData: LineData[] = useMemo(() => {
+    const results: LineData[] = [];
+    let queryIndex = 0;
+    
+    for (const run of selectedRuns) {
+      for (const tag of selectedTagsForSlice) {
+        const query = queries[queryIndex];
+        if (query?.data) {
+          const data = query.data as LinearInterpolationSliceData;
+          const tagDisplayName = tag.replace('linear_interpolation_', '');
+          
+          results.push({
+            x: data.alphas,
+            y: data.losses,
+            name: selectedTagsForSlice.length > 1 ? `${run} - ${tagDisplayName}` : run,
+            color: runColors[run] || '#8884d8'
+          });
+        }
+        queryIndex++;
+      }
+    }
+    
+    return results;
+  }, [queries, selectedRuns, selectedTagsForSlice, runColors]);
 
   // Show empty state when no runs selected
   if (selectedRuns.length === 0) {
@@ -48,6 +59,24 @@ export function LinearInterpolationDashboard() {
         <div className="text-center text-gray-500">
           <p className="font-semibold">No runs selected</p>
           <p className="text-sm">Select runs from the sidebar to view linear interpolation data</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state when no tags selected
+  if (selectedTagsForSlice.length === 0) {
+    return (
+      <div className="w-full space-y-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Linear Interpolation Loss Landscape</h3>
+          <TagSelector sliceType="linear-interpolation" />
+        </div>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center text-gray-500">
+            <p className="font-semibold">No tags selected</p>
+            <p className="text-sm">Select tags to view linear interpolation data</p>
+          </div>
         </div>
       </div>
     );
