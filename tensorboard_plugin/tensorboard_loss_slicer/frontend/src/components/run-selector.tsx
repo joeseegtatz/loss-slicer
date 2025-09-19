@@ -2,6 +2,7 @@ import { useRunsAndTags } from "@/lib/queries";
 import { useState, useMemo, useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Loader2, Search } from "lucide-react";
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 
@@ -33,6 +34,24 @@ export function RunSelector() {
     });
   };
 
+  const handleSelectAll = () => {
+    // Select all filtered runs that aren't already selected
+    filteredRuns.forEach(run => {
+      if (!selectedRuns.includes(run)) {
+        toggleRun(run);
+      }
+    });
+  };
+
+  const handleDeselectAll = () => {
+    // Deselect all currently selected runs that are in the filtered list
+    selectedRuns.forEach(run => {
+      if (filteredRuns.includes(run)) {
+        toggleRun(run);
+      }
+    });
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && filteredRuns.length > 0) {
       handleSelectFilteredRuns();
@@ -52,6 +71,9 @@ export function RunSelector() {
       return runs.filter(run => run.toLowerCase().includes(searchTerm.toLowerCase()));
     }
   }, [runsAndTags, searchTerm]);
+
+  const selectedFilteredRuns = filteredRuns.filter(run => selectedRuns.includes(run));
+  const allFilteredSelected = filteredRuns.length > 0 && selectedFilteredRuns.length === filteredRuns.length;
 
   if (isLoading) {
     return (
@@ -91,9 +113,31 @@ export function RunSelector() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium">Run</label>
-        <span className="text-xs text-muted-foreground">
-          {selectedRuns.length} selected
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">
+            {selectedRuns.length} selected
+          </span>
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleSelectAll}
+              disabled={allFilteredSelected || filteredRuns.length === 0}
+            >
+              All
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-xs text-muted-foreground hover:text-foreground"
+              onClick={handleDeselectAll}
+              disabled={selectedFilteredRuns.length === 0}
+            >
+              None
+            </Button>
+          </div>
+        </div>
       </div>
 
       {/* Search input */}

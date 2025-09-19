@@ -78,7 +78,7 @@ export function TagSelector({ sliceType }: TagSelectorProps) {
           <DropdownMenuItem 
             onClick={() => setSelectedTags(sliceType, availableTags)}
             disabled={currentTags.length === availableTags.length}
-            className="text-blue-600 hover:text-blue-800"
+            className="text-muted-foreground hover:text-foreground"
             onSelect={(e) => e.preventDefault()}
           >
             Select All
@@ -87,7 +87,7 @@ export function TagSelector({ sliceType }: TagSelectorProps) {
           <DropdownMenuItem 
             onClick={() => setSelectedTags(sliceType, [])}
             disabled={currentTags.length === 0}
-            className="text-red-600 hover:text-red-800"
+            className="text-muted-foreground hover:text-foreground"
             onSelect={(e) => e.preventDefault()}
           >
             Clear All
