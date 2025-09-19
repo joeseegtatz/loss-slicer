@@ -1,146 +1,58 @@
+import { useMemo } from 'react';
+import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from "@/contexts/slice-data-context";
-import { useEffect, useMemo, useState } from "react";
-import { fetchSliceData, fetchRunsAndTags, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
+import { fetchSliceData, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
 import { ParameterSliceChart } from "@/components/parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
-import { TagFilter } from "@/components/tag-filter";
-
-interface RunData {
-  isLoading: boolean;
-  isError: boolean;
-  errorMessage?: string;
-  data: AxisParallelSliceData | MultiFocusAxisParallelSliceData | null;
-}
+import { TagSelector } from "@/components/tag-selector";
 
 export function AxisParallelDashboard() {
-  const { selectedRuns } = useSliceDataContext();
-  const [runDataMap, setRunDataMap] = useState<Record<string, RunData>>({});
-  const [selectedRun, setSelectedRun] = useState<string | null>(null);
-  const [selectedFocusPoint, setSelectedFocusPoint] = useState<number | null>(null);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
+  const { selectedRuns, selectedTags } = useSliceDataContext();
 
-  // Function to update run data when queries complete
-  const updateRunData = (run: string, data: Partial<RunData>) => {
-    setRunDataMap(prev => ({
-      ...prev,
-      [run]: { ...prev[run], ...data }
-    }));
-  };
+  const selectedTagsForSlice = selectedTags['axis-parallel'];
 
-  // Fetch available tags when selected runs change
-  useEffect(() => {
-    if (selectedRuns.length === 0) {
-      setAvailableTags([]);
-      setSelectedTags(new Set());
-      return;
-    }
+  // Create queries for all combinations of selected runs and tags
+  const queries = useQueries({
+    queries: selectedRuns.flatMap(run =>
+      selectedTagsForSlice.map(tag => ({
+        queryKey: ['sliceData', run, tag],
+        queryFn: () => fetchSliceData(run, tag),
+        enabled: !!run && !!tag
+      }))
+    )
+  });
 
-    fetchRunsAndTags()
-      .then((runsAndTags: Record<string, string[]>) => {
-        const tagPrefix = 'axis_parallel/';
-        const allTags = new Set<string>();
+  // Check loading and error states
+  const isLoading = queries.some(query => query.isLoading);
+  const errors = queries.filter(query => query.error);
+  const hasData = queries.some(query => query.data);
 
-        selectedRuns.forEach(run => {
-          const tags = runsAndTags[run] || [];
-          tags.filter(tag => tag.startsWith(tagPrefix)).forEach(tag => allTags.add(tag));
-        });
-
-        const tagsArray = Array.from(allTags).sort();
-        setAvailableTags(tagsArray);
-
-        // Auto-select first tag if none are selected (single select mode)
-        if (selectedTags.size === 0 && tagsArray.length > 0) {
-          setSelectedTags(new Set([tagsArray[0]]));
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch tags:', error);
-        setAvailableTags([]);
-      });
-  }, [selectedRuns]);
-
-  // Set selected run to the first (and only) selected run
-  useEffect(() => {
-    if (selectedRuns.length === 1) {
-      setSelectedRun(selectedRuns[0]);
-    } else {
-      setSelectedRun(null);
-    }
-  }, [selectedRuns]);
-
-  // Calculate overall loading state
-  const isAnyLoading = useMemo(() => {
-    return selectedRuns.some(run => runDataMap[run]?.isLoading);
-  }, [selectedRuns, runDataMap]);
-
-  // Calculate error state
-  const errors = useMemo(() => {
-    return selectedRuns
-      .filter(run => runDataMap[run]?.isError)
-      .map(run => ({ run, message: runDataMap[run]?.errorMessage }));
-  }, [selectedRuns, runDataMap]);
-
-  // For each selected run, fetch data using the fetchSliceData function
-  useEffect(() => {
-    if (selectedRuns.length === 0 || selectedTags.size === 0) return;
-
-    // Clear previous data when runs or tags change to force refetch
-    setRunDataMap({});
-
-    selectedRuns.forEach(run => {
-      // Start loading state
-      setRunDataMap(prev => ({
-        ...prev,
-        [run]: {
-          isLoading: true,
-          isError: false,
-          data: null
-        }
-      }));
-
-      // Get the first selected tag for this run
-      const selectedTagsArray = Array.from(selectedTags);
-      if (selectedTagsArray.length === 0) {
-        updateRunData(run, {
-          isLoading: false,
-          isError: true,
-          errorMessage: 'No tags selected'
-        });
-        return;
-      }
-
-      const tag = selectedTagsArray[0]; // Use the first selected tag
-
-      // Fetch the actual slice data with the selected tag
-      fetchSliceData(run, tag)
-        .then((data) => {
-          if (data.type !== 'axis_parallel') {
-            throw new Error(`Expected axis_parallel data but received ${data.type}`);
+  // Transform data for display
+  const axisParallelData = useMemo(() => {
+    const results: Array<{ run: string; tag: string; data: AxisParallelSliceData | MultiFocusAxisParallelSliceData }> = [];
+    let queryIndex = 0;
+    
+    for (const run of selectedRuns) {
+      for (const tag of selectedTagsForSlice) {
+        const query = queries[queryIndex];
+        if (query?.data) {
+          const data = query.data as AxisParallelSliceData | MultiFocusAxisParallelSliceData;
+          if (data.type === 'axis_parallel') {
+            results.push({ run, tag, data });
           }
+        }
+        queryIndex++;
+      }
+    }
+    
+    return results;
+  }, [queries, selectedRuns, selectedTagsForSlice]);
 
-          updateRunData(run, {
-            isLoading: false,
-            isError: false,
-            data: data
-          });
-        })
-        .catch((error: Error) => {
-          console.error(`Failed to load axis parallel data for run ${run}:`, error);
-          updateRunData(run, {
-            isLoading: false,
-            isError: true,
-            errorMessage: error.message
-          });
-        });
-    });
-  }, [selectedRuns, selectedTags]);
-
-  // Generate charts for each parameter
+  // Generate charts for the selected run and tag (axis parallel works best with single run)
   const renderParameterList = () => {
-    if (!selectedRun || !runDataMap[selectedRun]?.data) return null;
+    if (selectedRuns.length !== 1 || axisParallelData.length === 0) return null;
 
-    const sliceData = runDataMap[selectedRun].data;
+    const sliceData = axisParallelData[0].data;
     if (!sliceData) return null;
 
     // Check if this is multi-focus data based on the presence of focus_point_slices
@@ -211,8 +123,8 @@ export function AxisParallelDashboard() {
                   parameterIndex={index}
                   parameterName={slices[0]?.parameter_name}
                   focusPointIndices={focusPointIndices}
-                  selectedFocusPoint={selectedFocusPoint}
-                  onFocusPointClick={setSelectedFocusPoint}
+                  selectedFocusPoint={null}
+                  onFocusPointClick={() => {}}
                 />
               ))}
             </div>
@@ -222,12 +134,14 @@ export function AxisParallelDashboard() {
     );
   };
 
+  // Show empty state when no runs selected
   if (selectedRuns.length === 0) {
     return (
       <MessageCard message="Select a run from the sidebar to view axis parallel data" />
     );
   }
 
+  // Show message for multiple runs (axis parallel works best with single run)
   if (selectedRuns.length > 1) {
     return (
       <MessageCard
@@ -237,48 +151,50 @@ export function AxisParallelDashboard() {
     );
   }
 
-  if (isAnyLoading && !selectedRun) {
+  // Show empty state when no tags selected
+  if (selectedTagsForSlice.length === 0) {
     return (
-      <MessageCard
-        message="Loading axis parallel data..."
-        type="loading"
-      />
+      <div className="w-full space-y-4">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-semibold">Axis Parallel Loss Landscape</h3>
+          <TagSelector sliceType="axis-parallel" />
+        </div>
+        <MessageCard message="Select tags to view axis parallel data" />
+      </div>
     );
   }
 
-  if (errors.length === selectedRuns.length) {
-    const errorMessages = errors.map(e => `${e.run}: ${e.message}`).join('; ');
-    return (
-      <MessageCard
-        message={`Error loading data for all runs: ${errorMessages}`}
-        type="error"
-      />
-    );
+  // Show loading state when no data yet
+  if (isLoading && !hasData) {
+    return <MessageCard message="Loading axis parallel data..." type="loading" />;
   }
 
-  if (!selectedRun) {
+  // Show error state when no data and errors exist
+  if (errors.length > 0 && !hasData) {
     return (
-      <MessageCard message="No axis parallel data available for this selection" />
+      <MessageCard 
+        message={`Failed to load data: ${errors[0].error?.message}`}
+        type="error" 
+      />
     );
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between py-3 border-b border-border">
-        <div className="flex items-center gap-4">
-          <span className="text-sm font-medium text-muted-foreground">Filter tags:</span>
-          <TagFilter
-            availableTags={availableTags}
-            selectedTags={selectedTags}
-            onTagsChange={setSelectedTags}
-            singleSelect={true}
-            placeholder="Select a tag..."
-            className="flex-1"
-          />
-        </div>
+    <div className="w-full space-y-4">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Axis Parallel Loss Landscape</h3>
+        <TagSelector sliceType="axis-parallel" />
       </div>
+      
       {renderParameterList()}
+      
+      {/* Show partial loading state */}
+      {isLoading && hasData && (
+        <div className="mt-4 text-sm text-gray-500 text-center">
+          Loading additional data...
+        </div>
+      )}
     </div>
-
   );
 }
+  

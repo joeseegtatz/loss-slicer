@@ -2,7 +2,7 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/app-sidebar"
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { SliceDataProvider, useSliceDataContext, SliceType } from "@/contexts/slice-data-context"
-import { SimpleTabs } from "@/components/ui/simple-tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { LinearInterpolationDashboard } from "@/components/dashboards/linear-interpolation-dashboard"
 import { RandomDirectionDashboard } from "@/components/dashboards/random-direction-dashboard"
 import { AxisParallelDashboard } from "@/components/dashboards/axis-parallel-dashboard"
@@ -22,43 +22,33 @@ const queryClient = new QueryClient({
 })
 
 function MainContent() {
-  const { setActiveSliceType } = useSliceDataContext();
+  const { activeSliceType, setActiveSliceType } = useSliceDataContext();
 
-  const slicingMethodTabs = [
-    {
-      id: "linear-interpolation",
-      label: "Linear Interpolation",
-      content: (
-        <LinearInterpolationDashboard />
-      ),
-    },
-    {
-      id: "random-direction",
-      label: "Random Direction",
-      content: (
-        <RandomDirectionDashboard />
-      ),
-    },
-    {
-      id: "axis-parallel",
-      label: "Axis Parallel",
-      content: (
-        <AxisParallelDashboard />
-      ),
-    },
-  ];
-
-  const handleTabChange = (tabId: string) => {
-    setActiveSliceType(tabId as SliceType);
-  };
-  
   return (
     <main className="flex-1 overflow-auto p-4 space-y-4">
-      <SimpleTabs 
-        defaultValue="linear-interpolation" 
-        tabs={slicingMethodTabs} 
-        onTabChange={handleTabChange}
-      />
+      <Tabs 
+        value={activeSliceType} 
+        onValueChange={(value) => setActiveSliceType(value as SliceType)}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="linear-interpolation">Linear Interpolation</TabsTrigger>
+          <TabsTrigger value="random-direction">Random Direction</TabsTrigger>
+          <TabsTrigger value="axis-parallel">Axis Parallel</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="linear-interpolation" className="mt-4">
+          <LinearInterpolationDashboard />
+        </TabsContent>
+        
+        <TabsContent value="random-direction" className="mt-4">
+          <RandomDirectionDashboard />
+        </TabsContent>
+        
+        <TabsContent value="axis-parallel" className="mt-4">
+          <AxisParallelDashboard />
+        </TabsContent>
+      </Tabs>
     </main>
   );
 }
