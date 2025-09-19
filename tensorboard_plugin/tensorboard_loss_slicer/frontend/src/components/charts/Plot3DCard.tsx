@@ -10,9 +10,21 @@ interface Plot3DCardProps {
   }>;
   isLoading?: boolean;
   title?: string;
+  xRange?: { min: number; max: number };
+  yRange?: { min: number; max: number };
+  zRange?: { min: number; max: number };
+  autoScale?: { x: boolean; y: boolean; z: boolean };
 }
 
-export function Plot3DCard({ runs, isLoading, title = "Random Direction Loss Landscape" }: Plot3DCardProps) {
+export function Plot3DCard({ 
+  runs, 
+  isLoading, 
+  title = "Random Direction Loss Landscape",
+  xRange,
+  yRange,
+  zRange,
+  autoScale = { x: true, y: true, z: true }
+}: Plot3DCardProps) {
   // Create multiple surface traces - one for each run
   const traces = runs.map(({ run, data }, index) => ({
     type: 'surface' as const,
@@ -33,9 +45,33 @@ export function Plot3DCard({ runs, isLoading, title = "Random Direction Loss Lan
 
   const layout = {
     scene: {
-      xaxis: { title: { text: 'X Direction' } },
-      yaxis: { title: { text: 'Y Direction' } },
-      zaxis: { title: { text: 'Loss' } },
+      xaxis: { 
+        title: { text: 'X Direction' },
+        ...((!autoScale.x && xRange) ? {
+          range: [xRange.min, xRange.max],
+          autorange: false
+        } : {
+          autorange: true
+        })
+      },
+      yaxis: { 
+        title: { text: 'Y Direction' },
+        ...((!autoScale.y && yRange) ? {
+          range: [yRange.min, yRange.max],
+          autorange: false
+        } : {
+          autorange: true
+        })
+      },
+      zaxis: { 
+        title: { text: 'Loss' },
+        ...((!autoScale.z && zRange) ? {
+          range: [zRange.min, zRange.max],
+          autorange: false
+        } : {
+          autorange: true
+        })
+      },
       camera: {
         eye: { x: 1.5, y: 1.5, z: 1.5 }
       }

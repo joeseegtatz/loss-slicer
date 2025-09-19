@@ -18,6 +18,9 @@ export interface LineChartProps {
   className?: string;
   isLoading?: boolean;
   error?: string;
+  xRange?: { min: number; max: number };
+  yRange?: { min: number; max: number };
+  autoScale?: { x: boolean; y: boolean };
 }
 
 export function LineChart({
@@ -30,7 +33,10 @@ export function LineChart({
   width = '100%',
   className = '',
   isLoading = false,
-  error
+  error,
+  xRange,
+  yRange,
+  autoScale = { x: true, y: true }
 }: LineChartProps) {
   // Show loading state
   if (isLoading) {
@@ -95,7 +101,13 @@ export function LineChart({
         font: { size: 14 }
       },
       showgrid: true,
-      gridcolor: '#f0f0f0'
+      gridcolor: '#f0f0f0',
+      ...((!autoScale.x && xRange) ? {
+        range: [xRange.min, xRange.max],
+        autorange: false
+      } : {
+        autorange: true
+      })
     },
     yaxis: {
       title: {
@@ -103,7 +115,13 @@ export function LineChart({
         font: { size: 14 }
       },
       showgrid: true,
-      gridcolor: '#f0f0f0'
+      gridcolor: '#f0f0f0',
+      ...((!autoScale.y && yRange) ? {
+        range: [yRange.min, yRange.max],
+        autorange: false
+      } : {
+        autorange: true
+      })
     },
     showlegend: showLegend,
     legend: {

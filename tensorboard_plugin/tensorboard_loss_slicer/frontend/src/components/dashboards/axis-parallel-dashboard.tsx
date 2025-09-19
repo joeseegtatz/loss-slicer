@@ -2,14 +2,15 @@ import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { fetchSliceData, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
-import { ParameterSliceChart } from "@/components/parameter-slice-chart";
+import { ParameterSliceChart } from "@/components/charts/parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
 import { TagSelector } from "@/components/tag-selector";
 
 export function AxisParallelDashboard() {
-  const { selectedRuns, selectedTags } = useSliceDataContext();
+  const { selectedRuns, selectedTags, axisRanges } = useSliceDataContext();
 
   const selectedTagsForSlice = selectedTags['axis-parallel'];
+  const currentAxisRanges = axisRanges['axis-parallel'];
 
   // Create queries for all combinations of selected runs and tags
   const queries = useQueries({
@@ -125,6 +126,9 @@ export function AxisParallelDashboard() {
                   focusPointIndices={focusPointIndices}
                   selectedFocusPoint={null}
                   onFocusPointClick={() => {}}
+                  xRange={currentAxisRanges.x}
+                  yRange={currentAxisRanges.y}
+                  autoScale={currentAxisRanges.x.auto && currentAxisRanges.y.auto}
                 />
               ))}
             </div>

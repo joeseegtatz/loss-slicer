@@ -7,9 +7,10 @@ import { MessageCard } from '@/components/message-card';
 import { TagSelector } from '@/components/tag-selector';
 
 export function RandomDirectionDashboard() {
-  const { selectedRuns, runColors, selectedTags } = useSliceDataContext();
+  const { selectedRuns, runColors, selectedTags, axisRanges } = useSliceDataContext();
 
   const selectedTagsForSlice = selectedTags['random-direction'];
+  const currentAxisRanges = axisRanges['random-direction'];
 
   // Create queries for all combinations of selected runs and tags
   const queries = useQueries({
@@ -107,6 +108,10 @@ export function RandomDirectionDashboard() {
             }))}
             isLoading={isLoading && !hasData}
             title="Random Direction Loss Landscape Comparison"
+            xRange={currentAxisRanges.x}
+            yRange={currentAxisRanges.y}
+            zRange={currentAxisRanges.z}
+            autoScale={{ x: currentAxisRanges.x.auto, y: currentAxisRanges.y.auto, z: currentAxisRanges.z?.auto ?? true }}
           />
         )}
 

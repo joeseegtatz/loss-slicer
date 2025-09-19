@@ -16,6 +16,18 @@ export const RUN_COLORS = [
 
 export type SliceType = 'linear-interpolation' | 'random-direction' | 'axis-parallel';
 
+interface AxisRange {
+  min: number;
+  max: number;
+  auto: boolean;
+}
+
+interface AxisRanges {
+  x: AxisRange;
+  y: AxisRange;
+  z?: AxisRange; // Optional for 3D charts
+}
+
 interface RunColorMapping {
   [run: string]: string;
 }
@@ -24,10 +36,14 @@ interface SliceDataContextType {
   selectedRuns: string[];
   activeSliceType: SliceType;
   selectedTags: Record<SliceType, string[]>;
+  axisRanges: Record<SliceType, AxisRanges>;
   toggleRun: (run: string) => void;
   setActiveSliceType: (sliceType: SliceType) => void;
   setSelectedTags: (sliceType: SliceType, tags: string[]) => void;
   toggleTag: (sliceType: SliceType, tag: string) => void;
+  setAxisRange: (sliceType: SliceType, axis: 'x' | 'y' | 'z', range: { min: number; max: number }) => void;
+  toggleAxisAuto: (sliceType: SliceType, axis: 'x' | 'y' | 'z') => void;
+  resetAxisRanges: (sliceType: SliceType) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
 }
@@ -45,6 +61,21 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     'linear-interpolation': [],
     'random-direction': [],
     'axis-parallel': []
+  });
+  const [axisRanges, setAxisRangesState] = useState<Record<SliceType, AxisRanges>>({
+    'linear-interpolation': {
+      x: { min: 0, max: 1, auto: true },
+      y: { min: 0, max: 1, auto: true }
+    },
+    'random-direction': {
+      x: { min: -1, max: 1, auto: true },
+      y: { min: -1, max: 1, auto: true },
+      z: { min: 0, max: 1, auto: true }
+    },
+    'axis-parallel': {
+      x: { min: 0, max: 1, auto: true },
+      y: { min: 0, max: 1, auto: true }
+    }
   });
   const [runColors, setRunColors] = useState<RunColorMapping>({});
 
@@ -96,6 +127,57 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     });
   };
 
+  const setAxisRange = (sliceType: SliceType, axis: 'x' | 'y' | 'z', range: { min: number; max: number }) => {
+    setAxisRangesState(prev => ({
+      ...prev,
+      [sliceType]: {
+        ...prev[sliceType],
+        [axis]: {
+          ...prev[sliceType][axis as keyof AxisRanges],
+          min: range.min,
+          max: range.max,
+          auto: false
+        }
+      }
+    }));
+  };
+
+  const toggleAxisAuto = (sliceType: SliceType, axis: 'x' | 'y' | 'z') => {
+    setAxisRangesState(prev => ({
+      ...prev,
+      [sliceType]: {
+        ...prev[sliceType],
+        [axis]: {
+          ...prev[sliceType][axis as keyof AxisRanges],
+          auto: !prev[sliceType][axis as keyof AxisRanges]?.auto
+        }
+      }
+    }));
+  };
+
+  const resetAxisRanges = (sliceType: SliceType) => {
+    const defaultRanges: Record<SliceType, AxisRanges> = {
+      'linear-interpolation': {
+        x: { min: 0, max: 1, auto: true },
+        y: { min: 0, max: 1, auto: true }
+      },
+      'random-direction': {
+        x: { min: -1, max: 1, auto: true },
+        y: { min: -1, max: 1, auto: true },
+        z: { min: 0, max: 1, auto: true }
+      },
+      'axis-parallel': {
+        x: { min: 0, max: 1, auto: true },
+        y: { min: 0, max: 1, auto: true }
+      }
+    };
+
+    setAxisRangesState(prev => ({
+      ...prev,
+      [sliceType]: defaultRanges[sliceType]
+    }));
+  };
+
   const resetSelections = () => {
     setSelectedRuns([]);
     setSelectedTagsState({
@@ -111,10 +193,14 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
         selectedRuns,
         activeSliceType,
         selectedTags,
+        axisRanges,
         toggleRun,
         setActiveSliceType,
         setSelectedTags,
         toggleTag,
+        setAxisRange,
+        toggleAxisAuto,
+        resetAxisRanges,
         resetSelections,
         runColors
       }}

@@ -11,6 +11,9 @@ interface ParameterSliceChartProps {
   selectedFocusPoint?: number | null;
   onFocusPointClick?: (focusPointIndex: number | null) => void;
   showConfidenceIntervals?: boolean;
+  xRange?: { min: number; max: number };
+  yRange?: { min: number; max: number };
+  autoScale?: boolean;
 }
 
 export function ParameterSliceChart({
@@ -20,7 +23,10 @@ export function ParameterSliceChart({
   focusPointIndices = [],
   selectedFocusPoint = null,
   onFocusPointClick,
-  showConfidenceIntervals = true
+  showConfidenceIntervals = true,
+  xRange,
+  yRange,
+  autoScale = true
 }: ParameterSliceChartProps) {
   const plotData = useMemo(() => {
     const traces: any[] = [];
@@ -217,12 +223,16 @@ export function ParameterSliceChart({
       });
     });
 
-    const xRange = [Math.min(...allXValues), Math.max(...allXValues)];
-    const yRange = [Math.min(...allYValues), Math.max(...allYValues)];
+    const defaultXRange = [Math.min(...allXValues), Math.max(...allXValues)];
+    const defaultYRange = [Math.min(...allYValues), Math.max(...allYValues)];
     
     // Add padding to ranges
-    const xPadding = (xRange[1] - xRange[0]) * 0.05;
-    const yPadding = (yRange[1] - yRange[0]) * 0.05;
+    const xPadding = (defaultXRange[1] - defaultXRange[0]) * 0.05;
+    const yPadding = (defaultYRange[1] - defaultYRange[0]) * 0.05;
+
+    // Use provided ranges or fallback to default
+    const finalXRange = !autoScale && xRange ? [xRange.min, xRange.max] : [defaultXRange[0] - xPadding, defaultXRange[1] + xPadding];
+    const finalYRange = !autoScale && yRange ? [yRange.min, yRange.max] : [defaultYRange[0] - yPadding, defaultYRange[1] + yPadding];
 
     return {
       autosize: true,
@@ -239,7 +249,7 @@ export function ParameterSliceChart({
         zerolinewidth: 1,
         gridcolor: '#f3f4f6',
         showgrid: true,
-        range: [xRange[0] - xPadding, xRange[1] + xPadding],
+        range: finalXRange,
         tickfont: { size: 10 },
         tickformat: '.2f'
       },
@@ -251,7 +261,7 @@ export function ParameterSliceChart({
         },
         gridcolor: '#f3f4f6',
         showgrid: true,
-        range: [yRange[0] - yPadding, yRange[1] + yPadding],
+        range: finalYRange,
         tickfont: { size: 10 },
         tickformat: '.2f'
       },
@@ -264,7 +274,7 @@ export function ParameterSliceChart({
         font: { color: 'white', size: 11 }
       }
     };
-  }, [slices]);
+  }, [slices, xRange, yRange, autoScale]);
 
   const plotConfig = {
     responsive: true,

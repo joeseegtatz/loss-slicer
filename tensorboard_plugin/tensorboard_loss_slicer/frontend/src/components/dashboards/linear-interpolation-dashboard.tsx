@@ -6,9 +6,10 @@ import { LineChart, LineData } from '@/components/charts/LineChart';
 import { TagSelector } from '@/components/tag-selector';
 
 export function LinearInterpolationDashboard() {
-  const { selectedRuns, runColors, selectedTags } = useSliceDataContext();
+  const { selectedRuns, runColors, selectedTags, axisRanges } = useSliceDataContext();
 
   const selectedTagsForSlice = selectedTags['linear-interpolation'];
+  const currentAxisRanges = axisRanges['linear-interpolation'];
 
   // Create queries for all combinations of selected runs and tags
   const queries = useQueries({
@@ -104,6 +105,12 @@ export function LinearInterpolationDashboard() {
           className=""
           isLoading={isLoading && !hasData}
           error={errorMessage}
+          xRange={!currentAxisRanges.x.auto ? currentAxisRanges.x : undefined}
+          yRange={!currentAxisRanges.y.auto ? currentAxisRanges.y : undefined}
+          autoScale={{
+            x: currentAxisRanges.x.auto,
+            y: currentAxisRanges.y.auto
+          }}
         />
         
         {/* Show partial loading state */}
