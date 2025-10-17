@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { fetchSliceData, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
-import { ParameterSliceChart } from "@/components/charts/parameter-slice-chart";
+import { LazyParameterSliceChart } from "@/components/charts/lazy-parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
 import { TagSelector } from "@/components/tag-selector";
 
@@ -118,7 +118,7 @@ export function AxisParallelDashboard() {
             <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {parameters.map(({ index, slices, focusPointIndices }) => (
-                <ParameterSliceChart
+                <LazyParameterSliceChart
                   key={index}
                   slices={slices}
                   parameterIndex={index}
