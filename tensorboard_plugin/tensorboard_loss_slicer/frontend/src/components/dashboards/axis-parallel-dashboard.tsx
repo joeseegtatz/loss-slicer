@@ -117,15 +117,12 @@ export function AxisParallelDashboard() {
           <div key={layerName} className="space-y-3">
             <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {parameters.map(({ index, slices, focusPointIndices }) => (
+              {parameters.map(({ index, slices }) => (
                 <LazyParameterSliceChart
                   key={index}
                   slices={slices}
                   parameterIndex={index}
                   parameterName={slices[0]?.parameter_name}
-                  focusPointIndices={focusPointIndices}
-                  selectedFocusPoint={null}
-                  onFocusPointClick={() => {}}
                   xRange={currentAxisRanges.x}
                   yRange={currentAxisRanges.y}
                   autoScale={currentAxisRanges.x.auto && currentAxisRanges.y.auto}

@@ -7,10 +7,6 @@ interface LazyParameterSliceChartProps {
   slices: ParameterSlice[];
   parameterIndex: number;
   parameterName?: string;
-  focusPointIndices?: number[];
-  selectedFocusPoint?: number | null;
-  onFocusPointClick?: (focusPointIndex: number | null) => void;
-  showConfidenceIntervals?: boolean;
   xRange?: { min: number; max: number };
   yRange?: { min: number; max: number };
   autoScale?: boolean;
