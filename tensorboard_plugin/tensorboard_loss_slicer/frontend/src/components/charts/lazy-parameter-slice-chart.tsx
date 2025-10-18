@@ -45,14 +45,16 @@ export function LazyParameterSliceChart({
   }, [rootMargin]);
 
   return (
-    <div ref={ref} className="min-h-[230px]">
+    <div ref={ref} className="min-h-[230px] w-full">
       {isVisible ? (
         <ParameterSliceChart {...props} />
       ) : (
-        <div className="h-[230px] rounded-lg border bg-card">
-          <div className="p-4 space-y-3">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-[170px] w-full" />
+        <div className="h-[230px] w-full border rounded">
+          <div className="border-b bg-gray-50 px-2 py-1">
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <div className="p-2">
+            <Skeleton className="h-[190px] w-full" />
           </div>
         </div>
       )}

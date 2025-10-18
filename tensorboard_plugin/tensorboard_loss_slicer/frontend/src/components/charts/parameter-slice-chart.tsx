@@ -1,5 +1,4 @@
 import { ParameterSlice } from "@/lib/api";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMemo } from "react";
 import Plot from 'react-plotly.js';
 
@@ -93,20 +92,16 @@ export function ParameterSliceChart({
   const displayName = parameterName || `Parameter ${parameterIndex}`;
 
   return (
-    <Card className="w-full overflow-hidden">
-      <CardHeader className="py-3 px-4 border-b">
-        <CardTitle className="text-sm font-medium">
-          {displayName}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="p-0">
-        <Plot
-          data={plotData}
-          layout={plotLayout}
-          config={{ responsive: true, displayModeBar: false }}
-          style={{ width: '100%', height: '100%' }}
-        />
-      </CardContent>
-    </Card>
+    <div className="w-full h-full">
+      <div className="text-xs font-medium text-gray-600 px-2 py-1 border-b bg-gray-50">
+        {displayName}
+      </div>
+      <Plot
+        data={plotData}
+        layout={plotLayout}
+        config={{ responsive: true, displayModeBar: false }}
+        style={{ width: '100%', height: '100%' }}
+      />
+    </div>
   );
 }
