@@ -42,7 +42,6 @@ interface SliceDataContextType {
   setSelectedTags: (sliceType: SliceType, tags: string[]) => void;
   toggleTag: (sliceType: SliceType, tag: string) => void;
   setAxisRange: (sliceType: SliceType, axis: 'x' | 'y' | 'z', range: { min: number; max: number }) => void;
-  toggleAxisAuto: (sliceType: SliceType, axis: 'x' | 'y' | 'z') => void;
   resetAxisRanges: (sliceType: SliceType) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
@@ -136,20 +135,7 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
           ...prev[sliceType][axis as keyof AxisRanges],
           min: range.min,
           max: range.max,
-          auto: false
-        }
-      }
-    }));
-  };
-
-  const toggleAxisAuto = (sliceType: SliceType, axis: 'x' | 'y' | 'z') => {
-    setAxisRangesState(prev => ({
-      ...prev,
-      [sliceType]: {
-        ...prev[sliceType],
-        [axis]: {
-          ...prev[sliceType][axis as keyof AxisRanges],
-          auto: !prev[sliceType][axis as keyof AxisRanges]?.auto
+          auto: false  // Automatically disable auto when user drags slider
         }
       }
     }));
@@ -199,7 +185,6 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
         setSelectedTags,
         toggleTag,
         setAxisRange,
-        toggleAxisAuto,
         resetAxisRanges,
         resetSelections,
         runColors

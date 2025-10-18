@@ -2,7 +2,6 @@ import { useSliceDataContext, SliceType } from "@/contexts/slice-data-context";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { RotateCcw } from "lucide-react";
 
 interface AxisControlsProps {
@@ -12,7 +11,7 @@ interface AxisControlsProps {
 }
 
 export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisControlsProps) {
-  const { axisRanges, setAxisRange, toggleAxisAuto, resetAxisRanges } = useSliceDataContext();
+  const { axisRanges, setAxisRange, resetAxisRanges } = useSliceDataContext();
   
   const currentRanges = axisRanges[sliceType];
 
@@ -61,60 +60,48 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
               <label className="text-sm font-medium">
                 {axisLabels[axis]} ({axis.toUpperCase()})
               </label>
-              <div className="flex items-center space-x-2">
-                <span className="text-xs text-muted-foreground">Auto</span>
-                <Switch
-                  checked={axisRange.auto}
-                  onCheckedChange={() => toggleAxisAuto(sliceType, axis)}
-                />
-              </div>
+              {!axisRange.auto && (
+                <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded">Manual</span>
+              )}
             </div>
 
-            {!axisRange.auto && (
-              <div className="space-y-3">
-                {/* Range Slider */}
-                <div className="px-2">
-                  <Slider
-                    value={[axisRange.min, axisRange.max]}
-                    onValueChange={(values) => handleRangeChange(axis, values)}
-                    min={-10}
-                    max={10}
+            <div className="space-y-3">
+              {/* Range Slider */}
+              <div className="px-2">
+                <Slider
+                  value={[axisRange.min, axisRange.max]}
+                  onValueChange={(values) => handleRangeChange(axis, values)}
+                  min={-10}
+                  max={10}
+                  step={0.01}
+                  className="w-full"
+                />
+              </div>
+
+              {/* Min/Max Inputs */}
+              <div className="flex space-x-2">
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground">Min</label>
+                  <Input
+                    type="number"
+                    value={axisRange.min}
+                    onChange={(e) => handleMinMaxInput(axis, 'min', e.target.value)}
+                    className="h-8 text-sm"
                     step={0.01}
-                    className="w-full"
                   />
                 </div>
-
-                {/* Min/Max Inputs */}
-                <div className="flex space-x-2">
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground">Min</label>
-                    <Input
-                      type="number"
-                      value={axisRange.min}
-                      onChange={(e) => handleMinMaxInput(axis, 'min', e.target.value)}
-                      className="h-8 text-sm"
-                      step={0.01}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label className="text-xs text-muted-foreground">Max</label>
-                    <Input
-                      type="number"
-                      value={axisRange.max}
-                      onChange={(e) => handleMinMaxInput(axis, 'max', e.target.value)}
-                      className="h-8 text-sm"
-                      step={0.01}
-                    />
-                  </div>
+                <div className="flex-1">
+                  <label className="text-xs text-muted-foreground">Max</label>
+                  <Input
+                    type="number"
+                    value={axisRange.max}
+                    onChange={(e) => handleMinMaxInput(axis, 'max', e.target.value)}
+                    className="h-8 text-sm"
+                    step={0.01}
+                  />
                 </div>
               </div>
-            )}
-
-            {axisRange.auto && (
-              <div className="text-xs text-muted-foreground text-center py-2">
-                Auto-scaling enabled
-              </div>
-            )}
+            </div>
           </div>
         );
       })}
