@@ -71,9 +71,9 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
                 <Slider
                   value={[axisRange.min, axisRange.max]}
                   onValueChange={(values) => handleRangeChange(axis, values)}
-                  min={-10}
-                  max={10}
-                  step={0.01}
+                  min={-6}
+                  max={6}
+                  step={0.1}
                   className="w-full"
                 />
               </div>
@@ -86,8 +86,8 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
                     type="number"
                     value={axisRange.min}
                     onChange={(e) => handleMinMaxInput(axis, 'min', e.target.value)}
-                    className="h-8 text-sm"
-                    step={0.01}
+                    // className="h-8 text-sm"
+                    step={0.1}
                   />
                 </div>
                 <div className="flex-1">
@@ -96,8 +96,8 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
                     type="number"
                     value={axisRange.max}
                     onChange={(e) => handleMinMaxInput(axis, 'max', e.target.value)}
-                    className="h-8 text-sm"
-                    step={0.01}
+                    // className="h-8 text-sm"
+                    step={0.1}
                   />
                 </div>
               </div>

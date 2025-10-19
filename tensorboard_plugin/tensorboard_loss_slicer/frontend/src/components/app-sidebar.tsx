@@ -54,6 +54,8 @@ export function AppSidebar() {
             
             <Separator />
             
+
+            {/* Axis Controls Start */}
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="axis-controls">
                 <AccordionTrigger className="text-sm font-medium">
@@ -68,6 +70,9 @@ export function AppSidebar() {
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
+            {/* Axis Controls End */}
+
+            
           </div>
         </SidebarGroup>
       </SidebarContent>

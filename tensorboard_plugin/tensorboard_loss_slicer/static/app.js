@@ -19724,9 +19724,9 @@ function sW({ sliceType: pe, availableAxes: Ce, axisLabels: qe }) {
             {
               value: [Ur.min, Ur.max],
               onValueChange: (Gr) => hr(vr, Gr),
-              min: -10,
-              max: 10,
-              step: 0.01,
+              min: -6,
+              max: 6,
+              step: 0.1,
               className: "w-full"
             }
           ) }),
@@ -19739,8 +19739,7 @@ function sW({ sliceType: pe, availableAxes: Ce, axisLabels: qe }) {
                   type: "number",
                   value: Ur.min,
                   onChange: (Gr) => wr(vr, "min", Gr.target.value),
-                  className: "h-8 text-sm",
-                  step: 0.01
+                  step: 0.1
                 }
               )
             ] }),
@@ -19752,8 +19751,7 @@ function sW({ sliceType: pe, availableAxes: Ce, axisLabels: qe }) {
                   type: "number",
                   value: Ur.max,
                   onChange: (Gr) => wr(vr, "max", Gr.target.value),
-                  className: "h-8 text-sm",
-                  step: 0.01
+                  step: 0.1
                 }
               )
             ] })
