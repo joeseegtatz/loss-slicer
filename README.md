@@ -35,11 +35,13 @@ To get started with either the library or the tensorboard plugin please refer to
 
 ## Development
 
+If you are new to PyTorch I would highly recommend their [documentation](https://docs.pytorch.org/tutorials/beginner/basics/intro.html) to get started. 
+
 For detailed development information and contribution guidelines:
 - [PySlice Development Guide](./docs/PYSLICE-DEVELOPMENT.md) - Core library development
 - [Plugin Development Guide](./docs/PLUGIN-DEVELOPMENT.md) - TensorBoard plugin development
 
-## Related Work
+## Related Work 
 
 This library builds on research in loss landscape visualization, particularly:
 - Doknic, A. and Möller, T. “FuNNscope: Visual microscope for interactively exploring the loss landscape of fully connected neural networks” (2022)

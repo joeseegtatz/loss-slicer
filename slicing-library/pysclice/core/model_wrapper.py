@@ -103,11 +103,20 @@ class ModelWrapper:
             
             self.model.eval()  # Set model to evaluation mode
             with torch.no_grad(): # no computational graph build
+                #iterate over all batches of samples of DataLoader
                 for inputs, targets in use_data:
+                    
+                    #move data to device
                     inputs = inputs.to(self.device)
                     targets = targets.to(self.device)
+                    
+                    #forward pass through model
                     outputs = self.model(inputs)
+                    
+                    #compare prediction (output) to ground truth (taget) using the loss function
                     loss = self.loss_fn(outputs, targets)
+                    
+                    #operations to correctly calculate mean over batches 
                     batch_size = inputs.size(0)
                     # Handle both tensor and float loss values
                     if isinstance(loss, torch.Tensor):

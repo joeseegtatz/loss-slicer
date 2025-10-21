@@ -12,9 +12,6 @@ import torch.nn as nn
 class Simple1DParabola(nn.Module):
     """
     Simple 1D parabolic function: f(x) = x²
-    
-    This creates a perfect parabola with minimum at x=0.
-    Useful for testing basic slicing functionality.
     """
     def __init__(self, initial_value=0.0):
         super().__init__()
@@ -27,9 +24,6 @@ class Simple1DParabola(nn.Module):
 class Simple2DParabola(nn.Module):
     """
     Simple 2D parabolic function: f(x, y) = x² + y²
-    
-    This creates a bowl-shaped landscape with minimum at (0,0).
-    Perfect for testing 2D slicing and visualization.
     """
     def __init__(self, initial_x=0.0, initial_y=0.0):
         super().__init__()
@@ -43,15 +37,6 @@ class Simple2DParabola(nn.Module):
 class MultiParameterQuadratic(nn.Module):
     """
     Multi-parameter model with different quadratic behaviors per parameter.
-    
-    This model demonstrates how different parameters can have different
-    loss landscape characteristics:
-    - param[0]: x² (minimum at 0)
-    - param[1]: (x-1)² (minimum at 1) 
-    - param[2]: x⁴ (minimum at 0, flatter)
-    - param[3]: (x+2)² (minimum at -2)
-    - param[4]: 0.5x² (minimum at 0, wider)
-    
     """
     def __init__(self):
         super().__init__()
@@ -76,9 +61,6 @@ class MultiParameterQuadratic(nn.Module):
 class SinusoidalModel(nn.Module):
     """
     Model with sinusoidal landscape: f(x, y) = sin(x) + sin(x + y)
-    
-    Creates a more complex landscape with multiple local minima.
-    Good for testing how slicers handle non-convex landscapes.
     """
     def __init__(self):
         super().__init__()
@@ -92,10 +74,6 @@ class SinusoidalModel(nn.Module):
 class RosenbrockFunction(nn.Module):
     """
     2D Rosenbrock function: f(x,y) = (a-x)² + b(y-x²)²
-    
-    With a=1, b=100, this creates the famous "Rosenbrock banana function"
-    with a global minimum at (1,1). This function is difficult
-    to optimize and provides an interesting test case for slicing.
     """
     def __init__(self, a=1.0, b=100.0):
         super().__init__()
@@ -112,9 +90,6 @@ class RosenbrockFunction(nn.Module):
 class SimpleNeuralNetwork(nn.Module):
     """
     A simple neural network for more realistic loss landscape analysis.
-    
-    This provides a more realistic example of how slicing works with
-    actual neural network parameters (weights and biases).
     """
     def __init__(self, input_size=3, hidden_size=5, output_size=1):
         super().__init__()
@@ -138,7 +113,7 @@ def create_dummy_data(batch_size=1, input_dim=1):
 
 
 # Identity loss function for models that return their loss directly
-def identity_loss(output, target):
+def identity_loss(output):
     """Loss function that returns the model output directly (for analytical models)."""
     return output
 
