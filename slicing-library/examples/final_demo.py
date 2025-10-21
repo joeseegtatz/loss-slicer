@@ -44,8 +44,8 @@ feature_cols = ['LSTAT', 'INDUS', 'NOX', 'PTRATIO', 'RM', 'TAX', 'DIS', 'AGE']
 X = data[feature_cols].values
 y = data['MEDV'].values
 
-# Apply log transformation to reduce skewness
-y = np.log1p(y)
+# Apply log transformation to reduce skewness - housing prices are often right-skewed
+# y = np.log1p(y)
 
 # Scale features
 scaler = MinMaxScaler()
@@ -213,7 +213,6 @@ print("Starting training...")
 
 for epoch in range(num_epochs):
     for i, (input, labels) in enumerate(train_loader):  
-
         input = input.to(device)
         labels = labels.to(device)
         
@@ -227,23 +226,12 @@ for epoch in range(num_epochs):
         optimizer.step()
         
         running_loss += loss.item()
-
-        #accuracy logging - uncomment if classification
-        # _, predicted = torch.max(outputs.data, 1)
-        # running_correct += (predicted == labels).sum().item()
         
-        if i % 1 == 0:    # log every step.
+        if i % 1 == 0:    # log every step
             print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
-            #-------------- TENSORBOARD LOSS AND ACCURACY ------------------------
-            writer.add_scalar('training loss', running_loss / 100, epoch * n_total_steps + i)
-            
-            # accuracy logging - uncomment if classification
-            # running_accuracy = running_correct / 100 / predicted.size(0)
-            # writer.add_scalar('accuracy', running_accuracy, epoch * n_total_steps + i)
-            # running_correct = 0
+            # Log the actual running loss divided by number of steps (1 in this case)
+            writer.add_scalar('training loss', running_loss / 1, epoch * n_total_steps + i)
             running_loss = 0.0
-            #--------------------------------------------------------
-            
 
 
 ########################### TEST MODEL ###########################
@@ -316,5 +304,5 @@ with custom_writer.as_default():
     log_slice("untrained_landscape", rd_slice_data_untrained,2)
     log_slice("trained_landscape", rd_slice_data_trained,3)
     log_slice("axis_parallel_slices_trained", ap_slice_data,4)
-    
-    
+
+
