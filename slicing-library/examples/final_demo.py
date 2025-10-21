@@ -1,0 +1,320 @@
+# Standard libraries
+import os
+import copy
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
+from torch.utils.tensorboard import SummaryWriter
+
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.model_selection import train_test_split
+
+# PySlice components
+from pysclice.slicers import LinearInterpolationSlicer, AxisParallelSlicer, RandomDirectionSlicer
+from pysclice.core import ModelWrapper
+
+# TensorBoard plugin components
+import sys
+sys.path.append('../../tensorboard_plugin')  # Add path to tensorboard plugin
+from tensorboard_loss_slicer.summary_v2 import log_slice
+import tensorflow as tf
+
+
+# Set seeds for reproducibility
+torch.manual_seed(42)
+np.random.seed(42)
+
+########################### LOAD DATASET / PREPARE DATA ###########################
+
+# Load Boston Housing dataset
+column_names = ['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV']
+data = pd.read_csv('./data/housing.csv', header=None, delimiter=r"\s+", names=column_names)
+
+# Remove outliers (MEDV >= 50.0)
+data = data[~(data['MEDV'] >= 50.0)]
+
+# Select features with good correlation to target
+feature_cols = ['LSTAT', 'INDUS', 'NOX', 'PTRATIO', 'RM', 'TAX', 'DIS', 'AGE']
+X = data[feature_cols].values
+y = data['MEDV'].values
+
+# Apply log transformation to reduce skewness
+y = np.log1p(y)
+
+# Scale features
+scaler = MinMaxScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Train/test split with reduced training data to make problem harder
+X_train_full, X_test, y_train_full, y_test = train_test_split(
+    X_scaled, y, test_size=0.2, random_state=42
+)
+
+# Reduce training data to 100 samples to increase difficulty
+train_indices = np.random.choice(len(X_train_full), 100, replace=False)
+X_train = X_train_full[train_indices]
+y_train = y_train_full[train_indices]
+
+# Convert to PyTorch tensors
+X_train_tensor = torch.FloatTensor(X_train)
+y_train_tensor = torch.FloatTensor(y_train).unsqueeze(1)
+X_test_tensor = torch.FloatTensor(X_test)
+y_test_tensor = torch.FloatTensor(y_test).unsqueeze(1)
+
+# Create datasets
+train_dataset = TensorDataset(X_train_tensor, y_train_tensor)
+test_dataset = TensorDataset(X_test_tensor, y_test_tensor)
+
+train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
+test_loader = DataLoader(test_dataset, batch_size=32, shuffle=False)
+
+examples = iter(train_loader)
+example_data, example_targets = next(examples)
+
+########################### DEFINE NETWORK ###########################
+
+
+# Define the 4 different network architectures for comparison
+
+class TinyNet(nn.Module):
+    """Tiny network - too small to capture dataset complexity"""
+    def __init__(self, input_size=8):
+        super(TinyNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, 4)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(4, 1)
+        
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+class ShallowNet(nn.Module):
+    """Traditional shallow network - sharp minima expected"""
+    def __init__(self, input_size=8):
+        super(ShallowNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, 32)
+        self.relu = nn.ReLU()
+        self.fc2 = nn.Linear(32, 1)
+        
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.fc2(x)
+        return x
+
+class DeepNet(nn.Module):
+    """Deep network without normalization - chaotic landscape expected"""
+    def __init__(self, input_size=8):
+        super(DeepNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, 64)
+        self.fc2 = nn.Linear(64, 64)
+        self.fc3 = nn.Linear(64, 32)
+        self.fc4 = nn.Linear(32, 16)
+        self.fc5 = nn.Linear(16, 1)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
+        x = self.relu(self.fc4(x))
+        x = self.fc5(x)
+        return x
+
+class NormalizedNet(nn.Module):
+    """Modern network with BatchNorm - flat minima expected"""
+    def __init__(self, input_size=8):
+        super(NormalizedNet, self).__init__()
+        self.fc1 = nn.Linear(input_size, 64)
+        self.bn1 = nn.BatchNorm1d(64)
+        self.fc2 = nn.Linear(64, 32)
+        self.bn2 = nn.BatchNorm1d(32)
+        self.fc3 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        x = self.relu(self.bn1(self.fc1(x)))
+        x = self.relu(self.bn2(self.fc2(x)))
+        x = self.fc3(x)
+        return x
+    
+########################### SETUP PARAMETERS ###########################
+
+# Architecture configuration
+INPUT_SIZE = X_train.shape[1]
+
+architectures = {
+    'tiny_net': TinyNet,
+    'shallow_net': ShallowNet, 
+    'deep_net': DeepNet,
+    'normalized_net': NormalizedNet
+}
+
+# Hyper-parameters 
+INPUT_SIZE = X_train.shape[1]
+num_classes = 10
+num_epochs = 10
+#batch_size = 64
+learning_rate = 0.001
+momentum = 0.9
+
+#tensorboard writer setup
+logdir = './runs/architecture_comparison'
+writer = SummaryWriter(logdir)
+
+#torch setup 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+
+########################### TRAIN FUNCTION ###########################
+
+def train_model(model, train_loader, optimizer, criterion, writer):
+    
+    pass
+
+def test_model(model, train_loader, optimizer, criterion, writer):
+    pass
+
+
+########################### MAIN LOOP ###########################
+
+
+
+
+model = architectures['tiny_net'](input_size=INPUT_SIZE)
+
+# Loss and optimizer
+criterion = nn.MSELoss()
+optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
+
+
+#-------- TENSORHOARD LOG GRAPH ---------
+writer.add_graph(model, example_data.to(device))
+# ----------------------------------------
+
+
+########################### TRAIN MODEL ###########################
+
+running_loss = 0.0
+# running_correct = 0
+n_total_steps = len(train_loader)
+
+#snapshot of untrained model
+untrained_model = copy.deepcopy(model)
+
+print("Starting training...")
+
+for epoch in range(num_epochs):
+    for i, (input, labels) in enumerate(train_loader):  
+
+        input = input.to(device)
+        labels = labels.to(device)
+        
+        # Forward pass
+        outputs = model(input)
+        loss = criterion(outputs, labels)
+        
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        
+        running_loss += loss.item()
+
+        #accuracy logging - uncomment if classification
+        # _, predicted = torch.max(outputs.data, 1)
+        # running_correct += (predicted == labels).sum().item()
+        
+        if i % 1 == 0:    # log every step.
+            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
+            #-------------- TENSORBOARD LOSS AND ACCURACY ------------------------
+            writer.add_scalar('training loss', running_loss / 100, epoch * n_total_steps + i)
+            
+            # accuracy logging - uncomment if classification
+            # running_accuracy = running_correct / 100 / predicted.size(0)
+            # writer.add_scalar('accuracy', running_accuracy, epoch * n_total_steps + i)
+            # running_correct = 0
+            running_loss = 0.0
+            #--------------------------------------------------------
+            
+
+
+########################### TEST MODEL ###########################
+
+with torch.no_grad():
+    all_predictions = []
+    all_targets = []
+    
+    for inputs, labels in test_loader:
+        inputs = inputs.to(device)
+        outputs = model(inputs)
+        
+        all_predictions.extend(outputs.cpu().numpy())
+        all_targets.extend(labels.cpu().numpy())
+    
+    # Create matplotlib figure
+    fig, ax = plt.subplots()
+    ax.scatter(all_targets, all_predictions, alpha=0.5)
+    ax.plot([min(all_targets), max(all_targets)], 
+            [min(all_targets), max(all_targets)], 
+            'r--', label='Perfect predictions')
+    ax.set_xlabel('Actual Values')
+    ax.set_ylabel('Predicted Values')
+    ax.set_title('Predictions vs Actual')
+    ax.legend()
+    
+    writer.add_figure('predictions_vs_actual', fig, global_step=num_epochs)
+
+
+########################### LOSS LANDSCAPE ###########################
+
+
+untrained_model_wrapper = ModelWrapper(untrained_model, criterion, train_loader)
+trained_model_wrapper = ModelWrapper(model, criterion, train_loader)
+
+# LINEAR INTERPOLATION
+
+linear_interpolation_slicer = LinearInterpolationSlicer(untrained_model_wrapper)
+linear_slice_data = linear_interpolation_slicer.slice(end_point=trained_model_wrapper.get_parameters(), n_samples=15)
+
+# RANDOM DIRECTION
+rd_slicer = RandomDirectionSlicer(untrained_model_wrapper)
+rd_slice_data_untrained = rd_slicer.slice(
+    n_samples=30, 
+    x_range=(-4,4), 
+    y_range=(-4,4)
+)
+
+rd_slicer.model = trained_model_wrapper
+rd_slice_data_trained = rd_slicer.slice(
+    n_samples=30, 
+    x_range=(-4,4), 
+    y_range=(-4,4)
+)
+
+# AXIS PARALLEL - more useful for smaller models / fewer parameters
+ap_slicer = AxisParallelSlicer(trained_model_wrapper)
+ap_slice_data = ap_slicer.sample_focus_points_and_slice(
+    n_points=5,
+    radius= 1, 
+    n_samples_per_slice= 20, 
+    bounds=(-4,4), 
+    bounds_mode='absolute'
+)
+
+
+custom_writer = tf.summary.create_file_writer(logdir)
+with custom_writer.as_default():
+    log_slice("linear_interpolation_start_to_finish", linear_slice_data, step=1)
+    log_slice("untrained_landscape", rd_slice_data_untrained,2)
+    log_slice("trained_landscape", rd_slice_data_trained,3)
+    log_slice("axis_parallel_slices_trained", ap_slice_data,4)
+    
+    
