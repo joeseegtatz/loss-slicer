@@ -166,143 +166,177 @@ momentum = 0.9
 
 #tensorboard writer setup
 logdir = './runs/architecture_comparison'
-writer = SummaryWriter(logdir)
+
 
 #torch setup 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 
-########################### TRAIN FUNCTION ###########################
-
-def train_model(model, train_loader, optimizer, criterion, writer):
-    
-    pass
-
-def test_model(model, train_loader, optimizer, criterion, writer):
-    pass
-
-
 ########################### MAIN LOOP ###########################
 
+# Dictionary to store models for later slicing
+saved_models = {}
 
-
-
-model = architectures['tiny_net'](input_size=INPUT_SIZE)
-
-# Loss and optimizer
-criterion = nn.MSELoss()
-optimizer = optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum)
-
-
-#-------- TENSORHOARD LOG GRAPH ---------
-writer.add_graph(model, example_data.to(device))
-# ----------------------------------------
-
-
-########################### TRAIN MODEL ###########################
-
-running_loss = 0.0
-# running_correct = 0
-n_total_steps = len(train_loader)
-
-#snapshot of untrained model
-untrained_model = copy.deepcopy(model)
-
-print("Starting training...")
-
-for epoch in range(num_epochs):
-    for i, (input, labels) in enumerate(train_loader):  
-        input = input.to(device)
-        labels = labels.to(device)
+for arch_name, arch_class in architectures.items():
+    
+    for lr in [0.01, 0.001]:
         
-        # Forward pass
-        outputs = model(input)
-        loss = criterion(outputs, labels)
-        
-        # Backward and optimize
-        optimizer.zero_grad()
-        loss.backward()
-        optimizer.step()
-        
-        running_loss += loss.item()
-        
-        if i % 1 == 0:    # log every step
-            print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
-            # Log the actual running loss divided by number of steps (1 in this case)
-            writer.add_scalar('training loss', running_loss / 1, epoch * n_total_steps + i)
+        for seed in [42]:
+            
+            print(f'\n\n=== Training {arch_name} with lr={lr}, seed={seed} ===\n\n')
+            
+            run_name = f'{arch_name}_lr{lr}_seed{seed}'
+            run_writer = SummaryWriter(f'{logdir}/{run_name}')
+            
+            torch.manual_seed(seed)
+            np.random.seed(seed)
+            
+            model = arch_class(input_size=INPUT_SIZE).to(device)
+            optimizer = optim.SGD(model.parameters(), lr=lr, momentum=momentum)
+            criterion = nn.MSELoss()
+            
+            #snapshot of untrained model for slicing later
+            untrained_model = copy.deepcopy(model)
+            
+            #-------- TENSORHOARD LOG GRAPH ---------
+            run_writer.add_graph(model, example_data.to(device))
+            # ----------------------------------------
+            
+            ########################### TRAIN MODEL ###########################
+            
             running_loss = 0.0
+            n_total_steps = len(train_loader)
+            
+            print("Starting training...")
+            
+            for epoch in range(num_epochs):
+                for i, (input, labels) in enumerate(train_loader):  
+                    input = input.to(device)
+                    labels = labels.to(device)
+                    
+                    # Forward pass
+                    outputs = model(input)
+                    loss = criterion(outputs, labels)
+                    
+                    # Backward and optimize
+                    optimizer.zero_grad()
+                    loss.backward()
+                    optimizer.step()
+                    
+                    running_loss += loss.item()
+                    
+                    if i % 1 == 0:    # log every step
+                        print (f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{n_total_steps}], Loss: {loss.item():.4f}')
+                        # Log the actual running loss divided by number of steps (1 in this case)
+                        run_writer.add_scalar('training loss', running_loss / 1, epoch * n_total_steps + i)
+                        running_loss = 0.0
+                
+                if epoch in [0, 5, num_epochs-1]:
+                    # Save models at checkpoints
+                    if run_name not in saved_models:
+                        saved_models[run_name] = {}
+                    
+                    saved_models[run_name][f'epoch_{epoch}'] = {
+                        'untrained_model': copy.deepcopy(untrained_model),
+                        'trained_model': copy.deepcopy(model)
+                    }
 
+            ########################### TEST MODEL ###########################
+            
+            with torch.no_grad():
+                all_predictions = []
+                all_targets = []
+                
+                for inputs, labels in test_loader:
+                    inputs = inputs.to(device)
+                    outputs = model(inputs)
+                    
+                    all_predictions.extend(outputs.cpu().numpy())
+                    all_targets.extend(labels.cpu().numpy())
+                
+                # Create matplotlib figure
+                fig, ax = plt.subplots()
+                ax.scatter(all_targets, all_predictions, alpha=0.5)
+                ax.plot([min(all_targets), max(all_targets)], 
+                        [min(all_targets), max(all_targets)], 
+                        'r--', label='Perfect predictions')
+                ax.set_xlabel('Actual Values')
+                ax.set_ylabel('Predicted Values')
+                ax.set_title('Predictions vs Actual')
+                ax.legend()
+                
+                run_writer.add_figure(f'{logdir}/{run_name}/prediction', fig, global_step=num_epochs)
+            
+            run_writer.close()
 
-########################### TEST MODEL ###########################
+########################### LOSS LANDSCAPE ANALYSIS ###########################
 
-with torch.no_grad():
-    all_predictions = []
-    all_targets = []
+print("\n\n=== Starting Loss Landscape Analysis ===\n")
+
+for run_name, checkpoints in saved_models.items():
     
-    for inputs, labels in test_loader:
-        inputs = inputs.to(device)
-        outputs = model(inputs)
+    print(f"\nProcessing {run_name}...")
+    
+    arch_name = run_name.split('_lr')[0]
+    
+    custom_writer = tf.summary.create_file_writer(f'{logdir}/{run_name}')
+    custom_writer.set_as_default()
+    
+    for epoch_key, models in checkpoints.items():
         
-        all_predictions.extend(outputs.cpu().numpy())
-        all_targets.extend(labels.cpu().numpy())
+        epoch = int(epoch_key.split('_')[1])
+        print(f"  Computing slices for {epoch_key}...")
+        
+        untrained_model = models['untrained_model']
+        trained_model = models['trained_model']
+        
+        untrained_model_wrapper = ModelWrapper(untrained_model, criterion, train_loader)
+        trained_model_wrapper = ModelWrapper(trained_model, criterion, train_loader)
+        
+        # LINEAR INTERPOLATION
+        linear_interpolation_slicer = LinearInterpolationSlicer(untrained_model_wrapper)
+        linear_slice_data = linear_interpolation_slicer.slice(end_point=trained_model_wrapper.get_parameters(), n_samples=15)
+        
+        # RANDOM DIRECTION
+        rd_slicer = RandomDirectionSlicer(untrained_model_wrapper)
+        rd_slice_data_untrained = rd_slicer.slice(
+            n_samples=30, 
+            x_range=(-4,4), 
+            y_range=(-4,4)
+        )
+        
+        rd_slicer.model = trained_model_wrapper
+        rd_slice_data_trained = rd_slicer.slice(
+            n_samples=30, 
+            x_range=(-4,4), 
+            y_range=(-4,4)
+        )
+        
+        # AXIS PARALLEL - more useful for smaller models / fewer parameters
+        if arch_name in ['tiny_net', 'shallow_net']:
+            ap_slicer = AxisParallelSlicer(trained_model_wrapper)
+            ap_slice_data = ap_slicer.sample_focus_points_and_slice(
+                n_points=5,
+                radius= 1, 
+                n_samples_per_slice= 20, 
+                bounds=(-4,4), 
+                bounds_mode='absolute'
+            )
+        
+        log_slice(f"linear_interpolation_start_to_finish_epoch{epoch}", linear_slice_data, step=epoch)
+        log_slice(f"untrained_landscape_epoch{epoch}", rd_slice_data_untrained, step=epoch)
+        log_slice(f"trained_landscape_epoch{epoch}", rd_slice_data_trained, step=epoch)
+        if arch_name in ['tiny_net', 'shallow_net']:
+            log_slice(f"axis_parallel_slices_trained_epoch{epoch}", ap_slice_data, step=epoch)
+        custom_writer.flush()
     
-    # Create matplotlib figure
-    fig, ax = plt.subplots()
-    ax.scatter(all_targets, all_predictions, alpha=0.5)
-    ax.plot([min(all_targets), max(all_targets)], 
-            [min(all_targets), max(all_targets)], 
-            'r--', label='Perfect predictions')
-    ax.set_xlabel('Actual Values')
-    ax.set_ylabel('Predicted Values')
-    ax.set_title('Predictions vs Actual')
-    ax.legend()
-    
-    writer.add_figure('predictions_vs_actual', fig, global_step=num_epochs)
+    custom_writer.close()
+    print(f"Completed slicing for {run_name}")
+
+print("\n=== All analysis complete! ===")
+print(f"View results with: tensorboard --logdir={logdir}")
 
 
-########################### LOSS LANDSCAPE ###########################
-
-
-untrained_model_wrapper = ModelWrapper(untrained_model, criterion, train_loader)
-trained_model_wrapper = ModelWrapper(model, criterion, train_loader)
-
-# LINEAR INTERPOLATION
-
-linear_interpolation_slicer = LinearInterpolationSlicer(untrained_model_wrapper)
-linear_slice_data = linear_interpolation_slicer.slice(end_point=trained_model_wrapper.get_parameters(), n_samples=15)
-
-# RANDOM DIRECTION
-rd_slicer = RandomDirectionSlicer(untrained_model_wrapper)
-rd_slice_data_untrained = rd_slicer.slice(
-    n_samples=30, 
-    x_range=(-4,4), 
-    y_range=(-4,4)
-)
-
-rd_slicer.model = trained_model_wrapper
-rd_slice_data_trained = rd_slicer.slice(
-    n_samples=30, 
-    x_range=(-4,4), 
-    y_range=(-4,4)
-)
-
-# AXIS PARALLEL - more useful for smaller models / fewer parameters
-ap_slicer = AxisParallelSlicer(trained_model_wrapper)
-ap_slice_data = ap_slicer.sample_focus_points_and_slice(
-    n_points=5,
-    radius= 1, 
-    n_samples_per_slice= 20, 
-    bounds=(-4,4), 
-    bounds_mode='absolute'
-)
-
-
-custom_writer = tf.summary.create_file_writer(logdir)
-with custom_writer.as_default():
-    log_slice("linear_interpolation_start_to_finish", linear_slice_data, step=1)
-    log_slice("untrained_landscape", rd_slice_data_untrained,2)
-    log_slice("trained_landscape", rd_slice_data_trained,3)
-    log_slice("axis_parallel_slices_trained", ap_slice_data,4)
 
 
