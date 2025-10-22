@@ -19,14 +19,8 @@ PySlice Library Architecture
 │   │   └── random_direction_slicer.py
 │   └── visualization/
 │       └── visualization.py      # Plotting and display tools
-├── Examples & Demos
-│   ├── example_models.py         # Model definitions for examples
-│   ├── pysclice_analytical_functions.ipynb
-│   └── pysclice_neural_network_demo.ipynb
-└── Performance Benchmarks
-    ├── performance_benchmark_axis_parallel.ipynb
-    ├── performance_benchmark_random_dir.ipynb
-    └── performance_test.py
+├── examples # example scripts
+│   
 ```
 
 ## Installation
@@ -171,19 +165,9 @@ plot_2d_slice(slice_data, title="2D Loss Landscape")
 plt.show()
 ```
 
-## Examples and Benchmarks
-
-### Example Notebooks
-- **`pysclice_analytical_functions.ipynb`**: Demonstrates slicing on analytical functions
-- **`pysclice_neural_network_demo.ipynb`**: Complete neural network analysis workflow
-
-### Performance Benchmarks
-- **`performance_benchmark_axis_parallel.ipynb`**: Benchmarks axis parallel slicing performance
-- **`performance_benchmark_random_dir.ipynb`**: Tests random direction slicing efficiency
-- **`performance_test.py`**: Automated performance testing script
-
-### Example Models
-See `example_models.py` for predefined model architectures suitable for loss landscape analysis.
+## Example
+ 
+You can find an exmaple notebook where anyltical functions are slices [here](/slicing-library/examples/analytical_functions-example.ipynb)
 
 ## Development
 

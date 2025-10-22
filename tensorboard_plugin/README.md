@@ -69,112 +69,14 @@ You should see `tensorboard-loss-slicer` in the output.
 
 ## Basic Usage
 
-### 1. Import Required Modules
+## Basic Usage
 
-```python
-import torch
-import torch.nn as nn
-from torch.utils.tensorboard import SummaryWriter
-
-# PySlice components
-from pysclice.core import ModelWrapper
-from pysclice.slicers import LinearInterpolationSlicer, AxisParallelSlicer, RandomDirectionSlicer
-
-# TensorBoard logging
-from tensorboard_loss_slicer.summary_v2 import log_slice
-```
-
-### 2. Setup Model and Data
-
-```python
-# Create model and loss function
-model = nn.Sequential(
-    nn.Linear(784, 128),
-    nn.ReLU(),
-    nn.Linear(128, 64),
-    nn.ReLU(),
-    nn.Linear(64, 10)
-)
-loss_fn = nn.CrossEntropyLoss()
-
-# Prepare data (replace with your actual data)
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=64)
-
-# Create model wrapper
-wrapper = ModelWrapper(
-    model=model,
-    loss_fn=loss_fn,
-    train_data=train_loader,
-    test_data=test_loader,
-    device='cuda' if torch.cuda.is_available() else 'cpu'
-)
-```
-
-### 3. Training Loop with Loss Landscape Logging
-
-```python
-# Create TensorBoard writer
-writer = SummaryWriter('runs/loss_landscape_experiment')
-
-# Create slicers
-linear_slicer = LinearInterpolationSlicer(wrapper)
-axis_slicer = AxisParallelSlicer(wrapper)
-random_slicer = RandomDirectionSlicer(wrapper)
-
-# Training loop
-for epoch in range(num_epochs):
-    # ... your training code ...
-    
-    # Log loss landscapes periodically
-    if epoch % 10 == 0:  # Log every 10 epochs
-        # Linear interpolation slice
-        current_params = wrapper.get_parameters()
-        random_params = wrapper.get_random_parameters(scale=0.1)
-        
-        linear_slice = linear_slicer.slice(
-            start_point=current_params,
-            end_point=random_params,
-            n_samples=50
-        )
-        log_slice(
-            name='training_path',
-            slice_data=linear_slice,
-            step=epoch
-        )
-        
-        # Axis parallel slice (first 10 parameters)
-        axis_slice = axis_slicer.slice(
-            center_point=current_params,
-            bounds=(-1.0, 1.0),
-            n_samples=51,
-            params_to_slice=list(range(10))
-        )
-        log_slice(
-            name='parameter_analysis',
-            slice_data=axis_slice,
-            step=epoch
-        )
-        
-        # Random direction 2D slice
-        random_slice = random_slicer.slice_2d(
-            center_point=current_params,
-            grid_size=25,
-            range=(-0.5, 0.5)
-        )
-        log_slice(
-            name='landscape_2d',
-            slice_data=random_slice,
-            step=epoch
-        )
-
-writer.close()
-```
+Check [`slicing-library/examples/hyperparameter-tuning-example.py`](../slicing-library/examples/hyperparamerter-tuning-example.py) for a hyperparameter tuning example.
 
 ### 4. Launch TensorBoard
 
 ```bash
-tensorboard --logdir=runs/loss_landscape_experiment
+tensorboard --logdir=runs/path_to_log_directory
 ```
 
 Navigate to `http://localhost:6006` and click on the "Loss Slicer" tab.
