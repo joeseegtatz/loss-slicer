@@ -82,41 +82,60 @@ example_data, example_targets = next(examples)
 
 # Define the 4 different network architectures for comparison
 
-class TinyNet(nn.Module):
-    """Tiny network - too small to capture dataset complexity"""
-    def __init__(self, input_size=8):
-        super(TinyNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, 4)
-        self.relu = nn.ReLU()
-        self.fc2 = nn.Linear(4, 1)
-        
-    def forward(self, x):
-        x = self.relu(self.fc1(x))
-        x = self.fc2(x)
-        return x
-
 class ShallowNet(nn.Module):
-    """Traditional shallow network - sharp minima expected"""
+    """8→32→1 (2 layers)"""
     def __init__(self, input_size=8):
         super(ShallowNet, self).__init__()
         self.fc1 = nn.Linear(input_size, 32)
-        self.relu = nn.ReLU()
         self.fc2 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
         
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.fc2(x)
         return x
 
+class Medium2Net(nn.Module):
+    """8→32→32→1 (3 layers)"""
+    def __init__(self, input_size=8):
+        super(Medium2Net, self).__init__()
+        self.fc1 = nn.Linear(input_size, 32)
+        self.fc2 = nn.Linear(32, 32)
+        self.fc3 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+class Medium3Net(nn.Module):
+    """8→32→32→32→1 (4 layers)"""
+    def __init__(self, input_size=8):
+        super(Medium3Net, self).__init__()
+        self.fc1 = nn.Linear(input_size, 32)
+        self.fc2 = nn.Linear(32, 32)
+        self.fc3 = nn.Linear(32, 32)
+        self.fc4 = nn.Linear(32, 1)
+        self.relu = nn.ReLU()
+        
+    def forward(self, x):
+        x = self.relu(self.fc1(x))
+        x = self.relu(self.fc2(x))
+        x = self.relu(self.fc3(x))
+        x = self.fc4(x)
+        return x
+
 class DeepNet(nn.Module):
-    """Deep network without normalization - chaotic landscape expected"""
+    """8→32→32→32→32→1 (5 layers)"""
     def __init__(self, input_size=8):
         super(DeepNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, 64)
-        self.fc2 = nn.Linear(64, 64)
-        self.fc3 = nn.Linear(64, 32)
-        self.fc4 = nn.Linear(32, 16)
-        self.fc5 = nn.Linear(16, 1)
+        self.fc1 = nn.Linear(input_size, 32)
+        self.fc2 = nn.Linear(32, 32)
+        self.fc3 = nn.Linear(32, 32)
+        self.fc4 = nn.Linear(32, 32)
+        self.fc5 = nn.Linear(32, 1)
         self.relu = nn.ReLU()
         
     def forward(self, x):
@@ -126,23 +145,6 @@ class DeepNet(nn.Module):
         x = self.relu(self.fc4(x))
         x = self.fc5(x)
         return x
-
-class NormalizedNet(nn.Module):
-    """Modern network with BatchNorm - flat minima expected"""
-    def __init__(self, input_size=8):
-        super(NormalizedNet, self).__init__()
-        self.fc1 = nn.Linear(input_size, 64)
-        self.bn1 = nn.BatchNorm1d(64)
-        self.fc2 = nn.Linear(64, 32)
-        self.bn2 = nn.BatchNorm1d(32)
-        self.fc3 = nn.Linear(32, 1)
-        self.relu = nn.ReLU()
-        
-    def forward(self, x):
-        x = self.relu(self.bn1(self.fc1(x)))
-        x = self.relu(self.bn2(self.fc2(x)))
-        x = self.fc3(x)
-        return x
     
 ########################### SETUP PARAMETERS ###########################
 
@@ -150,10 +152,10 @@ class NormalizedNet(nn.Module):
 INPUT_SIZE = X_train.shape[1]
 
 architectures = {
-    'tiny_net': TinyNet,
-    'shallow_net': ShallowNet, 
-    'deep_net': DeepNet,
-    'normalized_net': NormalizedNet
+    'shallow_net': ShallowNet,
+    'medium2_net': Medium2Net,
+    'medium3_net': Medium3Net,
+    'deep_net': DeepNet
 }
 
 # Hyper-parameters 
@@ -165,7 +167,7 @@ learning_rate = 0.001
 momentum = 0.9
 
 #tensorboard writer setup
-logdir = './runs/architecture_comparison'
+logdir = './runs/width_comparison'
 
 
 #torch setup 

@@ -11,7 +11,7 @@ export function RunSelector() {
   const { data: runsAndTags, isLoading, error } = useRunsAndTags();
   const [searchTerm, setSearchTerm] = useState("");
 
-  // ✅ Log raw data when it loads
+  // Log raw data when it loads
   useEffect(() => {
     if (runsAndTags) {
       console.log("RunSelector - Raw runsAndTags data:", runsAndTags);

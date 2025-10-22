@@ -69,7 +69,7 @@ export function ParameterSliceChart({
     return {
       autosize: true,
       height: 200,
-      margin: { l: 50, r: 20, b: 40, t: 20, pad: 4 },
+      margin: { l: 100, r: 20, b: 40, t: 20, pad: 4 },
       xaxis: {
         title: { text: 'Parameter Value' },
         gridcolor: '#f3f4f6',

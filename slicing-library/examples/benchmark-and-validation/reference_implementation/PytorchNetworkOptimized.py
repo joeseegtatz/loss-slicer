@@ -115,11 +115,38 @@ class NetworkSlicer():
         self.minX = -25.0
         self.maxX = 25.0
 
-        # ---- CACHING (only new addition) ----
+        # ---- CACHING ----
         self._cached_train = None  # (x, y) tensors on device
         self._cached_test = None   # (x, y) tensors on device
 
-    # ---- helpers for caching (only new addition) ----
+        # --- profiling state (coarse categories) ---
+        self._prof = {
+            'impl': 'Optimized',
+            'mode': 'cached',   # this impl uses cached tensors
+            'calls': 0,
+            'data_prep_ns': 0,
+            'loss_compute_ns': 0,
+        }
+
+    # public API to control/fetch profiling
+    def reset_profile(self, label=None):
+        self._prof.update({
+            'calls': 0,
+            'data_prep_ns': 0,
+            'loss_compute_ns': 0,
+            'label': label
+        })
+    def get_profile(self):
+        return {
+            'impl': self._prof.get('impl'),
+            'mode': self._prof.get('mode'),
+            'label': self._prof.get('label'),
+            'calls': self._prof.get('calls'),
+            'data_prep_ms': self._prof.get('data_prep_ns', 0) / 1e6,
+            'loss_compute_ms': self._prof.get('loss_compute_ns', 0) / 1e6,
+        }
+
+    # ---- helpers for caching ----
     def _build_xy(self, data):
         """
         Convert list of dicts {'x': ..., 'y': ...} into tensors on the model's device.
@@ -144,9 +171,10 @@ class NetworkSlicer():
     def computeLoss(self,w,b,useTrainingData=True):
         """
         Uses cached dataset tensors (built on first use).
-        Keeps your existing eval()+inference_mode() behavior.
         """
-        # make sure cache exists
+        # ---- DATA PREP (param set + cache ensure + tensor selection) ----
+        dp_t0 = time.perf_counter_ns()
+
         self._ensure_cached()
 
         # select cached tensors
@@ -159,14 +187,25 @@ class NetworkSlicer():
                 raise ValueError("No test data provided")
             x, y = self._cached_test
 
-        # set params and evaluate
+        self.network.setWeights(w)
+        self.network.setBias(b)
+
+        dp_t1 = time.perf_counter_ns()
+
+        # ---- LOSS COMPUTE (forward + loss) ----
         self.network.eval()
         with torch.inference_mode():
-            self.network.setWeights(w)
-            self.network.setBias(b)
+            lc_t0 = time.perf_counter_ns()
             y_pred = self.network(x)
             loss = self.network.loss(y_pred,y)
-            return float(loss.item())
+            out = float(loss.item())
+            lc_t1 = time.perf_counter_ns()
+
+        # accumulate
+        self._prof['calls'] += 1
+        self._prof['data_prep_ns'] += (dp_t1 - dp_t0)
+        self._prof['loss_compute_ns'] += (lc_t1 - lc_t0)
+        return out
 
     def predict(self,w,b,x):
         self.network.setWeights(w)
@@ -177,7 +216,7 @@ class NetworkSlicer():
             return self.network(xt)
 
     def addFocusPoint(self, w, b, sampleSize=101, useTrainingData=True):
-        # unchanged logic; computeLoss now benefits from caching
+        # unchanged logic; computeLoss now benefits from caching + profiling
         w = np.asarray(w, dtype=float)
         b = np.asarray(b, dtype=float)
         fp = np.concatenate([w, b])

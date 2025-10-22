@@ -64,16 +64,15 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
   const [axisRanges, setAxisRangesState] = useState<Record<SliceType, AxisRanges>>({
     'linear-interpolation': {
       x: { min: 0, max: 1, auto: true },
-      y: { min: 0, max: 1, auto: true }
+      y: { min: 0, max: 600, auto: true }
     },
     'random-direction': {
-      x: { min: -1, max: 1, auto: true },
-      y: { min: -1, max: 1, auto: true },
-      z: { min: 0, max: 1, auto: true }
+      x: { min: -4, max: 4, auto: true },
+      y: { min: -4, max: 4, auto: true }
     },
     'axis-parallel': {
-      x: { min: 0, max: 1, auto: true },
-      y: { min: 0, max: 1, auto: true }
+      x: { min: -4, max: 4, auto: true },
+      y: { min: 0, max: 600, auto: true }
     }
   });
   const [runColors, setRunColors] = useState<RunColorMapping>({});

@@ -25,21 +25,30 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # Hyper-parameters 
 input_size = 784 # 28x28
-hidden_size = 500 
+hidden_size = 100 # 500 was original value from tutorial 
 num_classes = 10
 num_epochs = 1
 batch_size = 64
 learning_rate = 0.001
 
-# MNIST dataset 
+class FlattenTransform:
+    def __call__(self, x):
+        return x.view(-1)
+
+# MNIST dataset with flattening transform
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    FlattenTransform()  # Flatten 28x28 to 784
+])
+
 train_dataset = torchvision.datasets.MNIST(root='./data', 
                                            train=True, 
-                                           transform=transforms.ToTensor(),  
+                                           transform=transform,  
                                            download=True)
 
 test_dataset = torchvision.datasets.MNIST(root='./data', 
                                           train=False, 
-                                          transform=transforms.ToTensor())
+                                          transform=transform)
 
 # Data loader
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, 
@@ -53,9 +62,9 @@ test_loader = torch.utils.data.DataLoader(dataset=test_dataset,
 examples = iter(test_loader)
 example_data, example_targets = next(examples)
 
-for i in range(6):
-    plt.subplot(2,3,i+1)
-    plt.imshow(example_data[i][0], cmap='gray')
+# for i in range(6):
+#     plt.subplot(2,3,i+1)
+#     plt.imshow(example_data[i][0], cmap='gray')
 #plt.show()
 
 # ############## TENSORBOARD ########################
@@ -174,22 +183,51 @@ with torch.no_grad():
     ###################################################
     
     
-# LINEAR INTERPOLATION
+# NETWORK SLICING
 
 from tensorboard_loss_slicer.summary_v2 import log_slice
 from pysclice.slicers import LinearInterpolationSlicer, AxisParallelSlicer, RandomDirectionSlicer
 from pysclice.core import ModelWrapper
 import tensorflow as tf
 
-untrained_model_wrapper = ModelWrapper(untrained_model, criterion, train_loader)
-trained_model_wrapper = ModelWrapper(trained_model, criterion, train_loader)
+import time
 
+from torch.utils.data import Subset
+
+# Create smaller dataset for slicing (use 10% of data)
+subset_indices = list(range(0, len(train_dataset), 10))  # Every 10th sample
+subset_train_dataset = Subset(train_dataset, subset_indices)
+
+subset_train_loader = torch.utils.data.DataLoader(
+    dataset=subset_train_dataset, 
+    batch_size=batch_size, 
+    shuffle=False
+)
+
+untrained_model_wrapper = ModelWrapper(untrained_model, criterion, subset_train_loader)
+trained_model_wrapper = ModelWrapper(trained_model, criterion, subset_train_loader)
+
+# LINEAR INTERPOLATION
+
+start = time.perf_counter()
 linear_interpolation_slicer = LinearInterpolationSlicer(untrained_model_wrapper)
-linear_slice_data = linear_interpolation_slicer.slice(start_point= untrained_model_wrapper.get_parameters() , end_point=trained_model_wrapper.get_parameters())
+linear_slice_data = linear_interpolation_slicer.slice(end_point=trained_model_wrapper.get_parameters(), n_samples=15, use_test_data=True)
+
+end = time.perf_counter()
+print(f"slicing done. elapse time: {end - start}")
+
+
+# RANDOM DIRECTION 
+
+rd_slicer = RandomDirectionSlicer(untrained_model_wrapper)
+start = time.perf_counter()
+rd_slice_data = rd_slicer.slice(n_samples=30, x_range=(-4,4), y_range=(-4,4))
+end = time.perf_counter()
+
+print(f"rd slicing done. elapse time: {end - start}")
 
 custom_writer = tf.summary.create_file_writer(logdir)
 
-
-with writer.as_default():
-    log_slice("linear_interpolation_start_to_finish", linear_slice_data)
-        
+with custom_writer.as_default():
+    log_slice("linear_interpolation_start_to_finish", linear_slice_data, step=1)
+    log_slice("random_direction", rd_slice_data,2)

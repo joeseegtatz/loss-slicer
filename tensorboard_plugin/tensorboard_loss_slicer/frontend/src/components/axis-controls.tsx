@@ -71,8 +71,8 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
                 <Slider
                   value={[axisRange.min, axisRange.max]}
                   onValueChange={(values) => handleRangeChange(axis, values)}
-                  min={-6}
-                  max={6}
+                  min={-600}
+                  max={600}
                   step={0.1}
                   className="w-full"
                 />

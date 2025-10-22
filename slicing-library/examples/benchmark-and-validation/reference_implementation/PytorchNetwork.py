@@ -107,7 +107,39 @@ class NetworkSlicer():
         #self.maxVals = [25.0 for i in range(100)] #change later
         self.minX = -25.0
         self.maxX = 25.0
+
+        # --- profiling state (coarse categories) ---
+        self._prof = {
+            'impl': 'Original',
+            'mode': 'legacy',   # this impl always rebuilds
+            'calls': 0,
+            'data_prep_ns': 0,
+            'loss_compute_ns': 0,
+        }
+
+    # public API to control/fetch profiling
+    def reset_profile(self, label=None):
+        self._prof.update({
+            'calls': 0,
+            'data_prep_ns': 0,
+            'loss_compute_ns': 0,
+            'label': label
+        })
+    def get_profile(self):
+        # return ms for easier plotting
+        return {
+            'impl': self._prof.get('impl'),
+            'mode': self._prof.get('mode'),
+            'label': self._prof.get('label'),
+            'calls': self._prof.get('calls'),
+            'data_prep_ms': self._prof.get('data_prep_ns', 0) / 1e6,
+            'loss_compute_ms': self._prof.get('loss_compute_ns', 0) / 1e6,
+        }
+
     def computeLoss(self,w,b,useTrainingData=True):
+        # ---- DATA PREP (includes param set + tensor building/moves) ----
+        dp_t0 = time.perf_counter_ns()
+
         self.network.setWeights(w)
         self.network.setBias(b)
         loss_fn = self.network.loss
@@ -117,13 +149,27 @@ class NetworkSlicer():
         else:
             x = torch.tensor([[i['x']] for i in self.testData]).to(torch.float32).to(self.network.device)
             y = torch.tensor([[[i['y']]] for i in self.testData]).to(torch.float32).to(self.network.device)
+
+        dp_t1 = time.perf_counter_ns()
+
+        # ---- LOSS COMPUTE (forward + loss) ----
+        lc_t0 = time.perf_counter_ns()
         y_pred = self.network(x)
         loss = loss_fn(y_pred,y)
-        return loss.item()
+        out = loss.item()
+        lc_t1 = time.perf_counter_ns()
+
+        # accumulate
+        self._prof['calls'] += 1
+        self._prof['data_prep_ns'] += (dp_t1 - dp_t0)
+        self._prof['loss_compute_ns'] += (lc_t1 - lc_t0)
+        return out
+
     def predict(self,w,b,x):
         self.network.setWeights(w)
         self.network.setBias(b)
         return self.network(x)
+
     def addFocusPoint(self, w, b, sampleSize=101):
         slices = [] #sampling slices for all fp
         dim = len(w)+len(b) #total slicing dim
@@ -141,6 +187,7 @@ class NetworkSlicer():
                 samples.append([vec[d],loss])
             slices.append(samples)
         return {'fpOrigin':fpOrigin,'slices':slices}
+
     def predictOutput(self, w, b, xrange, yrange, samplesPerDim):
         predictions = []
         x = [0,0]
@@ -154,11 +201,7 @@ class NetworkSlicer():
         return predictions
 
     def getOptimizedFocusPoint(self,epochs,lossThreshold,maxSeconds,bs,optimizerType,initialWeights,initialBiases,learningRate,weightDecay):
-        #if(initialWeights == None or initialBiases == None):
-        #    self.network.randomizeParameters()
-        #else:
-        #    self.network.setWeights(initialWeights)
-        #    self.network.setBias(initialBiases)
+        # (unchanged training)
         self.network.to(self.network.device)#
         if("adam" in optimizerType.lower()):
             optimizer = optim.Adam(self.network.layers.parameters(),weight_decay=weightDecay)

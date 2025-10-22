@@ -1,10 +1,10 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
-import { useSliceDataContext } from '@/contexts/slice-data-context';
-import { fetchSliceData, RandomDirection2DSliceData } from '@/lib/api';
-import { Plot3DCard } from '@/components/charts/Plot3DCard';
-import { MessageCard } from '@/components/message-card';
-import { TagSelector } from '@/components/tag-selector';
+import { useSliceDataContext } from "@/contexts/slice-data-context";
+import { fetchSliceData, RandomDirection2DSliceData } from "@/lib/api";
+import { ContourPlotCard } from '@/components/charts/ContourPlotCard';
+import { MessageCard } from "@/components/message-card";
+import { TagSelector } from "@/components/tag-selector";
 
 export function RandomDirectionDashboard() {
   const { selectedRuns, runColors, selectedTags, axisRanges } = useSliceDataContext();
@@ -98,21 +98,23 @@ export function RandomDirectionDashboard() {
           <TagSelector sliceType="random-direction" />
         </div>
         
-        {/* Single 3D plot showing all runs */}
+        {/* Grid of 2D contour plots - one per run/tag combination */}
         {plotData.length > 0 && (
-          <Plot3DCard 
-            runs={plotData.map(({ run, data, color, tag }) => ({ 
-              run: selectedTagsForSlice.length > 1 ? `${run} - ${tag.replace('random_direction_2d_', '')}` : run, 
-              data, 
-              color 
-            }))}
-            isLoading={isLoading && !hasData}
-            title="Random Direction Loss Landscape Comparison"
-            xRange={currentAxisRanges.x}
-            yRange={currentAxisRanges.y}
-            zRange={currentAxisRanges.z}
-            autoScale={{ x: currentAxisRanges.x.auto, y: currentAxisRanges.y.auto, z: currentAxisRanges.z?.auto ?? true }}
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {plotData.map(({ run, data, color, tag }) => (
+              <ContourPlotCard
+                key={`${run}-${tag}`}
+                run={run}
+                data={data}
+                color={color}
+                title={selectedTagsForSlice.length > 1 ? `${run} - ${tag.replace('random_direction_2d_', '')}` : run}
+                xRange={currentAxisRanges.x}
+                yRange={currentAxisRanges.y}
+                autoScale={{ x: currentAxisRanges.x.auto, y: currentAxisRanges.y.auto }}
+                ncontours={20}
+              />
+            ))}
+          </div>
         )}
 
         {/* Show partial loading state */}
