@@ -297,19 +297,22 @@ for run_name, checkpoints in saved_models.items():
         trained_model_wrapper = ModelWrapper(trained_model, criterion, train_loader)
         
         # LINEAR INTERPOLATION
-        linear_interpolation_slicer = LinearInterpolationSlicer(untrained_model_wrapper)
-        linear_slice_data = linear_interpolation_slicer.slice(end_point=trained_model_wrapper.get_parameters(), n_samples=15)
+        linear_slice_data = LinearInterpolationSlicer.slice(
+            model=untrained_model_wrapper,
+            end_point=trained_model_wrapper.get_parameters(),
+            n_samples=15
+        )
         
         # RANDOM DIRECTION
-        rd_slicer = RandomDirectionSlicer(untrained_model_wrapper)
-        rd_slice_data_untrained = rd_slicer.slice(
+        rd_slice_data_untrained = RandomDirectionSlicer.slice(
+            model=untrained_model_wrapper,
             n_samples=30, 
             x_range=(-4,4), 
             y_range=(-4,4)
         )
         
-        rd_slicer.model = trained_model_wrapper
-        rd_slice_data_trained = rd_slicer.slice(
+        rd_slice_data_trained = RandomDirectionSlicer.slice(
+            model=trained_model_wrapper,
             n_samples=30, 
             x_range=(-4,4), 
             y_range=(-4,4)
@@ -317,11 +320,11 @@ for run_name, checkpoints in saved_models.items():
         
         # AXIS PARALLEL - more useful for smaller models / fewer parameters
         if arch_name in ['tiny_net', 'shallow_net']:
-            ap_slicer = AxisParallelSlicer(trained_model_wrapper)
-            ap_slice_data = ap_slicer.sample_focus_points_and_slice(
+            ap_slice_data = AxisParallelSlicer.sample_focus_points_and_slice(
+                model=trained_model_wrapper,
                 n_points=5,
-                radius= 1, 
-                n_samples_per_slice= 20, 
+                radius=1, 
+                n_samples_per_slice=20, 
                 bounds=(-4,4), 
                 bounds_mode='absolute'
             )

@@ -29,7 +29,7 @@ loss-slicer/
 
 ## Getting Started
 
-To get started with either the library or the tensorboard plugin please refer to the respective README files:
+To get started with either the python library or the tensorboard plugin please refer to the respective README files:
 - [PySlice Library](./slicing-library/README.md) - Core loss landscape analysis tools
 - [TensorBoard Plugin](./tensorboard_plugin/README.md) - Interactive visualization plugin
 

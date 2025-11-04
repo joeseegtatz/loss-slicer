@@ -30,5 +30,7 @@ def random_direction(shape: Tuple[int, ...]) -> np.ndarray:
         Random normalized direction vector
     """
     direction = np.random.randn(*shape)
-    return normalize_direction(direction)
+    # return normalize_direction(direction)
+    return direction
+    
 
