@@ -3,7 +3,7 @@ PyTorch model wrapper for loss landscape analysis.
 """
 import torch
 import numpy as np
-from typing import Union, Tuple, List, Optional, Any, Callable
+from typing import Union, Tuple, Optional, Callable
 
 class ModelWrapper:
     """Wrapper for PyTorch models to enable loss landscape analysis."""
