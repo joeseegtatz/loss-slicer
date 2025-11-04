@@ -27,33 +27,24 @@ PySlice Library Architecture
 
 ### 1. Install the Library
 
+
+**Regular install:**
+```bash
+cd slicing-library
+pip install .  # Copies files to Python package directory. Good for production use
+```
+
+**Install in development mode:**
 ```bash
 cd slicing-library
 pip install -e .  # Links to source code directory - changes are immediately reflected. Good for development
 ```
 
-**Alternative installation method:**
+**Install in google colab :**
 ```bash
-cd slicing-library
-pip install .  # Copies files to Python package directory. Better for production use
+!pip install git+https://github.com/joeseegtatz/loss-slicer.git#subdirectory=slicing-library
 ```
 
-### 2. Install Dependencies
-
-Needed for example notebooks. When installing the library all the requirements for it are automatically installed.
-
-```bash
-pip install -r ../requirements.txt
-```
-
-### 3. Verify Installation
-
-```python
-import pysclice
-from pysclice.core import ModelWrapper
-from pysclice.slicers import AxisParallelSlicer, LinearInterpolationSlicer, RandomDirectionSlicer
-print("PySlice installed successfully!")
-```
 
 ## Slicing Methods
 
