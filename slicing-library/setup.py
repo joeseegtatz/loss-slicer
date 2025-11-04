@@ -10,7 +10,7 @@ setup(
         "numpy>=2.0.0,<3.0.0",
         "torch>=2.0.0,<=2.9.0",
         "matplotlib>=3.10.0,<=3.10.7",
-        "skikit-optimize=0.10.2",
+        "scikit-optimize==0.10.2",
     ],
     python_requires=">=3.7",
 )

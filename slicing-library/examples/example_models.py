@@ -113,7 +113,7 @@ def create_dummy_data(batch_size=1, input_dim=1):
 
 
 # Identity loss function for models that return their loss directly
-def identity_loss(output):
+def identity_loss(output, target=None):
     """Loss function that returns the model output directly (for analytical models)."""
     return output
 
