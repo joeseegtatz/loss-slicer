@@ -3,11 +3,10 @@ Random direction slicing technique.
 """
 from typing import Dict, Any, Optional, Tuple
 import numpy as np
-from .base import Slicer
 from ..core.model_wrapper import ModelWrapper
 from ..core.utils import normalize_direction, random_direction
 
-class RandomDirectionSlicer(Slicer):
+class RandomDirectionSlicer():
     """
     Slice along random directions in parameter space.
     
@@ -16,7 +15,9 @@ class RandomDirectionSlicer(Slicer):
     For 2D slicing, it creates two random directions and evaluates the loss on a grid.
     """
     
-    def _slice_1d(self,
+    @staticmethod
+    def _slice_1d(
+                model: ModelWrapper,
                 direction: Optional[np.ndarray] = None,
                 center_point: Optional[np.ndarray] = None,
                 n_samples: int = 51,
@@ -38,7 +39,7 @@ class RandomDirectionSlicer(Slicer):
             Dictionary containing 1D slice data
         """
         if center_point is None:
-            center_point = self.model.get_parameters()
+            center_point = model.get_parameters()
             
         # Generate direction if not provided
         if direction is None:
@@ -73,14 +74,14 @@ class RandomDirectionSlicer(Slicer):
             params = center_point + coord * direction
             
             # Compute loss
-            loss = self.model.compute_loss(params, use_test_data=use_test_data)
+            loss = model.compute_loss(params, use_test_data=use_test_data)
             samples.append((coord, loss))
         
         # Restore original parameters
-        self.model.set_parameters(original_params)
+        model.set_parameters(original_params)
         
         # Center point loss
-        center_loss = self.model.compute_loss(center_point, use_test_data=use_test_data)
+        center_loss = model.compute_loss(center_point, use_test_data=use_test_data)
         
         return {
             'type': 'random_direction_1d',
@@ -93,8 +94,10 @@ class RandomDirectionSlicer(Slicer):
             'n_samples': n_samples,
             'normalized': normalize_directions
         }
-        
-    def _slice_2d(self,
+       
+    @staticmethod 
+    def _slice_2d(
+                model: ModelWrapper,
                 direction1: Optional[np.ndarray] = None,
                 direction2: Optional[np.ndarray] = None,
                 center_point: Optional[np.ndarray] = None,
@@ -122,7 +125,7 @@ class RandomDirectionSlicer(Slicer):
             Dictionary containing 2D slice data
         """
         if center_point is None:
-            center_point = self.model.get_parameters()
+            center_point = model.get_parameters()
             
         # Generate directions if not provided
         if direction1 is None:
@@ -180,14 +183,14 @@ class RandomDirectionSlicer(Slicer):
                 params = center_point + x * direction1 + y * direction2
                 
                 # Compute loss
-                loss = self.model.compute_loss(params, use_test_data=use_test_data)
+                loss = model.compute_loss(params, use_test_data=use_test_data)
                 grid_data[i, j] = loss
                 
         # Restore original parameters
-        self.model.set_parameters(original_params)
+        model.set_parameters(original_params)
         
         # Center point loss
-        center_loss = self.model.compute_loss(center_point, use_test_data=use_test_data)
+        center_loss = model.compute_loss(center_point, use_test_data=use_test_data)
         
         return {
             'type': 'random_direction_2d',
@@ -204,17 +207,19 @@ class RandomDirectionSlicer(Slicer):
             'normalized': normalize_directions,
             'orthogonalized': ensure_orthogonal
         }
-        
-    def slice(self,
-             direction1: Optional[np.ndarray] = None,
-             direction2: Optional[np.ndarray] = None,
-             center_point: Optional[np.ndarray] = None,
-             n_samples: int = 51,
-             x_range: Tuple[float, float] = (-1.0, 1.0),
-             y_range: Optional[Tuple[float, float]] = None,
-             use_test_data: bool = False,
-             normalize_directions: bool = True,
-             ensure_orthogonal: bool = True) -> Dict[str, Any]:
+     
+    @staticmethod   
+    def slice(
+            model: ModelWrapper,
+            direction1: Optional[np.ndarray] = None,
+            direction2: Optional[np.ndarray] = None,
+            center_point: Optional[np.ndarray] = None,
+            n_samples: int = 51,
+            x_range: Tuple[float, float] = (-1.0, 1.0),
+            y_range: Optional[Tuple[float, float]] = None,
+            use_test_data: bool = False,
+            normalize_directions: bool = True,
+            ensure_orthogonal: bool = True) -> Dict[str, Any]:
         """
         Generate 1D or 2D slices along random directions.
         
@@ -234,7 +239,8 @@ class RandomDirectionSlicer(Slicer):
         """
         if y_range is None or direction2 is None and y_range is None:
             # If y_range is None, perform 1D slicing
-            return self._slice_1d(
+            return RandomDirectionSlicer._slice_1d(
+                model=model,
                 direction=direction1,
                 center_point=center_point,
                 n_samples=n_samples,
@@ -244,7 +250,8 @@ class RandomDirectionSlicer(Slicer):
             )
         else:
             # Otherwise perform 2D slicing
-            return self._slice_2d(
+            return RandomDirectionSlicer._slice_2d(
+                model=model,
                 direction1=direction1,
                 direction2=direction2,
                 center_point=center_point,
@@ -256,7 +263,8 @@ class RandomDirectionSlicer(Slicer):
                 ensure_orthogonal=ensure_orthogonal
             )
     
-    def generate_random_direction(self, shape: Tuple[int, ...]) -> np.ndarray:
+    @staticmethod
+    def generate_random_direction(shape: Tuple[int, ...]) -> np.ndarray:
         """
         Generate a random direction vector with the given shape.
         
@@ -268,7 +276,8 @@ class RandomDirectionSlicer(Slicer):
         """
         return random_direction(shape)
     
-    def generate_orthogonal_direction(self, 
+    @staticmethod
+    def generate_orthogonal_direction(
                                     direction: np.ndarray, 
                                     shape: Tuple[int, ...]) -> np.ndarray:
         """
@@ -282,7 +291,7 @@ class RandomDirectionSlicer(Slicer):
             Random direction vector orthogonal to the input direction
         """
         # Generate a random direction
-        new_direction = self.generate_random_direction(shape)
+        new_direction = RandomDirectionSlicer.generate_random_direction(shape)
         
         # Project out the component along the given direction
         flat_direction = direction.flatten()
@@ -295,7 +304,7 @@ class RandomDirectionSlicer(Slicer):
         norm = np.linalg.norm(flat_new_direction)
         if norm < 1e-10:  # If direction is too small after projection
             # Try again with a different random direction
-            return self.generate_orthogonal_direction(direction, shape)
+            return RandomDirectionSlicer.generate_orthogonal_direction(direction, shape)
             
         flat_new_direction = flat_new_direction / norm
         

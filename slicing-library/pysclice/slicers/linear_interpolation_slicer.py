@@ -3,19 +3,20 @@ Linear interpolation slicing technique.
 """
 from typing import Dict, Any, Optional, Tuple
 import numpy as np
-from .base import Slicer
 from ..core.model_wrapper import ModelWrapper
 
-class LinearInterpolationSlicer(Slicer):
+class LinearInterpolationSlicer():
     """Slice along a linear path between two points in parameter space."""
     
-    def slice(self, 
-             start_point: Optional[np.ndarray] = None, 
-             end_point: Optional[np.ndarray] = None, 
-             n_samples: int = 100, 
-             alpha_range: Tuple[float, float] = (-0.1, 1.1),
-             use_test_data: bool = False,
-             normalize_direction: bool = False) -> Dict[str, Any]:
+    @staticmethod
+    def slice(
+            model: ModelWrapper,
+            start_point: Optional[np.ndarray] = None, 
+            end_point: Optional[np.ndarray] = None, 
+            n_samples: int = 100, 
+            alpha_range: Tuple[float, float] = (-0.1, 1.1),
+            use_test_data: bool = False,
+            normalize_direction: bool = False) -> Dict[str, Any]:
         """
         Generate a slice along a linear path.
         
@@ -31,7 +32,7 @@ class LinearInterpolationSlicer(Slicer):
             Dictionary containing slice data
         """
         if start_point is None:
-            start_point = self.model.get_parameters()
+            start_point = model.get_parameters()
         
         if end_point is None:
             raise ValueError("End point must be provided")
@@ -60,12 +61,12 @@ class LinearInterpolationSlicer(Slicer):
             params = start_point + alpha * direction
             
             # Compute loss
-            loss = self.model.compute_loss(params, use_test_data=use_test_data)
+            loss = model.compute_loss(params, use_test_data=use_test_data)
             samples.append((alpha, loss))
             
         # Compute losses at endpoints
-        start_loss = self.model.compute_loss(start_point, use_test_data=use_test_data)
-        end_loss = self.model.compute_loss(end_point, use_test_data=use_test_data)
+        start_loss = model.compute_loss(start_point, use_test_data=use_test_data)
+        end_loss = model.compute_loss(end_point, use_test_data=use_test_data)
             
         return {
             'type': 'linear_path',

@@ -3,7 +3,7 @@ Axis parallel slicing technique.
 """
 from typing import Dict, List, Any, Optional, Tuple
 import numpy as np
-from .base import Slicer
+from ..core.model_wrapper import ModelWrapper
 
 # Import scikit-optimize (skopt) samplers
 from skopt.space import Space
@@ -13,16 +13,17 @@ from skopt.sampler import Halton
 from skopt.sampler import Hammersly
 from skopt.sampler import Grid
 
-class AxisParallelSlicer(Slicer):
+class AxisParallelSlicer():
     """Slice the loss landscape by varying parameters one at a time."""
     
-    def _slice(self, 
-             center_point: Optional[np.ndarray] = None, 
-             bounds: Tuple[float, float] = (-5.0, 5.0), 
-             n_samples: int = 101, 
-             params_to_slice: Optional[List[int]] = None,
-             use_test_data: bool = False,
-             bounds_mode: str = "relative") -> Dict[str, Any]:
+    def _slice(
+            model: ModelWrapper,
+            center_point: Optional[np.ndarray] = None, 
+            bounds: Tuple[float, float] = (-5.0, 5.0), 
+            n_samples: int = 101, 
+            params_to_slice: Optional[List[int]] = None,
+            use_test_data: bool = False,
+            bounds_mode: str = "relative") -> Dict[str, Any]:
         """
         Generate axis parallel slices.
         
@@ -39,7 +40,7 @@ class AxisParallelSlicer(Slicer):
             Dictionary containing slice data for each parameter
         """
         if center_point is None:
-            center_point = self.model.get_parameters()
+            center_point = model.get_parameters()
             
         if bounds[0] >= bounds[1]:
             raise ValueError(f"Invalid bounds: {bounds}. Min bound must be less than max bound.")
@@ -51,11 +52,11 @@ class AxisParallelSlicer(Slicer):
             params_to_slice = list(range(len(center_point)))
             
         results = []
-        center_loss = self.model.compute_loss(center_point, use_test_data=use_test_data)
+        center_loss = model.compute_loss(center_point, use_test_data=use_test_data)
         
         param_metadata = []
         start_idx = 0
-        for name, param in self.model.model.named_parameters():
+        for name, param in model.model.named_parameters():
             numel = param.numel()
             param_metadata.append({'name': name, 'start': start_idx, 'end': start_idx + numel})
             start_idx += numel
@@ -82,7 +83,7 @@ class AxisParallelSlicer(Slicer):
                 params[dim] = param_value
                 
                 # Compute loss
-                loss = self.model.compute_loss(params, use_test_data=use_test_data)
+                loss = model.compute_loss(params, use_test_data=use_test_data)
                 samples.append((param_value, loss))
             
             param_name = next((meta['name'] for meta in param_metadata if meta['start'] <= dim < meta['end']), "Unknown")
@@ -112,17 +113,18 @@ class AxisParallelSlicer(Slicer):
             'n_samples': n_samples
         }
     
-    def sample_focus_points_and_slice(self,
-                          center_point: Optional[np.ndarray] = None,
-                          n_points: int = 5,
-                          sampling_method: str = "random",
-                          radius: float = 1.0,
-                          bounds: Tuple[float, float] = (-5.0, 5.0),
-                          n_samples_per_slice: int = 101,
-                          params_to_slice: Optional[List[int]] = None,
-                          use_test_data: bool = False,
-                          bounds_mode: str = "relative",
-                          seed: Optional[int] = None) -> Dict[str, Any]:
+    def sample_focus_points_and_slice(
+            model: ModelWrapper,
+            center_point: Optional[np.ndarray] = None,
+            n_points: int = 5,
+            sampling_method: str = "random",
+            radius: float = 1.0,
+            bounds: Tuple[float, float] = (-5.0, 5.0),
+            n_samples_per_slice: int = 101,
+            params_to_slice: Optional[List[int]] = None,
+            use_test_data: bool = False,
+            bounds_mode: str = "relative",
+            seed: Optional[int] = None) -> Dict[str, Any]:
         """
         Generate and slice multiple focus points around a center point.
         
@@ -149,7 +151,7 @@ class AxisParallelSlicer(Slicer):
             Dictionary containing focus points and their slices
         """
         if center_point is None:
-            center_point = self.model.get_parameters()
+            center_point = model.get_parameters()
             
         # Define the parameter space
         dim = len(center_point)
@@ -200,10 +202,11 @@ class AxisParallelSlicer(Slicer):
         focus_point_slices = []
         for i, point in enumerate(focus_points):
             # Compute loss at focus point
-            point_loss = self.model.compute_loss(point, use_test_data=use_test_data)
+            point_loss = model.compute_loss(point, use_test_data=use_test_data)
             
             # Generate slices for this focus point
-            slices = self._slice(
+            slices = AxisParallelSlicer._slice(
+                model=model,
                 center_point=point,
                 bounds=bounds,
                 n_samples=n_samples_per_slice,
