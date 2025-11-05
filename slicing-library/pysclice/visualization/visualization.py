@@ -214,8 +214,8 @@ def _plot_multi_focus_parameter_slices(slice_data: Dict[str, Any],
     if not focus_point_slices:
         raise ValueError("No focus point slices found")
     
-    first_slice = focus_point_slices[0]['slices']['slices']
-    n_params = len(first_slice)
+    first_slices = focus_point_slices[0]['slices']  # Now directly a list
+    n_params = len(first_slices)
     
     # Setup subplot grid with fixed 3 columns
     n_cols = min(3, n_params)
@@ -233,7 +233,7 @@ def _plot_multi_focus_parameter_slices(slice_data: Dict[str, Any],
         
         # Plot slice from each focus point for this parameter
         for focus_idx, focus_slice in enumerate(focus_point_slices):
-            slices_data = focus_slice['slices']['slices']
+            slices_data = focus_slice['slices']  # Now directly a list
             focus_point = focus_slice['focus_point']
             
             # Find the slice for this parameter
@@ -261,9 +261,20 @@ def _plot_multi_focus_parameter_slices(slice_data: Dict[str, Any],
                 # Mark other focus points in grey
                 ax.scatter([focus_point[param_idx]], [focus_slice['focus_point_loss']], 
                           color='grey', s=8, marker='o', alpha=0.4)
-                    
-        ax.set_title(f'Parameter {param_idx}: Multiple Focus Point Slices (n={n_focus_points})')
-        ax.set_xlabel(f'Parameter {param_idx} Value')
+        
+        # Get parameter name from first slice for title
+        param_name = first_slices[param_idx].get('parameter_name', f'param_{param_idx}')
+        layer_name = first_slices[param_idx].get('layer_name', '')
+        param_type = first_slices[param_idx].get('param_type', '')
+        
+        # Create informative title
+        if layer_name and param_type and layer_name != param_type:
+            title = f'{layer_name}.{param_type}'
+        else:
+            title = param_name
+            
+        ax.set_title(f'{title}\n(n={n_focus_points} focus points)', fontsize=10)
+        ax.set_xlabel(f'Parameter Value')
         ax.set_ylabel('Loss')
         ax.grid(True, alpha=0.3)
         
