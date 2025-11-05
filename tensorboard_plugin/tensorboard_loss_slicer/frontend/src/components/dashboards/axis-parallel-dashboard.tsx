@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from "@/contexts/slice-data-context";
-import { fetchSliceData, AxisParallelSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
+import { fetchSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
 import { LazyParameterSliceChart } from "@/components/charts/lazy-parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
 import { TagSelector } from "@/components/tag-selector";
@@ -30,14 +30,15 @@ export function AxisParallelDashboard() {
 
   // Transform data for display
   const axisParallelData = useMemo(() => {
-    const results: Array<{ run: string; tag: string; data: AxisParallelSliceData | MultiFocusAxisParallelSliceData }> = [];
+    const results: Array<{ run: string; tag: string; data: MultiFocusAxisParallelSliceData }> = [];
     let queryIndex = 0;
     
     for (const run of selectedRuns) {
       for (const tag of selectedTagsForSlice) {
         const query = queries[queryIndex];
         if (query?.data) {
-          const data = query.data as AxisParallelSliceData | MultiFocusAxisParallelSliceData;
+          const data = query.data as MultiFocusAxisParallelSliceData;
+          // Check for the new type
           if (data.type === 'axis_parallel') {
             results.push({ run, tag, data });
           }
@@ -56,36 +57,21 @@ export function AxisParallelDashboard() {
     const sliceData = axisParallelData[0].data;
     if (!sliceData) return null;
 
-    // Check if this is multi-focus data based on the presence of focus_point_slices
-    const isMultiFocus = 'focus_point_slices' in sliceData;
-
     // Collect all slices grouped by parameter index, tracking focus point indices
     const parameterSlicesMap: Record<number, { slices: ParameterSlice[], focusPointIndices: number[] }> = {};
 
-    if (isMultiFocus) {
-      // For multi-focus data, collect slices from all focus points
-      const multiFocusData = sliceData as MultiFocusAxisParallelSliceData;
-      multiFocusData.focus_point_slices?.forEach(focusPointSlice => {
-        // Access the slices correctly - the structure has slices.slices according to the API
-        const slices = focusPointSlice.slices?.slices || [];
-        slices.forEach(slice => {
-          if (!parameterSlicesMap[slice.parameter_index]) {
-            parameterSlicesMap[slice.parameter_index] = { slices: [], focusPointIndices: [] };
-          }
-          parameterSlicesMap[slice.parameter_index].slices.push(slice);
-          parameterSlicesMap[slice.parameter_index].focusPointIndices.push(focusPointSlice.focus_point_index);
-        });
+    // Process multi-focus data
+    sliceData.focus_point_slices?.forEach(focusPointSlice => {
+      // slices is now directly a list
+      const slices = focusPointSlice.slices || [];
+      slices.forEach(slice => {
+        if (!parameterSlicesMap[slice.parameter_index]) {
+          parameterSlicesMap[slice.parameter_index] = { slices: [], focusPointIndices: [] };
+        }
+        parameterSlicesMap[slice.parameter_index].slices.push(slice);
+        parameterSlicesMap[slice.parameter_index].focusPointIndices.push(focusPointSlice.focus_point_index);
       });
-    } else {
-      // For standard data, collect all parameter slices (single focus point = index 0)
-      const standardData = sliceData as AxisParallelSliceData;
-      standardData.slices?.forEach(slice => {
-        parameterSlicesMap[slice.parameter_index] = {
-          slices: [slice],
-          focusPointIndices: [0]
-        };
-      });
-    }
+    });
 
     // Group parameters by layer for organization
     const groupedByLayer: Record<string, Array<{

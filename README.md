@@ -33,6 +33,12 @@ To get started with either the python library or the tensorboard plugin please r
 - [PySlice Library](./slicing-library/README.md) - Core loss landscape analysis tools
 - [TensorBoard Plugin](./tensorboard_plugin/README.md) - Interactive visualization plugin
 
+## Installation
+
+In this project the python package manager uv is used. You can use the command **uv sync** to automatically install all the requirements as well as the slicing library and the tensorboard plugin into a virtual environment. You can activate the venv manually or use run the script like **uv run hyperparamerter-tuning-example.py** or **uv run tensorboard**. It installs both of the local packages in development mode which means that changes you make are directly applied. 
+
+If you want to use the library in an online environment like google colab you can use **!pip install git+https://github.com/joeseegtatz/loss-slicer.git#subdirectory=slicing-library** 
+
 ## Development
 
 If you are new to PyTorch I would highly recommend their [documentation](https://docs.pytorch.org/tutorials/beginner/basics/intro.html) to get started. 

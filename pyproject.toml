@@ -1,0 +1,24 @@
+[project]
+name = "loss-slicer"
+version = "0.1.0"
+description = "A python package for slicing and visualizing loss landscapes and tensorboard integration."
+readme = "README.md"
+requires-python = ">=3.10,<3.11"
+dependencies = [
+    "torch",
+    "tensorboard==2.19.0",
+    "numpy",
+    "pandas",
+    "matplotlib",
+    "scikit-optimize",
+    "torchvision",
+    "tensorflow",
+    "pysclice",
+    "tensorboard-loss-slicer",
+]
+
+[tool.uv.sources]
+pysclice = { path = "slicing-library", editable = true } # Local development version
+tensorboard-loss-slicer = { path = "tensorboard_plugin", editable = true } # Local development version
+
+
