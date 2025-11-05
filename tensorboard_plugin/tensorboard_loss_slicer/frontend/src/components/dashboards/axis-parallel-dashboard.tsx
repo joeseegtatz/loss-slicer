@@ -1,13 +1,17 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQueries } from '@tanstack/react-query';
 import { useSliceDataContext } from "@/contexts/slice-data-context";
 import { fetchSliceData, MultiFocusAxisParallelSliceData, ParameterSlice } from "@/lib/api";
-import { LazyParameterSliceChart } from "@/components/charts/lazy-parameter-slice-chart";
+// import { LazyParameterSliceChart } from "@/components/charts/lazy-parameter-slice-chart";
 import { MessageCard } from "@/components/message-card";
 import { TagSelector } from "@/components/tag-selector";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Button } from "@/components/ui/button";
+import { ParameterSliceChart } from '../charts/parameter-slice-chart';
 
 export function AxisParallelDashboard() {
   const { selectedRuns, selectedTags, axisRanges } = useSliceDataContext();
+  const [openItems, setOpenItems] = useState<string[] | null>(null);
 
   const selectedTagsForSlice = selectedTags['axis-parallel'];
   const currentAxisRanges = axisRanges['axis-parallel'];
@@ -49,6 +53,33 @@ export function AxisParallelDashboard() {
     
     return results;
   }, [queries, selectedRuns, selectedTagsForSlice]);
+
+  // Get all layer names for collapse/expand functionality
+  const getAllLayerNames = (): string[] => {
+    if (selectedRuns.length !== 1 || axisParallelData.length === 0) return [];
+    
+    const sliceData = axisParallelData[0].data;
+    if (!sliceData) return [];
+
+    const parameterSlicesMap: Record<number, ParameterSlice[]> = {};
+    sliceData.focus_point_slices?.forEach(focusPointSlice => {
+      const slices = focusPointSlice.slices || [];
+      slices.forEach(slice => {
+        if (!parameterSlicesMap[slice.parameter_index]) {
+          parameterSlicesMap[slice.parameter_index] = [];
+        }
+        parameterSlicesMap[slice.parameter_index].push(slice);
+      });
+    });
+
+    const layerNames = new Set<string>();
+    Object.values(parameterSlicesMap).forEach(slices => {
+      const layerName = slices[0]?.layer_name || 'Other Parameters';
+      layerNames.add(layerName);
+    });
+
+    return Array.from(layerNames);
+  };
 
   // Generate charts for the selected run and tag (axis parallel works best with single run)
   const renderParameterList = () => {
@@ -97,27 +128,46 @@ export function AxisParallelDashboard() {
       params.sort((a, b) => a.index - b.index);
     });
 
+    // Get all layer names for default open state
+    const allLayerNames = Object.keys(groupedByLayer);
+    // Default to opening only the first layer
+    const defaultOpenItems = allLayerNames.length > 0 ? [allLayerNames[0]] : [];
+
     return (
-      <div className="space-y-8">
+      <Accordion 
+        type="multiple" 
+        value={openItems === null ? defaultOpenItems : openItems}
+        onValueChange={setOpenItems}
+        className="space-y-2"
+      >
         {Object.entries(groupedByLayer).map(([layerName, parameters]) => (
-          <div key={layerName} className="space-y-3">
-            <h3 className="font-medium text-base border-b pb-1">{layerName}</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {parameters.map(({ index, slices }) => (
-                <LazyParameterSliceChart
-                  key={index}
-                  slices={slices}
-                  parameterIndex={index}
-                  parameterName={slices[0]?.parameter_name}
-                  xRange={currentAxisRanges.x}
-                  yRange={currentAxisRanges.y}
-                  autoScale={currentAxisRanges.x.auto && currentAxisRanges.y.auto}
-                />
-              ))}
-            </div>
-          </div>
+          <AccordionItem key={layerName} value={layerName} > 
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-2">
+                <span className="font-medium">{layerName}</span>
+                <span className="text-muted-foreground text-xs">
+                  ({parameters.length} parameter{parameters.length !== 1 ? 's' : ''})
+                </span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+                {parameters.map(({ index, slices }) => (
+                  <ParameterSliceChart
+                    key={index}
+                    slices={slices}
+                    parameterIndex={index}
+                    parameterName={slices[0]?.parameter_name}
+                    xRange={currentAxisRanges.x}
+                    yRange={currentAxisRanges.y}
+                    autoScale={currentAxisRanges.x.auto && currentAxisRanges.y.auto}
+                  />
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
         ))}
-      </div>
+      </Accordion>
     );
   };
 
@@ -170,7 +220,25 @@ export function AxisParallelDashboard() {
     <div className="w-full space-y-4">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Axis Parallel Loss Landscape</h3>
-        <TagSelector sliceType="axis-parallel" />
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenItems(getAllLayerNames())}
+            >
+              Expand All
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOpenItems([])}
+            >
+              Collapse All
+            </Button>
+          </div>
+          <TagSelector sliceType="axis-parallel" />
+        </div>
       </div>
       
       {renderParameterList()}
