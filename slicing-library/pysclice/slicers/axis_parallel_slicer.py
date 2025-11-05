@@ -16,6 +16,7 @@ from skopt.sampler import Grid
 class AxisParallelSlicer():
     """Slice the loss landscape by varying parameters one at a time."""
     
+    @staticmethod
     def _slice(
             model: ModelWrapper,
             center_point: Optional[np.ndarray] = None, 
@@ -23,7 +24,7 @@ class AxisParallelSlicer():
             n_samples: int = 101, 
             params_to_slice: Optional[List[int]] = None,
             use_test_data: bool = False,
-            bounds_mode: str = "relative") -> Dict[str, Any]:
+            bounds_mode: str = "relative") -> List[Dict[str, Any]]:
         """
         Generate axis parallel slices.
         
@@ -97,22 +98,11 @@ class AxisParallelSlicer():
                 'layer_name': layer_name,
                 'param_type': param_type,
                 'samples': samples,
-                'center_point': center_point.copy(),
-                'center_loss': center_loss,
-                'bounds': bounds,
-                'bounds_mode': bounds_mode
             })
             
-        return {
-            'type': 'axis_parallel',
-            'center_point': center_point.copy(),
-            'center_loss': center_loss,
-            'slices': results,
-            'bounds': bounds,
-            'bounds_mode': bounds_mode,
-            'n_samples': n_samples
-        }
+        return results
     
+    @staticmethod
     def sample_focus_points_and_slice(
             model: ModelWrapper,
             center_point: Optional[np.ndarray] = None,
@@ -224,10 +214,8 @@ class AxisParallelSlicer():
         
         return {
             'type': 'axis_parallel',
-            'center_point': center_point.copy(),
             'sampling_method': sampling_method,
             'radius': radius,
-            'focus_points': focus_points,
             'focus_point_slices': focus_point_slices,
             'n_points': n_points,
             'bounds': bounds,
