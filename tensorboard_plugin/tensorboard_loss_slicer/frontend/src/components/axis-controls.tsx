@@ -11,9 +11,10 @@ interface AxisControlsProps {
 }
 
 export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisControlsProps) {
-  const { axisRanges, setAxisRange, resetAxisRanges } = useSliceDataContext();
+  const { axisRanges, sliderBounds, setAxisRange, setSliderBounds, resetAxisRanges } = useSliceDataContext();
   
   const currentRanges = axisRanges[sliceType];
+  const currentSliderBounds = sliderBounds[sliceType];
 
   const handleRangeChange = (axis: 'x' | 'y' | 'z', values: number[]) => {
     if (values.length === 2) {
@@ -31,6 +32,23 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
           max: type === 'max' ? numValue : currentRange.max
         };
         setAxisRange(sliceType, axis, newRange);
+
+        // Check if new value exceeds current slider bounds and update if needed
+        const currentBounds = currentSliderBounds?.[axis] ?? { min: -100, max: 600 };
+        const needsUpdate = numValue < currentBounds.min || numValue > currentBounds.max;
+        
+        if (needsUpdate) {
+          // Add some padding (20%) when expanding bounds
+          const padding = Math.abs(numValue) * 0.2;
+          const newBounds = {
+            ...currentSliderBounds,
+            [axis]: {
+              min: Math.min(currentBounds.min, Math.floor(numValue - padding)),
+              max: Math.max(currentBounds.max, Math.ceil(numValue + padding))
+            }
+          };
+          setSliderBounds(sliceType, newBounds);
+        }
       }
     }
   };
@@ -54,6 +72,9 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
         const axisRange = currentRanges[axis as keyof typeof currentRanges];
         if (!axisRange) return null;
 
+        // Get bounds for this axis, with fallback
+        const bounds = currentSliderBounds?.[axis] ?? { min: -100, max: 600 };
+
         return (
           <div key={axis} className="space-y-2">
             <div className="flex items-center justify-between">
@@ -71,8 +92,8 @@ export function AxisControls({ sliceType, availableAxes, axisLabels }: AxisContr
                 <Slider
                   value={[axisRange.min, axisRange.max]}
                   onValueChange={(values) => handleRangeChange(axis, values)}
-                  min={-600}
-                  max={600}
+                  min={bounds.min}
+                  max={bounds.max}
                   step={0.1}
                   className="w-full"
                 />

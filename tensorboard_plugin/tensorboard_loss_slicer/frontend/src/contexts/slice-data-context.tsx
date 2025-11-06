@@ -12,6 +12,21 @@ export const RUN_COLORS = [
   "#FF8042", // salmon
   "#a4de6c", // lime
   "#d0ed57", // yellow-green
+  "#e74c3c", // red
+  "#9b59b6", // violet
+  "#3498db", // light blue
+  "#1abc9c", // turquoise
+  "#f39c12", // gold
+  "#e67e22", // carrot
+  "#95a5a6", // gray
+  "#34495e", // dark blue-gray
+  "#16a085", // dark teal
+  "#27ae60", // emerald
+  "#2980b9", // belize blue
+  "#8e44ad", // wisteria
+  "#c0392b", // pomegranate
+  "#d35400", // pumpkin
+  "#7f8c8d", // asbestos
 ];
 
 export type SliceType = 'linear-interpolation' | 'random-direction' | 'axis-parallel';
@@ -28,6 +43,12 @@ interface AxisRanges {
   z?: AxisRange; // Optional for 3D charts
 }
 
+interface SliderBounds {
+  x?: { min: number; max: number };
+  y?: { min: number; max: number };
+  z?: { min: number; max: number };
+}
+
 interface RunColorMapping {
   [run: string]: string;
 }
@@ -37,11 +58,13 @@ interface SliceDataContextType {
   activeSliceType: SliceType;
   selectedTags: Record<SliceType, string[]>;
   axisRanges: Record<SliceType, AxisRanges>;
+  sliderBounds: Record<SliceType, SliderBounds>;
   toggleRun: (run: string) => void;
   setActiveSliceType: (sliceType: SliceType) => void;
   setSelectedTags: (sliceType: SliceType, tags: string[]) => void;
   toggleTag: (sliceType: SliceType, tag: string) => void;
   setAxisRange: (sliceType: SliceType, axis: 'x' | 'y' | 'z', range: { min: number; max: number }) => void;
+  setSliderBounds: (sliceType: SliceType, bounds: SliderBounds) => void;
   resetAxisRanges: (sliceType: SliceType) => void;
   resetSelections: () => void;
   runColors: RunColorMapping;
@@ -53,6 +76,38 @@ interface SliceDataProviderProps {
   children: ReactNode;
 }
 
+// Default axis ranges for each slice type
+const DEFAULT_AXIS_RANGES: Record<SliceType, AxisRanges> = {
+  'linear-interpolation': {
+    x: { min: 0, max: 1, auto: true },
+    y: { min: 0, max: 600, auto: true }
+  },
+  'random-direction': {
+    x: { min: -4, max: 4, auto: true },
+    y: { min: -4, max: 4, auto: true }
+  },
+  'axis-parallel': {
+    x: { min: -4, max: 4, auto: true },
+    y: { min: 0, max: 600, auto: true }
+  }
+};
+
+// Default slider bounds for each slice type
+const DEFAULT_SLIDER_BOUNDS: Record<SliceType, SliderBounds> = {
+  'linear-interpolation': {
+    x: { min: 0, max: 1 },
+    y: { min: -100, max: 1000 }
+  },
+  'random-direction': {
+    x: { min: -10, max: 10 },
+    y: { min: -10, max: 10 }
+  },
+  'axis-parallel': {
+    x: { min: -10, max: 10 },
+    y: { min: -100, max: 1000 }
+  }
+};
+
 export function SliceDataProvider({ children }: SliceDataProviderProps) {
   const [selectedRuns, setSelectedRuns] = useState<string[]>([]);
   const [activeSliceType, setActiveSliceType] = useState<SliceType>('linear-interpolation');
@@ -61,20 +116,8 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     'random-direction': [],
     'axis-parallel': []
   });
-  const [axisRanges, setAxisRangesState] = useState<Record<SliceType, AxisRanges>>({
-    'linear-interpolation': {
-      x: { min: 0, max: 1, auto: true },
-      y: { min: 0, max: 600, auto: true }
-    },
-    'random-direction': {
-      x: { min: -4, max: 4, auto: true },
-      y: { min: -4, max: 4, auto: true }
-    },
-    'axis-parallel': {
-      x: { min: -4, max: 4, auto: true },
-      y: { min: 0, max: 600, auto: true }
-    }
-  });
+  const [axisRanges, setAxisRangesState] = useState<Record<SliceType, AxisRanges>>(DEFAULT_AXIS_RANGES);
+  const [sliderBounds, setSliderBoundsState] = useState<Record<SliceType, SliderBounds>>(DEFAULT_SLIDER_BOUNDS);
   const [runColors, setRunColors] = useState<RunColorMapping>({});
 
   const toggleRun = (run: string) => {
@@ -140,26 +183,22 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
     }));
   };
 
-  const resetAxisRanges = (sliceType: SliceType) => {
-    const defaultRanges: Record<SliceType, AxisRanges> = {
-      'linear-interpolation': {
-        x: { min: 0, max: 1, auto: true },
-        y: { min: 0, max: 1, auto: true }
-      },
-      'random-direction': {
-        x: { min: -1, max: 1, auto: true },
-        y: { min: -1, max: 1, auto: true },
-        z: { min: 0, max: 1, auto: true }
-      },
-      'axis-parallel': {
-        x: { min: 0, max: 1, auto: true },
-        y: { min: 0, max: 1, auto: true }
-      }
-    };
+  const setSliderBounds = (sliceType: SliceType, bounds: SliderBounds) => {
+    setSliderBoundsState(prev => ({
+      ...prev,
+      [sliceType]: bounds
+    }));
+  };
 
+  //resets slider bounds and axis ranges to default values
+  const resetAxisRanges = (sliceType: SliceType) => {
     setAxisRangesState(prev => ({
       ...prev,
-      [sliceType]: defaultRanges[sliceType]
+      [sliceType]: DEFAULT_AXIS_RANGES[sliceType]
+    }));
+    setSliderBoundsState(prev => ({
+      ...prev,
+      [sliceType]: DEFAULT_SLIDER_BOUNDS[sliceType]
     }));
   };
 
@@ -179,11 +218,13 @@ export function SliceDataProvider({ children }: SliceDataProviderProps) {
         activeSliceType,
         selectedTags,
         axisRanges,
+        sliderBounds,
         toggleRun,
         setActiveSliceType,
         setSelectedTags,
         toggleTag,
         setAxisRange,
+        setSliderBounds,
         resetAxisRanges,
         resetSelections,
         runColors
