@@ -112,7 +112,7 @@ function Pq() {
   var za = Ea.prototype = new Oe();
   za.constructor = Ea, Kn(za, dn.prototype), za.isPureReactComponent = !0;
   var Da = Array.isArray, la = { H: null, A: null, T: null, S: null, V: null }, ti = Object.prototype.hasOwnProperty;
-  function ni(fa, Pi, Yo, xo, Io, Wi) {
+  function ri(fa, Pi, Yo, xo, Io, Wi) {
     return Yo = Wi.ref, {
       $$typeof: pe,
       type: fa,
@@ -122,7 +122,7 @@ function Pq() {
     };
   }
   function ra(fa, Pi) {
-    return ni(
+    return ri(
       fa.type,
       Pi,
       void 0,
@@ -335,7 +335,7 @@ function Pq() {
         Rl[au] = arguments[au + 2];
       xo.children = Rl;
     }
-    return ni(fa.type, Io, void 0, void 0, Wi, xo);
+    return ri(fa.type, Io, void 0, void 0, Wi, xo);
   }, Tu.createContext = function(fa) {
     return fa = {
       $$typeof: tr,
@@ -363,7 +363,7 @@ function Pq() {
     if (fa && fa.defaultProps)
       for (xo in Uo = fa.defaultProps, Uo)
         Io[xo] === void 0 && (Io[xo] = Uo[xo]);
-    return ni(fa, Wi, void 0, void 0, null, Io);
+    return ri(fa, Wi, void 0, void 0, null, Io);
   }, Tu.createRef = function() {
     return { current: null };
   }, Tu.forwardRef = function(fa) {
@@ -528,7 +528,7 @@ function Iq() {
           Li !== null && Ws(la, Li.startTime - Ya);
         }
     }
-    var ti = !1, ni = -1, ra = 5, co = -1;
+    var ti = !1, ri = -1, ra = 5, co = -1;
     function fo() {
       return dn ? !0 : !(pe.unstable_now() - co < ra);
     }
@@ -539,7 +539,7 @@ function Iq() {
         var Li = !0;
         try {
           e: {
-            Kn = !1, bn && (bn = !1, Ea(ni), ni = -1), xn = !0;
+            Kn = !1, bn && (bn = !1, Ea(ri), ri = -1), xn = !0;
             var ci = an;
             try {
               t: {
@@ -593,7 +593,7 @@ function Iq() {
         Oe(Ti, 0);
       };
     function Ws(Ya, Li) {
-      ni = Oe(function() {
+      ri = Oe(function() {
         Ya(pe.unstable_now());
       }, Li);
     }
@@ -667,7 +667,7 @@ function Iq() {
         startTime: ci,
         expirationTime: fa,
         sortIndex: -1
-      }, ci > Lo ? (Ya.sortIndex = ci, Ce(pr, Ya), qe(Tr) === null && Ya === qe(pr) && (bn ? (Ea(ni), ni = -1) : bn = !0, Ws(la, ci - Lo))) : (Ya.sortIndex = fa, Ce(Tr, Ya), Kn || xn || (Kn = !0, ti || (ti = !0, ts()))), Ya;
+      }, ci > Lo ? (Ya.sortIndex = ci, Ce(pr, Ya), qe(Tr) === null && Ya === qe(pr) && (bn ? (Ea(ri), ri = -1) : bn = !0, Ws(la, ci - Lo))) : (Ya.sortIndex = fa, Ce(Tr, Ya), Kn || xn || (Kn = !0, ti || (ti = !0, ts()))), Ya;
     }, pe.unstable_shouldYield = fo, pe.unstable_wrapCallback = function(Ya) {
       var Li = an;
       return function() {
@@ -958,7 +958,7 @@ function Oq() {
     }
     return null;
   }
-  var qr = Object.assign, Zr = Symbol.for("react.element"), an = Symbol.for("react.transitional.element"), xn = Symbol.for("react.portal"), Kn = Symbol.for("react.fragment"), bn = Symbol.for("react.strict_mode"), dn = Symbol.for("react.profiler"), Oe = Symbol.for("react.provider"), Ea = Symbol.for("react.consumer"), za = Symbol.for("react.context"), Da = Symbol.for("react.forward_ref"), la = Symbol.for("react.suspense"), ti = Symbol.for("react.suspense_list"), ni = Symbol.for("react.memo"), ra = Symbol.for("react.lazy"), co = Symbol.for("react.activity"), fo = Symbol.for("react.memo_cache_sentinel"), Ti = Symbol.iterator;
+  var qr = Object.assign, Zr = Symbol.for("react.element"), an = Symbol.for("react.transitional.element"), xn = Symbol.for("react.portal"), Kn = Symbol.for("react.fragment"), bn = Symbol.for("react.strict_mode"), dn = Symbol.for("react.profiler"), Oe = Symbol.for("react.provider"), Ea = Symbol.for("react.consumer"), za = Symbol.for("react.context"), Da = Symbol.for("react.forward_ref"), la = Symbol.for("react.suspense"), ti = Symbol.for("react.suspense_list"), ri = Symbol.for("react.memo"), ra = Symbol.for("react.lazy"), co = Symbol.for("react.activity"), fo = Symbol.for("react.memo_cache_sentinel"), Ti = Symbol.iterator;
   function ts(j) {
     return j === null || typeof j != "object" ? null : (j = Ti && j[Ti] || j["@@iterator"], typeof j == "function" ? j : null);
   }
@@ -993,7 +993,7 @@ function Oq() {
         case Da:
           var J = j.render;
           return j = j.displayName, j || (j = J.displayName || J.name || "", j = j !== "" ? "ForwardRef(" + j + ")" : "ForwardRef"), j;
-        case ni:
+        case ri:
           return J = j.displayName || null, J !== null ? J : Yi(j.type) || "Memo";
         case ra:
           J = j._payload, j = j._init;
@@ -2453,7 +2453,7 @@ Error generating stack: ` + ge.message + `
               case Da:
                 Ur = 11;
                 break e;
-              case ni:
+              case ri:
                 Ur = 14;
                 break e;
               case ra:
@@ -5184,7 +5184,7 @@ Error generating stack: ` + ge.message + `
                   ge
                 );
                 break e;
-              } else if (st === ni) {
+              } else if (st === ri) {
                 J.tag = 14, J = IM(
                   null,
                   J,
@@ -10727,8 +10727,8 @@ const sP = "-", sH = (pe) => {
     tr.push(Da);
     const la = bt(Oe, dn);
     for (let ti = 0; ti < la.length; ++ti) {
-      const ni = la[ti];
-      tr.push(za + ni);
+      const ri = la[ti];
+      tr.push(za + ri);
     }
     Tr = qr + (Tr.length > 0 ? " " + Tr : Tr);
   }
@@ -10798,7 +10798,7 @@ const Qd = (pe) => {
     "bottom-left",
     // Deprecated since Tailwind CSS v4.1.0, see https://github.com/tailwindlabs/tailwindcss/pull/17378
     "left-bottom"
-  ], la = () => [...Da(), Gs, Hs], ti = () => ["auto", "hidden", "clip", "visible", "scroll"], ni = () => ["auto", "contain", "none"], ra = () => [Gs, Hs, Tr], co = () => [h2, "full", "auto", ...ra()], fo = () => [P1, "none", "subgrid", Gs, Hs], Ti = () => ["auto", {
+  ], la = () => [...Da(), Gs, Hs], ti = () => ["auto", "hidden", "clip", "visible", "scroll"], ri = () => ["auto", "contain", "none"], ra = () => [Gs, Hs, Tr], co = () => [h2, "full", "auto", ...ra()], fo = () => [P1, "none", "subgrid", Gs, Hs], Ti = () => ["auto", {
     span: ["full", P1, Gs, Hs]
   }, P1, Gs, Hs], ts = () => [P1, "auto", Gs, Hs], xi = () => ["auto", "min", "max", "fr", Gs, Hs], Yi = () => ["start", "end", "center", "between", "around", "evenly", "stretch", "baseline", "center-safe", "end-safe"], Ws = () => ["start", "end", "center", "stretch", "center-safe", "end-safe"], Ya = () => ["auto", ...ra()], Li = () => [h2, "auto", "full", "dvw", "dvh", "lvw", "lvh", "svw", "svh", "min", "max", "fit", ...ra()], ci = () => [pe, Gs, Hs], Lo = () => [...Da(), ZD, XD, {
     position: [Gs, Hs]
@@ -10973,21 +10973,21 @@ const Qd = (pe) => {
        * @see https://tailwindcss.com/docs/overscroll-behavior
        */
       overscroll: [{
-        overscroll: ni()
+        overscroll: ri()
       }],
       /**
        * Overscroll Behavior X
        * @see https://tailwindcss.com/docs/overscroll-behavior
        */
       "overscroll-x": [{
-        "overscroll-x": ni()
+        "overscroll-x": ri()
       }],
       /**
        * Overscroll Behavior Y
        * @see https://tailwindcss.com/docs/overscroll-behavior
        */
       "overscroll-y": [{
-        "overscroll-y": ni()
+        "overscroll-y": ri()
       }],
       /**
        * Position
@@ -13538,15 +13538,15 @@ var rG = "DismissableLayer", E6 = "dismissableLayer.update", nG = "dismissableLa
       onInteractOutside: tr,
       onDismiss: fr,
       ...Tr
-    } = pe, pr = Yr.useContext(p8), [qr, Zr] = Yr.useState(null), an = (qr == null ? void 0 : qr.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document), [, xn] = Yr.useState({}), Kn = $u(Ce, (ni) => Zr(ni)), bn = Array.from(pr.layers), [dn] = [...pr.layersWithOutsidePointerEventsDisabled].slice(-1), Oe = bn.indexOf(dn), Ea = qr ? bn.indexOf(qr) : -1, za = pr.layersWithOutsidePointerEventsDisabled.size > 0, Da = Ea >= Oe, la = sG((ni) => {
-      const ra = ni.target, co = [...pr.branches].some((fo) => fo.contains(ra));
-      !Da || co || (bt == null || bt(ni), tr == null || tr(ni), ni.defaultPrevented || fr == null || fr());
-    }, an), ti = lG((ni) => {
-      const ra = ni.target;
-      [...pr.branches].some((fo) => fo.contains(ra)) || (Nt == null || Nt(ni), tr == null || tr(ni), ni.defaultPrevented || fr == null || fr());
+    } = pe, pr = Yr.useContext(p8), [qr, Zr] = Yr.useState(null), an = (qr == null ? void 0 : qr.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document), [, xn] = Yr.useState({}), Kn = $u(Ce, (ri) => Zr(ri)), bn = Array.from(pr.layers), [dn] = [...pr.layersWithOutsidePointerEventsDisabled].slice(-1), Oe = bn.indexOf(dn), Ea = qr ? bn.indexOf(qr) : -1, za = pr.layersWithOutsidePointerEventsDisabled.size > 0, Da = Ea >= Oe, la = sG((ri) => {
+      const ra = ri.target, co = [...pr.branches].some((fo) => fo.contains(ra));
+      !Da || co || (bt == null || bt(ri), tr == null || tr(ri), ri.defaultPrevented || fr == null || fr());
+    }, an), ti = lG((ri) => {
+      const ra = ri.target;
+      [...pr.branches].some((fo) => fo.contains(ra)) || (Nt == null || Nt(ri), tr == null || tr(ri), ri.defaultPrevented || fr == null || fr());
     }, an);
-    return v8((ni) => {
-      Ea === pr.layers.size - 1 && (Xe == null || Xe(ni), !ni.defaultPrevented && fr && (ni.preventDefault(), fr()));
+    return v8((ri) => {
+      Ea === pr.layers.size - 1 && (Xe == null || Xe(ri), !ri.defaultPrevented && fr && (ri.preventDefault(), fr()));
     }, an), Yr.useEffect(() => {
       if (qr)
         return qe && (pr.layersWithOutsidePointerEventsDisabled.size === 0 && (KD = an.body.style.pointerEvents, an.body.style.pointerEvents = "none"), pr.layersWithOutsidePointerEventsDisabled.add(qr)), pr.layers.add(qr), $D(), () => {
@@ -13555,8 +13555,8 @@ var rG = "DismissableLayer", E6 = "dismissableLayer.update", nG = "dismissableLa
     }, [qr, an, qe, pr]), Yr.useEffect(() => () => {
       qr && (pr.layers.delete(qr), pr.layersWithOutsidePointerEventsDisabled.delete(qr), $D());
     }, [qr, pr]), Yr.useEffect(() => {
-      const ni = () => xn({});
-      return document.addEventListener(E6, ni), () => document.removeEventListener(E6, ni);
+      const ri = () => xn({});
+      return document.addEventListener(E6, ri), () => document.removeEventListener(E6, ri);
     }, []), /* @__PURE__ */ Br.jsx(
       iu.div,
       {
@@ -14004,12 +14004,12 @@ var x8 = kG(), o6 = function() {
     onScrollCapture: o6,
     onWheelCapture: o6,
     onTouchMoveCapture: o6
-  }), bt = Xe[0], Nt = Xe[1], tr = pe.forwardProps, fr = pe.children, Tr = pe.className, pr = pe.removeScrollBar, qr = pe.enabled, Zr = pe.shards, an = pe.sideCar, xn = pe.noRelative, Kn = pe.noIsolation, bn = pe.inert, dn = pe.allowPinchZoom, Oe = pe.as, Ea = Oe === void 0 ? "div" : Oe, za = pe.gapMode, Da = y8(pe, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noRelative", "noIsolation", "inert", "allowPinchZoom", "as", "gapMode"]), la = an, ti = MG([qe, Ce]), ni = ay(ay({}, Da), bt);
+  }), bt = Xe[0], Nt = Xe[1], tr = pe.forwardProps, fr = pe.children, Tr = pe.className, pr = pe.removeScrollBar, qr = pe.enabled, Zr = pe.shards, an = pe.sideCar, xn = pe.noRelative, Kn = pe.noIsolation, bn = pe.inert, dn = pe.allowPinchZoom, Oe = pe.as, Ea = Oe === void 0 ? "div" : Oe, za = pe.gapMode, Da = y8(pe, ["forwardProps", "children", "className", "removeScrollBar", "enabled", "shards", "sideCar", "noRelative", "noIsolation", "inert", "allowPinchZoom", "as", "gapMode"]), la = an, ti = MG([qe, Ce]), ri = ay(ay({}, Da), bt);
   return Yr.createElement(
     Yr.Fragment,
     null,
     qr && Yr.createElement(la, { sideCar: x8, removeScrollBar: pr, shards: Zr, noRelative: xn, noIsolation: Kn, inert: bn, setCallbacks: Nt, allowPinchZoom: !!dn, lockRef: qe, gapMode: za }),
-    tr ? Yr.cloneElement(Yr.Children.only(fr), ay(ay({}, ni), { ref: ti })) : Yr.createElement(Ea, ay({}, ni, { className: Tr, ref: ti }), fr)
+    tr ? Yr.cloneElement(Yr.Children.only(fr), ay(ay({}, ri), { ref: ti })) : Yr.createElement(Ea, ay({}, ri, { className: Tr, ref: ti }), fr)
   );
 });
 cC.defaultProps = {
@@ -14255,13 +14255,13 @@ function eY(pe) {
   var fr = Yr.useCallback(function(bn, dn) {
     if ("touches" in bn && bn.touches.length === 2 || bn.type === "wheel" && bn.ctrlKey)
       return !tr.current.allowPinchZoom;
-    var Oe = B5(bn), Ea = qe.current, za = "deltaX" in bn ? bn.deltaX : Ea[0] - Oe[0], Da = "deltaY" in bn ? bn.deltaY : Ea[1] - Oe[1], la, ti = bn.target, ni = Math.abs(za) > Math.abs(Da) ? "h" : "v";
-    if ("touches" in bn && ni === "h" && ti.type === "range")
+    var Oe = B5(bn), Ea = qe.current, za = "deltaX" in bn ? bn.deltaX : Ea[0] - Oe[0], Da = "deltaY" in bn ? bn.deltaY : Ea[1] - Oe[1], la, ti = bn.target, ri = Math.abs(za) > Math.abs(Da) ? "h" : "v";
+    if ("touches" in bn && ri === "h" && ti.type === "range")
       return !1;
-    var ra = iz(ni, ti);
+    var ra = iz(ri, ti);
     if (!ra)
       return !0;
-    if (ra ? la = ni : (la = ni === "v" ? "h" : "v", ra = iz(ni, ti)), !ra)
+    if (ra ? la = ri : (la = ri === "v" ? "h" : "v", ra = iz(ri, ti)), !ra)
       return !1;
     if (!Xe.current && "changedTouches" in bn && (za || Da) && (Xe.current = la), !la)
       return !0;
@@ -14974,9 +14974,9 @@ const BY = (pe) => ({
       x: qe,
       y: Xe
     }, xn = _P(bt), Kn = yP(xn), bn = await tr.getDimensions(pr), dn = xn === "y", Oe = dn ? "top" : "left", Ea = dn ? "bottom" : "right", za = dn ? "clientHeight" : "clientWidth", Da = Nt.reference[Kn] + Nt.reference[xn] - an[xn] - Nt.floating[Kn], la = an[xn] - Nt.reference[xn], ti = await (tr.getOffsetParent == null ? void 0 : tr.getOffsetParent(pr));
-    let ni = ti ? ti[za] : 0;
-    (!ni || !await (tr.isElement == null ? void 0 : tr.isElement(ti))) && (ni = fr.floating[za] || Nt.floating[Kn]);
-    const ra = Da / 2 - la / 2, co = ni / 2 - bn[Kn] / 2 - 1, fo = G1(Zr[Oe], co), Ti = G1(Zr[Ea], co), ts = fo, xi = ni - bn[Kn] - Ti, Yi = ni / 2 - bn[Kn] / 2 + ra, Ws = k6(ts, Yi, xi), Ya = !Tr.arrow && q2(bt) != null && Yi !== Ws && Nt.reference[Kn] / 2 - (Yi < ts ? fo : Ti) - bn[Kn] / 2 < 0, Li = Ya ? Yi < ts ? Yi - ts : Yi - xi : 0;
+    let ri = ti ? ti[za] : 0;
+    (!ri || !await (tr.isElement == null ? void 0 : tr.isElement(ti))) && (ri = fr.floating[za] || Nt.floating[Kn]);
+    const ra = Da / 2 - la / 2, co = ri / 2 - bn[Kn] / 2 - 1, fo = G1(Zr[Oe], co), Ti = G1(Zr[Ea], co), ts = fo, xi = ri - bn[Kn] - Ti, Yi = ri / 2 - bn[Kn] / 2 + ra, Ws = k6(ts, Yi, xi), Ya = !Tr.arrow && q2(bt) != null && Yi !== Ws && Nt.reference[Kn] / 2 - (Yi < ts ? fo : Ti) - bn[Kn] / 2 < 0, Li = Ya ? Yi < ts ? Yi - ts : Yi - xi : 0;
     return {
       [xn]: an[xn] + Li,
       data: {
@@ -15015,7 +15015,7 @@ const BY = (pe) => ({
         return {};
       const Oe = f0(bt), Ea = iy(fr), za = f0(fr) === fr, Da = await (Tr.isRTL == null ? void 0 : Tr.isRTL(pr.floating)), la = an || (za || !bn ? [Q5(fr)] : DY(fr)), ti = Kn !== "none";
       !an && ti && la.push(...OY(fr, bn, Kn, Da));
-      const ni = [fr, ...la], ra = await nS(Ce, dn), co = [];
+      const ri = [fr, ...la], ra = await nS(Ce, dn), co = [];
       let fo = ((Xe = Nt.flip) == null ? void 0 : Xe.overflows) || [];
       if (qr && co.push(ra[Oe]), Zr) {
         const Yi = IY(bt, tr, Da);
@@ -15026,7 +15026,7 @@ const BY = (pe) => ({
         overflows: co
       }], !co.every((Yi) => Yi <= 0)) {
         var Ti, ts;
-        const Yi = (((Ti = Nt.flip) == null ? void 0 : Ti.index) || 0) + 1, Ws = ni[Yi];
+        const Yi = (((Ti = Nt.flip) == null ? void 0 : Ti.index) || 0) + 1, Ws = ri[Yi];
         if (Ws && (!(Zr === "alignment" ? Ea !== iy(Ws) : !1) || // We leave the current main axis only if every placement on that axis
         // overflows the main axis.
         fo.every((ci) => ci.overflows[0] > 0 && iy(ci.placement) === Ea)))
@@ -15293,15 +15293,15 @@ const qY = function(pe) {
       let dn, Oe;
       Zr === "top" || Zr === "bottom" ? (dn = Zr, Oe = an === (await (tr.isRTL == null ? void 0 : tr.isRTL(fr.floating)) ? "start" : "end") ? "left" : "right") : (Oe = Zr, dn = an === "end" ? "top" : "bottom");
       const Ea = bn - qr.top - qr.bottom, za = Kn - qr.left - qr.right, Da = G1(bn - qr[dn], Ea), la = G1(Kn - qr[Oe], za), ti = !Ce.middlewareData.shift;
-      let ni = Da, ra = la;
-      if ((qe = Ce.middlewareData.shift) != null && qe.enabled.x && (ra = za), (Xe = Ce.middlewareData.shift) != null && Xe.enabled.y && (ni = Ea), ti && !an) {
+      let ri = Da, ra = la;
+      if ((qe = Ce.middlewareData.shift) != null && qe.enabled.x && (ra = za), (Xe = Ce.middlewareData.shift) != null && Xe.enabled.y && (ri = Ea), ti && !an) {
         const fo = Jp(qr.left, 0), Ti = Jp(qr.right, 0), ts = Jp(qr.top, 0), xi = Jp(qr.bottom, 0);
-        xn ? ra = Kn - 2 * (fo !== 0 || Ti !== 0 ? fo + Ti : Jp(qr.left, qr.right)) : ni = bn - 2 * (ts !== 0 || xi !== 0 ? ts + xi : Jp(qr.top, qr.bottom));
+        xn ? ra = Kn - 2 * (fo !== 0 || Ti !== 0 ? fo + Ti : Jp(qr.left, qr.right)) : ri = bn - 2 * (ts !== 0 || xi !== 0 ? ts + xi : Jp(qr.top, qr.bottom));
       }
       await Tr({
         ...Ce,
         availableWidth: ra,
-        availableHeight: ni
+        availableHeight: ri
       });
       const co = await tr.getDimensions(fr.floating);
       return Kn !== co.width || bn !== co.height ? {
@@ -15732,15 +15732,15 @@ function uX(pe, Ce) {
     };
     let Da = !0;
     function la(ti) {
-      const ni = ti[0].intersectionRatio;
-      if (ni !== Tr) {
+      const ri = ti[0].intersectionRatio;
+      if (ri !== Tr) {
         if (!Da)
           return tr();
-        ni ? tr(!1, ni) : Xe = setTimeout(() => {
+        ri ? tr(!1, ri) : Xe = setTimeout(() => {
           tr(!1, 1e-7);
         }, 1e3);
       }
-      ni === 1 && !K8(pr, pe.getBoundingClientRect()) && tr(), Da = !1;
+      ri === 1 && !K8(pr, pe.getBoundingClientRect()) && tr(), Da = !1;
     }
     try {
       qe = new IntersectionObserver(la, {
@@ -15875,16 +15875,16 @@ function Q8(pe) {
   const [Kn, bn] = Yr.useState(null), [dn, Oe] = Yr.useState(null), Ea = Yr.useCallback((ci) => {
     ci !== ti.current && (ti.current = ci, bn(ci));
   }, []), za = Yr.useCallback((ci) => {
-    ci !== ni.current && (ni.current = ci, Oe(ci));
-  }, []), Da = Nt || Kn, la = tr || dn, ti = Yr.useRef(null), ni = Yr.useRef(null), ra = Yr.useRef(qr), co = Tr != null, fo = c6(Tr), Ti = c6(bt), ts = c6(pr), xi = Yr.useCallback(() => {
-    if (!ti.current || !ni.current)
+    ci !== ri.current && (ri.current = ci, Oe(ci));
+  }, []), Da = Nt || Kn, la = tr || dn, ti = Yr.useRef(null), ri = Yr.useRef(null), ra = Yr.useRef(qr), co = Tr != null, fo = c6(Tr), Ti = c6(bt), ts = c6(pr), xi = Yr.useCallback(() => {
+    if (!ti.current || !ri.current)
       return;
     const ci = {
       placement: Ce,
       strategy: qe,
       middleware: an
     };
-    Ti.current && (ci.platform = Ti.current), mX(ti.current, ni.current, ci).then((Lo) => {
+    Ti.current && (ci.platform = Ti.current), mX(ti.current, ri.current, ci).then((Lo) => {
       const fa = {
         ...Lo,
         // The floating element's position may be recomputed while it's closed
@@ -15908,7 +15908,7 @@ function Q8(pe) {
   W5(() => (Yi.current = !0, () => {
     Yi.current = !1;
   }), []), W5(() => {
-    if (Da && (ti.current = Da), la && (ni.current = la), Da && la) {
+    if (Da && (ti.current = Da), la && (ri.current = la), Da && la) {
       if (fo.current)
         return fo.current(Da, la, xi);
       xi();
@@ -15916,7 +15916,7 @@ function Q8(pe) {
   }, [Da, la, xi, fo, co]);
   const Ws = Yr.useMemo(() => ({
     reference: ti,
-    floating: ni,
+    floating: ri,
     setReference: Ea,
     setFloating: za
   }), [Ea, za]), Ya = Yr.useMemo(() => ({
@@ -16060,7 +16060,7 @@ var AP = "PopperContent", [bX, wX] = cO(AP), pO = Yr.forwardRef(
       updatePositionStrategy: xn = "optimized",
       onPlaced: Kn,
       ...bn
-    } = pe, dn = hO(AP, qe), [Oe, Ea] = Yr.useState(null), za = $u(Ce, (Qi) => Ea(Qi)), [Da, la] = Yr.useState(null), ti = pC(Da), ni = (ti == null ? void 0 : ti.width) ?? 0, ra = (ti == null ? void 0 : ti.height) ?? 0, co = Xe + (Nt !== "center" ? "-" + Nt : ""), fo = typeof qr == "number" ? qr : { top: 0, right: 0, bottom: 0, left: 0, ...qr }, Ti = Array.isArray(pr) ? pr : [pr], ts = Ti.length > 0, xi = {
+    } = pe, dn = hO(AP, qe), [Oe, Ea] = Yr.useState(null), za = $u(Ce, (Qi) => Ea(Qi)), [Da, la] = Yr.useState(null), ti = pC(Da), ri = (ti == null ? void 0 : ti.width) ?? 0, ra = (ti == null ? void 0 : ti.height) ?? 0, co = Xe + (Nt !== "center" ? "-" + Nt : ""), fo = typeof qr == "number" ? qr : { top: 0, right: 0, bottom: 0, left: 0, ...qr }, Ti = Array.isArray(pr) ? pr : [pr], ts = Ti.length > 0, xi = {
       padding: fo,
       boundary: Ti.filter(AX),
       // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
@@ -16092,7 +16092,7 @@ var AP = "PopperContent", [bX, wX] = cO(AP), pO = Yr.forwardRef(
           }
         }),
         Da && oO({ element: Da, padding: fr }),
-        SX({ arrowWidth: ni, arrowHeight: ra }),
+        SX({ arrowWidth: ri, arrowHeight: ra }),
         an && iO({ strategy: "referenceHidden", ...xi })
       ]
     }), [Lo, fa] = yO(Ya), Pi = km(Kn);
@@ -17480,7 +17480,7 @@ var ty, Hz, xZ = (Hz = class extends G2 {
     this.execute(this.state.variables);
   }
   async execute(Ce) {
-    var Nt, tr, fr, Tr, pr, qr, Zr, an, xn, Kn, bn, dn, Oe, Ea, za, Da, la, ti, ni, ra;
+    var Nt, tr, fr, Tr, pr, qr, Zr, an, xn, Kn, bn, dn, Oe, Ea, za, Da, la, ti, ri, ra;
     const qe = () => {
       nu(this, ny, I1).call(this, { type: "continue" });
     };
@@ -17551,8 +17551,8 @@ var ty, Hz, xZ = (Hz = class extends G2 {
           this.state.variables,
           this.state.context,
           this
-        )), await ((ra = (ni = this.options).onSettled) == null ? void 0 : ra.call(
-          ni,
+        )), await ((ra = (ri = this.options).onSettled) == null ? void 0 : ra.call(
+          ri,
           void 0,
           co,
           Ce,
@@ -17760,7 +17760,7 @@ function bz(pe) {
             return Promise.reject();
           if (Da == null && za.pages.length)
             return Promise.resolve(za);
-          const ni = (() => {
+          const ri = (() => {
             const Ti = {
               client: Ce.client,
               queryKey: Ce.queryKey,
@@ -17769,7 +17769,7 @@ function bz(pe) {
               meta: Ce.options.meta
             };
             return dn(Ti), Ti;
-          })(), ra = await Oe(ni), { maxPages: co } = Ce.options, fo = la ? fZ : cZ;
+          })(), ra = await Oe(ri), { maxPages: co } = Ce.options, fo = la ? fZ : cZ;
           return {
             pages: fo(za.pages, ra, co),
             pageParams: fo(za.pageParams, Da, co)
@@ -18818,8 +18818,8 @@ var $O = "CheckboxBubbleInput", JO = Yr.forwardRef(
         "checked"
       ).set, ti = !bt.current;
       if (bn !== Nt && la) {
-        const ni = new Event("click", { bubbles: ti });
-        Ea.indeterminate = H1(Nt), la.call(Ea, H1(Nt) ? !1 : Nt), Ea.dispatchEvent(ni);
+        const ri = new Event("click", { bubbles: ti });
+        Ea.indeterminate = H1(Nt), la.call(Ea, H1(Nt) ? !1 : Nt), Ea.dispatchEvent(ri);
       }
     }, [an, bn, Nt, bt]);
     const Oe = Yr.useRef(H1(Nt) ? !1 : Nt);
@@ -18966,9 +18966,9 @@ function jZ({ children: pe }) {
     "random-direction": [],
     "axis-parallel": []
   }), [fr, Tr] = Yr.useState(Ez), [pr, qr] = Yr.useState(Cz), [Zr, an] = Yr.useState({}), xn = (Da) => {
-    qe((la) => la.includes(Da) ? la.filter((ni) => ni !== Da) : (Zr[Da] || an((ni) => ({
-      ...ni,
-      [Da]: Mz[Object.keys(ni).length % Mz.length]
+    qe((la) => la.includes(Da) ? la.filter((ri) => ri !== Da) : (Zr[Da] || an((ri) => ({
+      ...ri,
+      [Da]: Mz[Object.keys(ri).length % Mz.length]
     })), [...la, Da]));
   }, Kn = (Da, la) => {
     tr((ti) => ({
@@ -18977,22 +18977,22 @@ function jZ({ children: pe }) {
     }));
   }, bn = (Da, la) => {
     tr((ti) => {
-      const ni = ti[Da];
-      return ni.includes(la) ? {
+      const ri = ti[Da];
+      return ri.includes(la) ? {
         ...ti,
-        [Da]: ni.filter((co) => co !== la)
+        [Da]: ri.filter((co) => co !== la)
       } : {
         ...ti,
-        [Da]: [...ni, la]
+        [Da]: [...ri, la]
       };
     });
   }, dn = (Da, la, ti) => {
-    Tr((ni) => ({
-      ...ni,
+    Tr((ri) => ({
+      ...ri,
       [Da]: {
-        ...ni[Da],
+        ...ri[Da],
         [la]: {
-          ...ni[Da][la],
+          ...ri[Da][la],
           min: ti.min,
           max: ti.max,
           auto: !1
@@ -19219,7 +19219,7 @@ function _C(pe) {
       if (!Ea) return [];
       const za = Array.from(Ea.querySelectorAll(`[${Zr}]`));
       return Array.from(dn.itemMap.values()).sort(
-        (ti, ni) => za.indexOf(ti.ref.current) - za.indexOf(ni.ref.current)
+        (ti, ri) => za.indexOf(ti.ref.current) - za.indexOf(ri.ref.current)
       );
     }, [dn.collectionRef, dn.itemMap]);
   }
@@ -19263,7 +19263,7 @@ var nF = ["PageUp", "PageDown"], aF = ["ArrowUp", "ArrowDown", "ArrowLeft", "Arr
         (xi = [...dn.current][Oe.current]) == null || xi.focus(), Zr(Ti);
       }
     }), ti = Yr.useRef(Da);
-    function ni(Ti) {
+    function ri(Ti) {
       const ts = QZ(Da, Ti);
       fo(Ti, ts);
     }
@@ -19312,7 +19312,7 @@ var nF = ["PageUp", "PageDown"], aF = ["ArrowUp", "ArrowDown", "ArrowLeft", "Arr
             min: Xe,
             max: bt,
             inverted: xn,
-            onSlideStart: fr ? void 0 : ni,
+            onSlideStart: fr ? void 0 : ri,
             onSlideMove: fr ? void 0 : ra,
             onSlideEnd: fr ? void 0 : co,
             onHomeKeyDown: () => !fr && fo(Xe, 0, { commit: !0 }),
@@ -19349,8 +19349,8 @@ var [lF, uF] = oF(Y2, {
       ...qr
     } = pe, [Zr, an] = Yr.useState(null), xn = $u(Ce, (za) => an(za)), Kn = Yr.useRef(void 0), bn = gS(bt), dn = bn === "ltr", Oe = dn && !Nt || !dn && Nt;
     function Ea(za) {
-      const Da = Kn.current || Zr.getBoundingClientRect(), la = [0, Da.width], ni = OP(la, Oe ? [qe, Xe] : [Xe, qe]);
-      return Kn.current = Da, ni(za - Da.left);
+      const Da = Kn.current || Zr.getBoundingClientRect(), la = [0, Da.width], ri = OP(la, Oe ? [qe, Xe] : [Xe, qe]);
+      return Kn.current = Da, ri(za - Da.left);
     }
     return /* @__PURE__ */ Br.jsx(
       lF,
@@ -20083,8 +20083,8 @@ var [AF, SW] = wC(vg), [SF, MW] = wC(
           Nt === "vertical" && ti();
           break;
       }
-      const ni = Ea % Oe;
-      (ra = bn[ni].ref.current) == null || ra.focus();
+      const ri = Ea % Oe;
+      (ra = bn[ri].ref.current) == null || ra.focus();
     });
     return /* @__PURE__ */ Br.jsx(
       kW,
@@ -20325,7 +20325,7 @@ var VW = Yr.forwardRef((pe, Ce) => {
     defaultProp: fr ?? null,
     onChange: Tr,
     caller: yS
-  }), [Oe, Ea] = Yr.useState(!1), za = km(pr), Da = NF(qe), la = Yr.useRef(!1), [ti, ni] = Yr.useState(0);
+  }), [Oe, Ea] = Yr.useState(!1), za = km(pr), Da = NF(qe), la = Yr.useRef(!1), [ti, ri] = Yr.useState(0);
   return Yr.useEffect(() => {
     const ra = an.current;
     if (ra)
@@ -20344,11 +20344,11 @@ var VW = Yr.forwardRef((pe, Ce) => {
       ),
       onItemShiftTab: Yr.useCallback(() => Ea(!0), []),
       onFocusableItemAdd: Yr.useCallback(
-        () => ni((ra) => ra + 1),
+        () => ri((ra) => ra + 1),
         []
       ),
       onFocusableItemRemove: Yr.useCallback(
-        () => ni((ra) => ra - 1),
+        () => ri((ra) => ra - 1),
         []
       ),
       children: /* @__PURE__ */ Br.jsx(
@@ -20811,9 +20811,9 @@ function sK() {
     }
     function Nt(la) {
       if (typeof WeakMap != "function") return null;
-      var ti = /* @__PURE__ */ new WeakMap(), ni = /* @__PURE__ */ new WeakMap();
+      var ti = /* @__PURE__ */ new WeakMap(), ri = /* @__PURE__ */ new WeakMap();
       return (Nt = function(co) {
-        return co ? ni : ti;
+        return co ? ri : ti;
       })(la);
     }
     function tr(la, ti) {
@@ -20821,28 +20821,28 @@ function sK() {
         return la;
       if (la === null || Ce(la) !== "object" && typeof la != "function")
         return { default: la };
-      var ni = Nt(ti);
-      if (ni && ni.has(la))
-        return ni.get(la);
+      var ri = Nt(ti);
+      if (ri && ri.has(la))
+        return ri.get(la);
       var ra = {}, co = Object.defineProperty && Object.getOwnPropertyDescriptor;
       for (var fo in la)
         if (fo !== "default" && Object.prototype.hasOwnProperty.call(la, fo)) {
           var Ti = co ? Object.getOwnPropertyDescriptor(la, fo) : null;
           Ti && (Ti.get || Ti.set) ? Object.defineProperty(ra, fo, Ti) : ra[fo] = la[fo];
         }
-      return ra.default = la, ni && ni.set(la, ra), ra;
+      return ra.default = la, ri && ri.set(la, ra), ra;
     }
     function fr(la, ti) {
       if (!(la instanceof ti))
         throw new TypeError("Cannot call a class as a function");
     }
     function Tr(la, ti) {
-      for (var ni = 0; ni < ti.length; ni++) {
-        var ra = ti[ni];
+      for (var ri = 0; ri < ti.length; ri++) {
+        var ra = ti[ri];
         ra.enumerable = ra.enumerable || !1, ra.configurable = !0, "value" in ra && (ra.writable = !0), Object.defineProperty(la, ra.key, ra);
       }
     }
-    function pr(la, ti, ni) {
+    function pr(la, ti, ri) {
       return ti && Tr(la.prototype, ti), Object.defineProperty(la, "prototype", { writable: !1 }), la;
     }
     function qr(la, ti) {
@@ -20890,14 +20890,14 @@ function sK() {
       }
     }
     function dn(la) {
-      return dn = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(ni) {
-        return ni.__proto__ || Object.getPrototypeOf(ni);
+      return dn = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function(ri) {
+        return ri.__proto__ || Object.getPrototypeOf(ri);
       }, dn(la);
     }
     var Oe = ["AfterExport", "AfterPlot", "Animated", "AnimatingFrame", "AnimationInterrupted", "AutoSize", "BeforeExport", "BeforeHover", "ButtonClicked", "Click", "ClickAnnotation", "Deselect", "DoubleClick", "Framework", "Hover", "LegendClick", "LegendDoubleClick", "Relayout", "Relayouting", "Restyle", "Redraw", "Selected", "Selecting", "SliderChange", "SliderEnd", "SliderStart", "SunburstClick", "Transitioning", "TransitionInterrupted", "Unhover", "WebGlContextLost"], Ea = ["plotly_restyle", "plotly_redraw", "plotly_relayout", "plotly_relayouting", "plotly_doubleclick", "plotly_animated", "plotly_sunburstclick"], za = typeof window < "u";
     function Da(la) {
-      var ti = /* @__PURE__ */ function(ni) {
-        qr(co, ni);
+      var ti = /* @__PURE__ */ function(ri) {
+        qr(co, ri);
         var ra = an(co);
         function co(fo) {
           var Ti;
@@ -21039,8 +21039,8 @@ function sK() {
         className: Xe.default.string,
         useResizeHandler: Xe.default.bool,
         divId: Xe.default.string
-      }, Oe.forEach(function(ni) {
-        ti.propTypes["on" + ni] = Xe.default.func;
+      }, Oe.forEach(function(ri) {
+        ti.propTypes["on" + ri] = Xe.default.func;
       }), ti.defaultProps = {
         debug: !1,
         useResizeHandler: !1,
@@ -21091,7 +21091,7 @@ function uK() {
           "src/version.js"(K) {
             K.version = "3.0.1";
           }
-        }), ni = Oe({
+        }), ri = Oe({
           "node_modules/native-promise-only/lib/npo.src.js"(K, Y) {
             (function(x, A, E) {
               A[x] = A[x] || E(), typeof Y < "u" && Y.exports && (Y.exports = A[x]);
@@ -56562,7 +56562,7 @@ function uK() {
           }
         }), JC = Oe({
           "src/core.js"(K) {
-            K.version = ti().version, ni(), rb();
+            K.version = ti().version, ri(), rb();
             var Y = ko(), v = K.register = Y.register, x = S0(), A = Object.keys(x);
             for (e = 0; e < A.length; e++)
               E = A[e], E.charAt(0) !== "_" && (K[E] = x[E]), v({
@@ -113614,8 +113614,8 @@ void main() {
                     ba.dtype = wi || Wt(fi), ba.dimension = Ai, to(ba, fi, hi), No && (ba.persistentData = new Uint8Array(new Uint8Array(fi.buffer)));
                   else if (Lr(fi)) {
                     Gi = fi.shape;
-                    var ri = fi.stride, _o = fi.offset, ro = 0, fs = 0, fl = 0, Vo = 0;
-                    Gi.length === 1 ? (ro = Gi[0], fs = 1, fl = ri[0], Vo = 0) : Gi.length === 2 && (ro = Gi[0], fs = Gi[1], fl = ri[0], Vo = ri[1]), ba.dtype = wi || Wt(fi.data) || Vt, ba.dimension = fs;
+                    var ni = fi.stride, _o = fi.offset, ro = 0, fs = 0, fl = 0, Vo = 0;
+                    Gi.length === 1 ? (ro = Gi[0], fs = 1, fl = ni[0], Vo = 0) : Gi.length === 2 && (ro = Gi[0], fs = Gi[1], fl = ni[0], Vo = ni[1]), ba.dtype = wi || Wt(fi.data) || Vt, ba.dimension = fs;
                     var vs = B.allocType(ba.dtype, ro * fs);
                     sn(
                       vs,
@@ -113638,14 +113638,14 @@ void main() {
                   var Ai = new ga(fi);
                   ha[Ai.id] = Ai;
                   function No(bi) {
-                    var gi = ia, Co = null, ri = 0, _o = 0, ro = 1;
-                    return Array.isArray(bi) || Er(bi) || Lr(bi) || bi instanceof ArrayBuffer ? Co = bi : typeof bi == "number" ? ri = bi | 0 : bi && ("data" in bi && (Co = bi.data), "usage" in bi && (gi = Gn[bi.usage]), "type" in bi && (_o = Cn[bi.type]), "dimension" in bi && (ro = bi.dimension | 0), "length" in bi && (ri = bi.length | 0)), Ai.bind(), Co ? Jo(Ai, Co, gi, _o, ro, wi) : (ri && Mr.bufferData(Ai.type, ri, gi), Ai.dtype = _o || er, Ai.usage = gi, Ai.dimension = ro, Ai.byteLength = ri), Xn.profile && (Ai.stats.size = Ai.byteLength * Qt[Ai.dtype]), No;
+                    var gi = ia, Co = null, ni = 0, _o = 0, ro = 1;
+                    return Array.isArray(bi) || Er(bi) || Lr(bi) || bi instanceof ArrayBuffer ? Co = bi : typeof bi == "number" ? ni = bi | 0 : bi && ("data" in bi && (Co = bi.data), "usage" in bi && (gi = Gn[bi.usage]), "type" in bi && (_o = Cn[bi.type]), "dimension" in bi && (ro = bi.dimension | 0), "length" in bi && (ni = bi.length | 0)), Ai.bind(), Co ? Jo(Ai, Co, gi, _o, ro, wi) : (ni && Mr.bufferData(Ai.type, ni, gi), Ai.dtype = _o || er, Ai.usage = gi, Ai.dimension = ro, Ai.byteLength = ni), Xn.profile && (Ai.stats.size = Ai.byteLength * Qt[Ai.dtype]), No;
                   }
                   function Gi(bi, gi) {
                     Mr.bufferSubData(Ai.type, gi, bi);
                   }
                   function is(bi, gi) {
-                    var Co = (gi || 0) | 0, ri;
+                    var Co = (gi || 0) | 0, ni;
                     if (Ai.bind(), Er(bi) || bi instanceof ArrayBuffer)
                       Gi(bi, Co);
                     else if (Array.isArray(bi)) {
@@ -113654,15 +113654,15 @@ void main() {
                           var _o = B.allocType(Ai.dtype, bi.length);
                           Rr(_o, bi), Gi(_o, Co), B.freeType(_o);
                         } else if (Array.isArray(bi[0]) || Er(bi[0])) {
-                          ri = Un(bi);
-                          var ro = sa(bi, ri, Ai.dtype);
+                          ni = Un(bi);
+                          var ro = sa(bi, ni, Ai.dtype);
                           Gi(ro, Co), B.freeType(ro);
                         }
                       }
                     } else if (Lr(bi)) {
-                      ri = bi.shape;
+                      ni = bi.shape;
                       var fs = bi.stride, fl = 0, Vo = 0, vs = 0, oo = 0;
-                      ri.length === 1 ? (fl = ri[0], Vo = 1, vs = fs[0], oo = 0) : ri.length === 2 && (fl = ri[0], Vo = ri[1], vs = fs[0], oo = fs[1]);
+                      ni.length === 1 ? (fl = ni[0], Vo = 1, vs = fs[0], oo = 0) : ni.length === 2 && (fl = ni[0], Vo = ni[1], vs = fs[0], oo = fs[1]);
                       var nl = Array.isArray(bi.data) ? Ai.dtype : Wt(bi.data), Pl = B.allocType(nl, fl * Vo);
                       sn(
                         Pl,
@@ -114079,7 +114079,7 @@ void main() {
                     !xt && mt ? X.channels = sl[X.format] : xt && !mt && X.channels !== tc[X.format] && (X.format = X.internalformat = tc[X.channels]);
                   }
                 }
-                function ri(X) {
+                function ni(X) {
                   Mr.pixelStorei(Bh, X.flipY), Mr.pixelStorei(ju, X.premultiplyAlpha), Mr.pixelStorei(Du, X.colorSpace), Mr.pixelStorei(sf, X.unpackAlignment);
                 }
                 function _o() {
@@ -114121,7 +114121,7 @@ void main() {
                 }
                 function fs(X, ye, ne) {
                   var we = X.element, We = X.data, ct = X.internalformat, xt = X.format, mt = X.type, Pt = X.width, Ht = X.height;
-                  ri(X), we ? Mr.texImage2D(ye, ne, xt, xt, mt, we) : X.compressed ? Mr.compressedTexImage2D(ye, ne, ct, Pt, Ht, 0, We) : X.needsCopy ? (Za(), Mr.copyTexImage2D(
+                  ni(X), we ? Mr.texImage2D(ye, ne, xt, xt, mt, we) : X.compressed ? Mr.compressedTexImage2D(ye, ne, ct, Pt, Ht, 0, We) : X.needsCopy ? (Za(), Mr.copyTexImage2D(
                     ye,
                     ne,
                     xt,
@@ -114134,7 +114134,7 @@ void main() {
                 }
                 function fl(X, ye, ne, we, We) {
                   var ct = X.element, xt = X.data, mt = X.internalformat, Pt = X.format, Ht = X.type, cr = X.width, ur = X.height;
-                  ri(X), ct ? Mr.texSubImage2D(
+                  ni(X), ct ? Mr.texSubImage2D(
                     ye,
                     We,
                     ne,
@@ -114584,48 +114584,48 @@ void main() {
                   setFBO: null
                 }, ji = ["rgba"], zi = ["rgba4", "rgb565", "rgb5 a1"];
                 Nn.ext_srgb && zi.push("srgba"), Nn.ext_color_buffer_half_float && zi.push("rgba16f", "rgb16f"), Nn.webgl_color_buffer_float && zi.push("rgba32f"), Nn.oes_texture_half_float, Nn.oes_texture_float;
-                function Vi(ri, _o, ro) {
-                  this.target = ri, this.texture = _o, this.renderbuffer = ro;
+                function Vi(ni, _o, ro) {
+                  this.target = ni, this.texture = _o, this.renderbuffer = ro;
                   var fs = 0, fl = 0;
                   _o ? (fs = _o.width, fl = _o.height) : ro && (fs = ro.width, fl = ro.height), this.width = fs, this.height = fl;
                 }
-                function to(ri) {
-                  ri && (ri.texture && ri.texture._texture.decRef(), ri.renderbuffer && ri.renderbuffer._renderbuffer.decRef());
+                function to(ni) {
+                  ni && (ni.texture && ni.texture._texture.decRef(), ni.renderbuffer && ni.renderbuffer._renderbuffer.decRef());
                 }
-                function Jo(ri, _o, ro) {
-                  if (ri)
-                    if (ri.texture) {
-                      var fs = ri.texture._texture;
+                function Jo(ni, _o, ro) {
+                  if (ni)
+                    if (ni.texture) {
+                      var fs = ni.texture._texture;
                       Math.max(1, fs.width), Math.max(1, fs.height), fs.refCount += 1;
                     } else {
-                      var fl = ri.renderbuffer._renderbuffer;
+                      var fl = ni.renderbuffer._renderbuffer;
                       fl.refCount += 1;
                     }
                 }
-                function Eo(ri, _o) {
+                function Eo(ni, _o) {
                   _o && (_o.texture ? Mr.framebufferTexture2D(
                     mu,
-                    ri,
+                    ni,
                     _o.target,
                     _o.texture._texture.texture,
                     0
                   ) : Mr.framebufferRenderbuffer(
                     mu,
-                    ri,
+                    ni,
                     Gf,
                     _o.renderbuffer._renderbuffer.renderbuffer
                   ));
                 }
-                function so(ri) {
-                  var _o = ff, ro = null, fs = null, fl = ri;
-                  typeof ri == "object" && (fl = ri.data, "target" in ri && (_o = ri.target | 0));
+                function so(ni) {
+                  var _o = ff, ro = null, fs = null, fl = ni;
+                  typeof ni == "object" && (fl = ni.data, "target" in ni && (_o = ni.target | 0));
                   var Vo = fl._reglType;
                   return Vo === "texture2d" || Vo === "textureCube" ? ro = fl : Vo === "renderbuffer" && (fs = fl, _o = Gf), new Vi(_o, ro, fs);
                 }
-                function ki(ri, _o, ro, fs, fl) {
+                function ki(ni, _o, ro, fs, fl) {
                   if (ro) {
                     var Vo = Za.create2D({
-                      width: ri,
+                      width: ni,
                       height: _o,
                       format: fs,
                       type: fl
@@ -114633,34 +114633,34 @@ void main() {
                     return Vo._texture.refCount = 0, new Vi(ff, Vo, null);
                   } else {
                     var vs = Si.create({
-                      width: ri,
+                      width: ni,
                       height: _o,
                       format: fs
                     });
                     return vs._renderbuffer.refCount = 0, new Vi(Gf, null, vs);
                   }
                 }
-                function ba(ri) {
-                  return ri && (ri.texture || ri.renderbuffer);
+                function ba(ni) {
+                  return ni && (ni.texture || ni.renderbuffer);
                 }
-                function fi(ri, _o, ro) {
-                  ri && (ri.texture ? ri.texture.resize(_o, ro) : ri.renderbuffer && ri.renderbuffer.resize(_o, ro), ri.width = _o, ri.height = ro);
+                function fi(ni, _o, ro) {
+                  ni && (ni.texture ? ni.texture.resize(_o, ro) : ni.renderbuffer && ni.renderbuffer.resize(_o, ro), ni.width = _o, ni.height = ro);
                 }
                 var hi = 0, wi = {};
                 function Ai() {
                   this.id = hi++, wi[this.id] = this, this.framebuffer = Mr.createFramebuffer(), this.width = 0, this.height = 0, this.colorAttachments = [], this.depthAttachment = null, this.stencilAttachment = null, this.depthStencilAttachment = null;
                 }
-                function No(ri) {
-                  ri.colorAttachments.forEach(to), to(ri.depthAttachment), to(ri.stencilAttachment), to(ri.depthStencilAttachment);
+                function No(ni) {
+                  ni.colorAttachments.forEach(to), to(ni.depthAttachment), to(ni.stencilAttachment), to(ni.depthStencilAttachment);
                 }
-                function Gi(ri) {
-                  var _o = ri.framebuffer;
-                  Mr.deleteFramebuffer(_o), ri.framebuffer = null, ha.framebufferCount--, delete wi[ri.id];
+                function Gi(ni) {
+                  var _o = ni.framebuffer;
+                  Mr.deleteFramebuffer(_o), ni.framebuffer = null, ha.framebufferCount--, delete wi[ni.id];
                 }
-                function is(ri) {
+                function is(ni) {
                   var _o;
-                  Mr.bindFramebuffer(mu, ri.framebuffer);
-                  var ro = ri.colorAttachments;
+                  Mr.bindFramebuffer(mu, ni.framebuffer);
+                  var ro = ni.colorAttachments;
                   for (_o = 0; _o < ro.length; ++_o)
                     Eo(Ql + _o, ro[_o]);
                   for (_o = ro.length; _o < Xn.maxColorAttachments; ++_o)
@@ -114689,11 +114689,11 @@ void main() {
                     ff,
                     null,
                     0
-                  ), Eo(vh, ri.depthAttachment), Eo(wf, ri.stencilAttachment), Eo(Yf, ri.depthStencilAttachment);
+                  ), Eo(vh, ni.depthAttachment), Eo(wf, ni.stencilAttachment), Eo(Yf, ni.depthStencilAttachment);
                   var fs = Mr.checkFramebufferStatus(mu);
                   Mr.isContextLost(), Mr.bindFramebuffer(mu, ga.next ? ga.next.framebuffer : null), ga.cur = ga.next, Mr.getError();
                 }
-                function bi(ri, _o) {
+                function bi(ni, _o) {
                   var ro = new Ai();
                   ha.framebufferCount++;
                   function fs(Vo, vs) {
@@ -114755,7 +114755,7 @@ void main() {
                       fi(Pl[zl], oo, nl);
                     return fi(ro.depthAttachment, oo, nl), fi(ro.stencilAttachment, oo, nl), fi(ro.depthStencilAttachment, oo, nl), ro.width = fs.width = oo, ro.height = fs.height = nl, is(ro), fs;
                   }
-                  return fs(ri, _o), v(fs, {
+                  return fs(ni, _o), v(fs, {
                     resize: fl,
                     _reglType: "framebuffer",
                     _framebuffer: ro,
@@ -114769,7 +114769,7 @@ void main() {
                     }
                   });
                 }
-                function gi(ri) {
+                function gi(ni) {
                   var _o = Array(6);
                   function ro(fl) {
                     var Vo, vs = {
@@ -114834,7 +114834,7 @@ void main() {
                       _o[Vo].resize(vs);
                     return ro.width = ro.height = vs, ro;
                   }
-                  return ro(ri), v(ro, {
+                  return ro(ni), v(ro, {
                     faces: _o,
                     resize: fs,
                     _reglType: "framebufferCube",
@@ -114846,14 +114846,14 @@ void main() {
                   });
                 }
                 function Co() {
-                  ga.cur = null, ga.next = null, ga.dirty = !0, St(wi).forEach(function(ri) {
-                    ri.framebuffer = Mr.createFramebuffer(), is(ri);
+                  ga.cur = null, ga.next = null, ga.dirty = !0, St(wi).forEach(function(ni) {
+                    ni.framebuffer = Mr.createFramebuffer(), is(ni);
                   });
                 }
                 return v(ga, {
-                  getFramebuffer: function(ri) {
-                    if (typeof ri == "function" && ri._reglType === "framebuffer") {
-                      var _o = ri._framebuffer;
+                  getFramebuffer: function(ni) {
+                    if (typeof ni == "function" && ni._reglType === "framebuffer") {
+                      var _o = ni._framebuffer;
                       if (_o instanceof Ai)
                         return _o;
                     }
@@ -114916,8 +114916,8 @@ void main() {
                       bi.bindAttrs();
                     else {
                       for (var gi = ba(), Co = 0; Co < zi.length; ++Co) {
-                        var ri = zi[Co];
-                        ri.buffer ? (Mr.enableVertexAttribArray(Co), ri.buffer.bind(), Mr.vertexAttribPointer(Co, ri.size, ri.type, ri.normalized, ri.stride, ri.offfset), gi && ri.divisor && gi.vertexAttribDivisorANGLE(Co, ri.divisor)) : (Mr.disableVertexAttribArray(Co), Mr.vertexAttrib4f(Co, ri.x, ri.y, ri.z, ri.w));
+                        var ni = zi[Co];
+                        ni.buffer ? (Mr.enableVertexAttribArray(Co), ni.buffer.bind(), Mr.vertexAttribPointer(Co, ni.size, ni.type, ni.normalized, ni.stride, ni.offfset), gi && ni.divisor && gi.vertexAttribDivisorANGLE(Co, ni.divisor)) : (Mr.disableVertexAttribArray(Co), Mr.vertexAttrib4f(Co, ni.x, ni.y, ni.z, ni.w));
                       }
                       ga.elements ? Mr.bindBuffer(eu, ga.elements.buffer.buffer) : Mr.bindBuffer(eu, null);
                     }
@@ -114936,8 +114936,8 @@ void main() {
                 }
                 No.prototype.bindAttrs = function() {
                   for (var bi = ba(), gi = this.attributes, Co = 0; Co < gi.length; ++Co) {
-                    var ri = gi[Co];
-                    ri.buffer ? (Mr.enableVertexAttribArray(Co), Mr.bindBuffer(ph, ri.buffer.buffer), Mr.vertexAttribPointer(Co, ri.size, ri.type, ri.normalized, ri.stride, ri.offset), bi && ri.divisor && bi.vertexAttribDivisorANGLE(Co, ri.divisor)) : (Mr.disableVertexAttribArray(Co), Mr.vertexAttrib4f(Co, ri.x, ri.y, ri.z, ri.w));
+                    var ni = gi[Co];
+                    ni.buffer ? (Mr.enableVertexAttribArray(Co), Mr.bindBuffer(ph, ni.buffer.buffer), Mr.vertexAttribPointer(Co, ni.size, ni.type, ni.normalized, ni.stride, ni.offset), bi && ni.divisor && bi.vertexAttribDivisorANGLE(Co, ni.divisor)) : (Mr.disableVertexAttribArray(Co), Mr.vertexAttrib4f(Co, ni.x, ni.y, ni.z, ni.w));
                   }
                   for (var _o = gi.length; _o < ji; ++_o)
                     Mr.disableVertexAttribArray(_o);
@@ -114962,17 +114962,17 @@ void main() {
                 function is(bi) {
                   var gi = new No();
                   Za.vaoCount += 1;
-                  function Co(ri) {
+                  function Co(ni) {
                     var _o;
-                    if (Array.isArray(ri))
-                      _o = ri, gi.elements && gi.ownsElements && gi.elements.destroy(), gi.elements = null, gi.ownsElements = !1, gi.offset = 0, gi.count = 0, gi.instances = -1, gi.primitive = 4;
+                    if (Array.isArray(ni))
+                      _o = ni, gi.elements && gi.ownsElements && gi.elements.destroy(), gi.elements = null, gi.ownsElements = !1, gi.offset = 0, gi.count = 0, gi.instances = -1, gi.primitive = 4;
                     else {
-                      if (ri.elements) {
-                        var ro = ri.elements;
-                        gi.ownsElements ? typeof ro == "function" && ro._reglType === "elements" ? (gi.elements.destroy(), gi.ownsElements = !1) : (gi.elements(ro), gi.ownsElements = !1) : ha.getElements(ri.elements) ? (gi.elements = ri.elements, gi.ownsElements = !1) : (gi.elements = ha.create(ri.elements), gi.ownsElements = !0);
+                      if (ni.elements) {
+                        var ro = ni.elements;
+                        gi.ownsElements ? typeof ro == "function" && ro._reglType === "elements" ? (gi.elements.destroy(), gi.ownsElements = !1) : (gi.elements(ro), gi.ownsElements = !1) : ha.getElements(ni.elements) ? (gi.elements = ni.elements, gi.ownsElements = !1) : (gi.elements = ha.create(ni.elements), gi.ownsElements = !0);
                       } else
                         gi.elements = null, gi.ownsElements = !1;
-                      _o = ri.attributes, gi.offset = 0, gi.count = -1, gi.instances = -1, gi.primitive = 4, gi.elements && (gi.count = gi.elements._elements.vertCount, gi.primitive = gi.elements._elements.primType), "offset" in ri && (gi.offset = ri.offset | 0), "count" in ri && (gi.count = ri.count | 0), "instances" in ri && (gi.instances = ri.instances | 0), "primitive" in ri && (gi.primitive = At[ri.primitive]);
+                      _o = ni.attributes, gi.offset = 0, gi.count = -1, gi.instances = -1, gi.primitive = 4, gi.elements && (gi.count = gi.elements._elements.vertCount, gi.primitive = gi.elements._elements.primType), "offset" in ni && (gi.offset = ni.offset | 0), "count" in ni && (gi.count = ni.count | 0), "instances" in ni && (gi.instances = ni.instances | 0), "primitive" in ni && (gi.primitive = At[ni.primitive]);
                     }
                     var fs = {}, fl = gi.attributes;
                     fl.length = _o.length;
@@ -114988,8 +114988,8 @@ void main() {
                     return gi.refresh(), Co;
                   }
                   return Co.destroy = function() {
-                    for (var ri = 0; ri < gi.buffers.length; ++ri)
-                      gi.buffers[ri] && gi.buffers[ri].destroy();
+                    for (var ni = 0; ni < gi.buffers.length; ++ni)
+                      gi.buffers[ni] && gi.buffers[ni].destroy();
                     gi.buffers.length = 0, gi.ownsElements && (gi.elements.destroy(), gi.elements = null, gi.ownsElements = !1), gi.destroy();
                   }, Co._vao = gi, Co._reglType = "vao", Co(bi);
                 }
@@ -115038,8 +115038,8 @@ void main() {
                   for (wi = 0; wi < gi; ++wi)
                     if (Ai = Mr.getActiveUniform(is, wi), Ai)
                       if (Ai.size > 1)
-                        for (var ri = 0; ri < Ai.size; ++ri) {
-                          var _o = Ai.name.replace("[0]", "[" + ri + "]");
+                        for (var ni = 0; ni < Ai.size; ++ni) {
+                          var _o = Ai.name.replace("[0]", "[" + ni + "]");
                           ji(Co, new ga(
                             _o,
                             Nn.id(_o),
@@ -115581,15 +115581,15 @@ void main() {
                   dirty: !0,
                   profile: ba.profile
                 }, is = {}, bi = [], gi = {}, Co = {};
-                function ri(mt) {
+                function ni(mt) {
                   return mt.replace(".", "_");
                 }
                 function _o(mt, Pt, Ht) {
-                  var cr = ri(mt);
+                  var cr = ni(mt);
                   bi.push(mt), is[cr] = Gi[cr] = !!Ht, gi[cr] = Pt;
                 }
                 function ro(mt, Pt, Ht) {
-                  var cr = ri(mt);
+                  var cr = ni(mt);
                   bi.push(mt), Array.isArray(Ht) ? (Gi[cr] = Ht.slice(), is[cr] = Ht.slice()) : Gi[cr] = is[cr] = Ht, Co[cr] = Pt;
                 }
                 function fs(mt) {
@@ -116150,7 +116150,7 @@ void main() {
                 function Fu(mt, Pt) {
                   var Ht = mt.static, cr = mt.dynamic, ur = {};
                   return bi.forEach(function(kr) {
-                    var jr = ri(kr);
+                    var jr = ni(kr);
                     function Nr(mr, Pr) {
                       if (kr in Ht) {
                         var Or = mr(Ht[kr]);
@@ -116653,7 +116653,7 @@ void main() {
                     var Ka = Nr[Ua];
                     Ka && (Pr[Ua] = Ka);
                   }
-                  En(_h), En(ri(Sf));
+                  En(_h), En(ni(Sf));
                   var Bn = Object.keys(Pr).length > 0, ta = {
                     framebuffer: jr,
                     draw: mr,
@@ -116728,7 +116728,7 @@ void main() {
                 function Vs(mt, Pt, Ht) {
                   var cr = mt.shared, ur = cr.gl, kr = mt.current, jr = mt.next, Nr = cr.current, mr = cr.next, Pr = mt.cond(Nr, ".dirty");
                   bi.forEach(function(Or) {
-                    var En = ri(Or);
+                    var En = ni(Or);
                     if (!(En in Ht.state)) {
                       var Bn, ta;
                       if (En in jr) {
@@ -117831,8 +117831,8 @@ void main() {
                     for (ha.length = hi, hi = 0, wi = 0; wi < Eo.length; ++wi) {
                       var is = Eo[wi], bi = is.startQueryIndex, gi = is.endQueryIndex;
                       is.sum += ki[gi] - ki[bi];
-                      var Co = ba[bi], ri = ba[gi];
-                      ri === Co ? (is.stats.gpuTime += is.sum / 1e6, Jo(is)) : (is.startQueryIndex = Co, is.endQueryIndex = ri, Eo[hi++] = is);
+                      var Co = ba[bi], ni = ba[gi];
+                      ni === Co ? (is.stats.gpuTime += is.sum / 1e6, Jo(is)) : (is.startQueryIndex = Co, is.endQueryIndex = ni, Eo[hi++] = is);
                     }
                     Eo.length = hi;
                   }
@@ -117939,7 +117939,7 @@ void main() {
                   Vi,
                   ji,
                   Nn
-                ), ri = Zu(
+                ), ni = Zu(
                   Xn,
                   gi,
                   Co.procs.poll,
@@ -118167,7 +118167,7 @@ void main() {
                     return fi.extensions.indexOf(_l.toLowerCase()) >= 0;
                   },
                   // Read pixels
-                  read: ri,
+                  read: ni,
                   // Destroy regl and all associated resources
                   destroy: vf,
                   // Direct GL state manipulation
@@ -132871,7 +132871,7 @@ void main() {
                   }, k;
                 }(hi);
                 Co.prototype.bytesPerElement = 8, Xt("StructArrayLayout2f8", Co);
-                var ri = function(C) {
+                var ni = function(C) {
                   function k() {
                     C.apply(this, arguments);
                   }
@@ -132885,7 +132885,7 @@ void main() {
                     return this.uint16[yn + 0] = Te, this.uint16[yn + 1] = De, this.uint16[yn + 2] = Ze, this.uint16[yn + 3] = vt, this.uint16[yn + 4] = Ut, this.uint16[yn + 5] = Zt, this.uint16[yn + 6] = ar, this.uint16[yn + 7] = Cr, this.uint16[yn + 8] = tn, this.uint16[yn + 9] = Qr, ue;
                   }, k;
                 }(hi);
-                ri.prototype.bytesPerElement = 20, Xt("StructArrayLayout10ui20", ri);
+                ni.prototype.bytesPerElement = 20, Xt("StructArrayLayout10ui20", ni);
                 var _o = function(C) {
                   function k() {
                     C.apply(this, arguments);
@@ -133933,16 +133933,16 @@ void main() {
                 function Xi(C) {
                   var k = {
                     "line-pattern": {
-                      source: ri,
-                      composite: ri
+                      source: ni,
+                      composite: ni
                     },
                     "fill-pattern": {
-                      source: ri,
-                      composite: ri
+                      source: ni,
+                      composite: ni
                     },
                     "fill-extrusion-pattern": {
-                      source: ri,
-                      composite: ri
+                      source: ni,
+                      composite: ni
                     }
                   };
                   return k[C];
@@ -148702,7 +148702,7 @@ uniform ` + Ht + " " + cr + " u_" + ur + `;
                   "ScaleControl.Kilometers": "km",
                   "ScaleControl.Miles": "mi",
                   "ScaleControl.NauticalMiles": "nm"
-                }, Gi = e.window.HTMLImageElement, is = e.window.HTMLElement, bi = e.window.ImageBitmap, gi = -2, Co = 22, ri = 0, _o = 60, ro = {
+                }, Gi = e.window.HTMLImageElement, is = e.window.HTMLElement, bi = e.window.ImageBitmap, gi = -2, Co = 22, ni = 0, _o = 60, ro = {
                   center: [
                     0,
                     0
@@ -148712,7 +148712,7 @@ uniform ` + Ht + " " + cr + " u_" + ur + `;
                   pitch: 0,
                   minZoom: gi,
                   maxZoom: Co,
-                  minPitch: ri,
+                  minPitch: ni,
                   maxPitch: _o,
                   interactive: !0,
                   scrollZoom: !0,
@@ -148746,8 +148746,8 @@ uniform ` + Ht + " " + cr + " u_" + ur + `;
                       throw new Error("maxZoom must be greater than or equal to minZoom");
                     if (ne.minPitch != null && ne.maxPitch != null && ne.minPitch > ne.maxPitch)
                       throw new Error("maxPitch must be greater than or equal to minPitch");
-                    if (ne.minPitch != null && ne.minPitch < ri)
-                      throw new Error("minPitch must be greater than or equal to " + ri);
+                    if (ne.minPitch != null && ne.minPitch < ni)
+                      throw new Error("minPitch must be greater than or equal to " + ni);
                     if (ne.maxPitch != null && ne.maxPitch > _o)
                       throw new Error("maxPitch must be less than or equal to " + _o);
                     var We = new Ss(ne.minZoom, ne.maxZoom, ne.minPitch, ne.maxPitch, ne.renderWorldCopies);
@@ -148837,11 +148837,11 @@ uniform ` + Ht + " " + cr + " u_" + ur + `;
                   }, X.prototype.getMaxZoom = function() {
                     return this.transform.maxZoom;
                   }, X.prototype.setMinPitch = function(we) {
-                    if (we = we ?? ri, we < ri)
-                      throw new Error("minPitch must be greater than or equal to " + ri);
-                    if (we >= ri && we <= this.transform.maxPitch)
+                    if (we = we ?? ni, we < ni)
+                      throw new Error("minPitch must be greater than or equal to " + ni);
+                    if (we >= ni && we <= this.transform.maxPitch)
                       return this.transform.minPitch = we, this._update(), this.getPitch() < we && this.setPitch(we), this;
-                    throw new Error("minPitch must be between " + ri + " and the current maxPitch, inclusive");
+                    throw new Error("minPitch must be between " + ni + " and the current maxPitch, inclusive");
                   }, X.prototype.getMinPitch = function() {
                     return this.transform.minPitch;
                   }, X.prototype.setMaxPitch = function(we) {
@@ -158897,7 +158897,7 @@ Use an identity property function instead: \`{ "type": "identity", "property": $
                   for (var G = 0, D = arguments.length; D--; ) G += arguments[D] * arguments[D];
                   return Math.sqrt(G);
                 });
-                var Co, ri = gi;
+                var Co, ni = gi;
                 function _o(G, D, $) {
                   var ve = D[0], Re = D[1], Ye = D[2], $e = D[3];
                   return G[0] = $[0] * ve + $[4] * Re + $[8] * Ye + $[12] * $e, G[1] = $[1] * ve + $[5] * Re + $[9] * Ye + $[13] * $e, G[2] = $[2] * ve + $[6] * Re + $[10] * Ye + $[14] * $e, G[3] = $[3] * ve + $[7] * Re + $[11] * Ye + $[15] * $e, G;
@@ -162091,7 +162091,7 @@ Use an identity property function instead: \`{ "type": "identity", "property": $
                 }, e.aP = function(G, D, $, ve, Re, Ye, $e) {
                   var dt = 1 / (D - $), Ct = 1 / (ve - Re), qt = 1 / (Ye - $e);
                   return G[0] = -2 * dt, G[1] = 0, G[2] = 0, G[3] = 0, G[4] = 0, G[5] = -2 * Ct, G[6] = 0, G[7] = 0, G[8] = 0, G[9] = 0, G[10] = 2 * qt, G[11] = 0, G[12] = (D + $) * dt, G[13] = (Re + ve) * Ct, G[14] = ($e + Ye) * qt, G[15] = 1, G;
-                }, e.aQ = ri, e.aR = class extends Bt {
+                }, e.aQ = ni, e.aR = class extends Bt {
                 }, e.aS = Gg, e.aT = class extends gr {
                 }, e.aU = vf, e.aV = function(G) {
                   return G <= 1 ? 1 : Math.pow(2, Math.ceil(Math.log(G) / Math.LN2));
@@ -190663,15 +190663,15 @@ var dK = "DismissableLayer", nP = "dismissableLayer.update", vK = "dismissableLa
       onInteractOutside: tr,
       onDismiss: fr,
       ...Tr
-    } = pe, pr = Yr.useContext(n4), [qr, Zr] = Yr.useState(null), an = (qr == null ? void 0 : qr.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document), [, xn] = Yr.useState({}), Kn = $u(Ce, (ni) => Zr(ni)), bn = Array.from(pr.layers), [dn] = [...pr.layersWithOutsidePointerEventsDisabled].slice(-1), Oe = bn.indexOf(dn), Ea = qr ? bn.indexOf(qr) : -1, za = pr.layersWithOutsidePointerEventsDisabled.size > 0, Da = Ea >= Oe, la = yK((ni) => {
-      const ra = ni.target, co = [...pr.branches].some((fo) => fo.contains(ra));
-      !Da || co || (bt == null || bt(ni), tr == null || tr(ni), ni.defaultPrevented || fr == null || fr());
-    }, an), ti = _K((ni) => {
-      const ra = ni.target;
-      [...pr.branches].some((fo) => fo.contains(ra)) || (Nt == null || Nt(ni), tr == null || tr(ni), ni.defaultPrevented || fr == null || fr());
+    } = pe, pr = Yr.useContext(n4), [qr, Zr] = Yr.useState(null), an = (qr == null ? void 0 : qr.ownerDocument) ?? (globalThis == null ? void 0 : globalThis.document), [, xn] = Yr.useState({}), Kn = $u(Ce, (ri) => Zr(ri)), bn = Array.from(pr.layers), [dn] = [...pr.layersWithOutsidePointerEventsDisabled].slice(-1), Oe = bn.indexOf(dn), Ea = qr ? bn.indexOf(qr) : -1, za = pr.layersWithOutsidePointerEventsDisabled.size > 0, Da = Ea >= Oe, la = yK((ri) => {
+      const ra = ri.target, co = [...pr.branches].some((fo) => fo.contains(ra));
+      !Da || co || (bt == null || bt(ri), tr == null || tr(ri), ri.defaultPrevented || fr == null || fr());
+    }, an), ti = _K((ri) => {
+      const ra = ri.target;
+      [...pr.branches].some((fo) => fo.contains(ra)) || (Nt == null || Nt(ri), tr == null || tr(ri), ri.defaultPrevented || fr == null || fr());
     }, an);
-    return v8((ni) => {
-      Ea === pr.layers.size - 1 && (Xe == null || Xe(ni), !ni.defaultPrevented && fr && (ni.preventDefault(), fr()));
+    return v8((ri) => {
+      Ea === pr.layers.size - 1 && (Xe == null || Xe(ri), !ri.defaultPrevented && fr && (ri.preventDefault(), fr()));
     }, an), Yr.useEffect(() => {
       if (qr)
         return qe && (pr.layersWithOutsidePointerEventsDisabled.size === 0 && (zz = an.body.style.pointerEvents, an.body.style.pointerEvents = "none"), pr.layersWithOutsidePointerEventsDisabled.add(qr)), pr.layers.add(qr), Oz(), () => {
@@ -190680,8 +190680,8 @@ var dK = "DismissableLayer", nP = "dismissableLayer.update", vK = "dismissableLa
     }, [qr, an, qe, pr]), Yr.useEffect(() => () => {
       qr && (pr.layers.delete(qr), pr.layersWithOutsidePointerEventsDisabled.delete(qr), Oz());
     }, [qr, pr]), Yr.useEffect(() => {
-      const ni = () => xn({});
-      return document.addEventListener(nP, ni), () => document.removeEventListener(nP, ni);
+      const ri = () => xn({});
+      return document.addEventListener(nP, ri), () => document.removeEventListener(nP, ri);
     }, []), /* @__PURE__ */ Br.jsx(
       iu.div,
       {
@@ -190811,7 +190811,7 @@ var YP = "PopperContent", [wK, TK] = o4(YP), h4 = Yr.forwardRef(
       updatePositionStrategy: xn = "optimized",
       onPlaced: Kn,
       ...bn
-    } = pe, dn = l4(YP, qe), [Oe, Ea] = Yr.useState(null), za = $u(Ce, (Qi) => Ea(Qi)), [Da, la] = Yr.useState(null), ti = pC(Da), ni = (ti == null ? void 0 : ti.width) ?? 0, ra = (ti == null ? void 0 : ti.height) ?? 0, co = Xe + (Nt !== "center" ? "-" + Nt : ""), fo = typeof qr == "number" ? qr : { top: 0, right: 0, bottom: 0, left: 0, ...qr }, Ti = Array.isArray(pr) ? pr : [pr], ts = Ti.length > 0, xi = {
+    } = pe, dn = l4(YP, qe), [Oe, Ea] = Yr.useState(null), za = $u(Ce, (Qi) => Ea(Qi)), [Da, la] = Yr.useState(null), ti = pC(Da), ri = (ti == null ? void 0 : ti.width) ?? 0, ra = (ti == null ? void 0 : ti.height) ?? 0, co = Xe + (Nt !== "center" ? "-" + Nt : ""), fo = typeof qr == "number" ? qr : { top: 0, right: 0, bottom: 0, left: 0, ...qr }, Ti = Array.isArray(pr) ? pr : [pr], ts = Ti.length > 0, xi = {
       padding: fo,
       boundary: Ti.filter(SK),
       // with `strategy: 'fixed'`, this is the only way to get it to respect boundaries
@@ -190843,7 +190843,7 @@ var YP = "PopperContent", [wK, TK] = o4(YP), h4 = Yr.forwardRef(
           }
         }),
         Da && oO({ element: Da, padding: fr }),
-        MK({ arrowWidth: ni, arrowHeight: ra }),
+        MK({ arrowWidth: ri, arrowHeight: ra }),
         an && iO({ strategy: "referenceHidden", ...xi })
       ]
     }), [Lo, fa] = p4(Ya), Pi = km(Kn);
@@ -191156,7 +191156,7 @@ var Cm = "MenuContent", [HK, WP] = Zx(Cm), w4 = Yr.forwardRef(
       onDismiss: xn,
       disableOutsideScroll: Kn,
       ...bn
-    } = pe, dn = Wx(Cm, qe), Oe = bS(Cm, qe), Ea = MC(qe), za = y4(qe), Da = NK(qe), [la, ti] = Yr.useState(null), ni = Yr.useRef(null), ra = $u(Ce, ni, dn.onContentChange), co = Yr.useRef(0), fo = Yr.useRef(""), Ti = Yr.useRef(0), ts = Yr.useRef(null), xi = Yr.useRef("right"), Yi = Yr.useRef(0), Ws = Kn ? dP : Yr.Fragment, Ya = Kn ? { as: XK, allowPinchZoom: !0 } : void 0, Li = (Lo) => {
+    } = pe, dn = Wx(Cm, qe), Oe = bS(Cm, qe), Ea = MC(qe), za = y4(qe), Da = NK(qe), [la, ti] = Yr.useState(null), ri = Yr.useRef(null), ra = $u(Ce, ri, dn.onContentChange), co = Yr.useRef(0), fo = Yr.useRef(""), Ti = Yr.useRef(0), ts = Yr.useRef(null), xi = Yr.useRef("right"), Yi = Yr.useRef(0), Ws = Kn ? dP : Yr.Fragment, Ya = Kn ? { as: XK, allowPinchZoom: !0 } : void 0, Li = (Lo) => {
       var Rl, au;
       const fa = fo.current + Lo, Pi = Da().filter((Ju) => !Ju.disabled), Yo = document.activeElement, xo = (Rl = Pi.find((Ju) => Ju.ref.current === Yo)) == null ? void 0 : Rl.textValue, Io = Pi.map((Ju) => Ju.textValue), Wi = i$(Io, fa, xo), Uo = (au = Pi.find((Ju) => Ju.textValue === Wi)) == null ? void 0 : au.ref.current;
       (function Ju(ol) {
@@ -191182,7 +191182,7 @@ var Cm = "MenuContent", [HK, WP] = Zx(Cm), w4 = Yr.forwardRef(
         onItemLeave: Yr.useCallback(
           (Lo) => {
             var fa;
-            ci(Lo) || ((fa = ni.current) == null || fa.focus(), ti(null));
+            ci(Lo) || ((fa = ri.current) == null || fa.focus(), ti(null));
           },
           [ci]
         ),
@@ -191203,7 +191203,7 @@ var Cm = "MenuContent", [HK, WP] = Zx(Cm), w4 = Yr.forwardRef(
             trapped: bt,
             onMountAutoFocus: xh(Nt, (Lo) => {
               var fa;
-              Lo.preventDefault(), (fa = ni.current) == null || fa.focus({ preventScroll: !0 });
+              Lo.preventDefault(), (fa = ri.current) == null || fa.focus({ preventScroll: !0 });
             }),
             onUnmountAutoFocus: tr,
             children: /* @__PURE__ */ Br.jsx(
@@ -191245,7 +191245,7 @@ var Cm = "MenuContent", [HK, WP] = Zx(Cm), w4 = Yr.forwardRef(
                         onKeyDown: xh(bn.onKeyDown, (Lo) => {
                           const Pi = Lo.target.closest("[data-radix-menu-content]") === Lo.currentTarget, Yo = Lo.ctrlKey || Lo.altKey || Lo.metaKey, xo = Lo.key.length === 1;
                           Pi && (Lo.key === "Tab" && Lo.preventDefault(), !Yo && xo && Li(Lo.key));
-                          const Io = ni.current;
+                          const Io = ri.current;
                           if (Lo.target !== Io || !zK.includes(Lo.key)) return;
                           Lo.preventDefault();
                           const Uo = Da().filter((Rl) => !Rl.disabled).map((Rl) => Rl.ref.current);
@@ -192380,21 +192380,21 @@ function fJ() {
     if (!bn) return null;
     const dn = {};
     (Da = bn.focus_point_slices) == null || Da.forEach((la) => {
-      (la.slices || []).forEach((ni) => {
-        dn[ni.parameter_index] || (dn[ni.parameter_index] = { slices: [], focusPointIndices: [] }), dn[ni.parameter_index].slices.push(ni), dn[ni.parameter_index].focusPointIndices.push(la.focus_point_index);
+      (la.slices || []).forEach((ri) => {
+        dn[ri.parameter_index] || (dn[ri.parameter_index] = { slices: [], focusPointIndices: [] }), dn[ri.parameter_index].slices.push(ri), dn[ri.parameter_index].focusPointIndices.push(la.focus_point_index);
       });
     });
     const Oe = {};
-    Object.entries(dn).forEach(([la, { slices: ti, focusPointIndices: ni }]) => {
+    Object.entries(dn).forEach(([la, { slices: ti, focusPointIndices: ri }]) => {
       var co;
       const ra = ((co = ti[0]) == null ? void 0 : co.layer_name) || "Other Parameters";
       Oe[ra] || (Oe[ra] = []), Oe[ra].push({
         index: parseInt(la),
         slices: ti,
-        focusPointIndices: ni
+        focusPointIndices: ri
       });
     }), Object.values(Oe).forEach((la) => {
-      la.sort((ti, ni) => ti.index - ni.index);
+      la.sort((ti, ri) => ti.index - ri.index);
     });
     const Ea = Object.keys(Oe), za = Ea.length > 0 ? [Ea[0]] : [];
     return /* @__PURE__ */ Br.jsx(
@@ -192415,19 +192415,19 @@ function fJ() {
               ")"
             ] })
           ] }) }),
-          /* @__PURE__ */ Br.jsx(FF, { children: /* @__PURE__ */ Br.jsx("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2", children: ti.map(({ index: ni, slices: ra }) => {
+          /* @__PURE__ */ Br.jsx(FF, { children: /* @__PURE__ */ Br.jsx("div", { className: "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 pt-2", children: ti.map(({ index: ri, slices: ra }) => {
             var co;
             return /* @__PURE__ */ Br.jsx(
               cJ,
               {
                 slices: ra,
-                parameterIndex: ni,
-                parameterName: (co = ra[0]) == null ? void 0 : co.parameter_name,
+                parameterIndex: ri,
+                parameterName: `#${ri} - ${((co = ra[0]) == null ? void 0 : co.parameter_name) || "Unknown"}`,
                 xRange: tr.x,
                 yRange: tr.y,
                 autoScale: tr.x.auto && tr.y.auto
               },
-              ni
+              ri
             );
           }) }) })
         ] }, la))

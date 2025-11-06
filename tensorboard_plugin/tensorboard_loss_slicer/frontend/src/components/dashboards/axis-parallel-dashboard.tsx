@@ -157,7 +157,7 @@ export function AxisParallelDashboard() {
                     key={index}
                     slices={slices}
                     parameterIndex={index}
-                    parameterName={slices[0]?.parameter_name}
+                    parameterName={`#${index} - ${slices[0]?.parameter_name || 'Unknown'}`}
                     xRange={currentAxisRanges.x}
                     yRange={currentAxisRanges.y}
                     autoScale={currentAxisRanges.x.auto && currentAxisRanges.y.auto}
