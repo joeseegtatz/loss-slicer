@@ -13,13 +13,12 @@ PySlice Library Architecture
 │   │   ├── model_wrapper.py      # PyTorch model abstraction
 │   │   └── utils.py              # Utility functions
 │   ├── slicers/
-│   │   ├── base.py               # Base slicer interface
 │   │   ├── axis_parallel_slicer.py
 │   │   ├── linear_interpolation_slicer.py
 │   │   └── random_direction_slicer.py
 │   └── visualization/
 │       └── visualization.py      # Plotting and display tools
-├── examples # example scripts
+├── examples # example notebook
 │   
 ```
 
@@ -45,120 +44,53 @@ pip install -e .  # Links to source code directory - changes are immediately ref
 !pip install git+https://github.com/joeseegtatz/loss-slicer.git#subdirectory=slicing-library
 ```
 
-
 ## Slicing Methods
 
 ### Linear Interpolation Slicer
-Creates 1D slices along the line connecting two points in parameter space.
-
-**Use cases:**
-- Analyze loss changes along training paths
-- Compare different optimization trajectories
-- Study loss barriers between local minima
-
-**Key parameters:**
-- `start_point`: Starting parameter vector
-- `end_point`: Ending parameter vector  
-- `n_samples`: Number of evaluation points along the line
+Creates 1D slices along the line connecting two points in parameter space. Useful for studying loss barriers between minima.
 
 ### Axis Parallel Slicer
-Samples along individual parameter axes (coordinate directions).
-
-**Use cases:**
-- Identify parameter sensitivity
-- Understand which parameters most affect loss
-- Debug optimization problems
-
-**Key parameters:**
-- `center_point`: Central parameter vector
-- `bounds`: Tuple defining parameter range to explore
-- `n_samples`: Number of samples per parameter
-- `params_to_slice`: Which parameters to analyze
+Samples along individual parameter axes (coordinate directions). Identifies parameter sensitivity and helps understand which parameters most affect loss. Useful for debugging optimization problems.
 
 ### Random Direction Slicer
-Samples along random directions in parameter space, supporting both 1D and 2D slices.
+Samples along random directions in parameter space, supporting both 1D and 2D slices. Good for exploring loss landscape topology, visualizing basins and barriers. Generates data suited for contour plots and 3D plots.
 
-**Use cases:**
-- Explore loss landscape topology
-- Visualize loss basins and barriers
-- Generate 2D contour plots of loss landscapes
-
-**Key parameters:**
-- `center_point`: Central parameter vector
-- `directions`: Custom directions (optional)
-- `grid_size`: Resolution for 2D slices
-- `range`: Distance range to explore
-- `normalize_directions`: Whether to normalize direction vectors
 
 ## Basic Usage
 
-### 1. Import Required Modules
+Suppose the user has trained a neural network model on a dataset and wishes to understand how the loss changes when individual parameters are varied. The axis-parallel slicer evaluates the loss along each parameter axis, revealing which parameters most strongly influence the loss function.
+
+This is done as follows:
 
 ```python
-import torch
-import torch.nn as nn
-import numpy as np
-import matplotlib.pyplot as plt
 
-# PySlice components
-from pysclice.core import ModelWrapper
-from pysclice.slicers import AxisParallelSlicer, LinearInterpolationSlicer, RandomDirectionSlicer
-from pysclice.visualization import plot_1d_slice, plot_2d_slice
-```
-
-### 2. Setup Model and Data
-
-```python
-# Create a simple neural network
-model = nn.Sequential(
-    nn.Linear(2, 10),
-    nn.ReLU(),
-    nn.Linear(10, 5),
-    nn.ReLU(),
-    nn.Linear(5, 1)
-)
-
-# Define loss function
-loss_fn = nn.MSELoss()
-
-# Prepare your data (replace with your actual data)
-# Data should be in PyTorch DataLoader format
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=32)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32)
-
-# Create model wrapper
-wrapper = ModelWrapper(
-    model=model,
-    loss_fn=loss_fn,
-    train_data=train_loader,
-    test_data=test_loader,
-    device='cuda' if torch.cuda.is_available() else 'cpu'
+model_wrapper = ModelWrapper(model, loss_fn, data_loader)
+slice_data = AxisParallelSlicer.sample_focus_points_and_slice(
+    model=model_wrapper,
+    n_points=50,            # Number of focus points to sample
+    sampling_method="lhs",  # Latin Hypercube Sampling
+    radius=1.5,             # Sampling radius around current parameters
+    bounds=(-3, 3),         # Range to explore per parameter
+    n_samples_per_slice=25, # Evaluation points per parameter
 )
 ```
 
-### 3. Perform Loss Landscape Analysis
+The method returns a dictionary containing slices from multiple focus points in parameter space. Each slice consists of (parameter_value, loss) pairs showing how loss varies along individual parameter axes. The user can then visualize this data to identify sensitive parameters, understand optimization challenges, or export to TensorBoard for interactive exploration.
 
-#### Random Direction Slicing
-```python
-# Create random direction slicer
-random_slicer = RandomDirectionSlicer(wrapper)
+The library provides a built-in plotting function that automatically detects the slice type and generates appropriate visualizations. For more flexibility, the raw data can be used to create custom plots.
 
-# Create 2D slice in random directions
-slice_data = random_slicer.slice_2d(
-    center_point=current_params,
-    grid_size=50,
-    range=(-1.0, 1.0),
-    normalize_directions=True
+```python 
+fig = plot_slices(
+    slice_data=slice_data,
 )
-
-# Visualize 2D loss landscape
-plot_2d_slice(slice_data, title="2D Loss Landscape")
-plt.show()
 ```
 
-## Example
+![axis-parallel-slice-plot](/docs/assets/axis-parallell-slice-plot.png)
+
+
+## Example Notebook explaining Core Functions
  
-You can find an exmaple notebook where anyltical functions are slices [here](/slicing-library/examples/analytical_functions-example.ipynb)
+You can find an exmaple notebook where analytical functions are sliced [here](/slicing-library/examples/analytical_functions-example.ipynb)
 
 ## Development
 
