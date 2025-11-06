@@ -4,7 +4,13 @@
 
 The TensorBoard Loss Slicer Plugin provides visualization of neural network loss landscapes. It integrates seamlessly with PyTorch training loops and offers an interactive web-based interface for exploring different slicing methods.
 
-## Architecture
+![plugin-screenshot](/docs/assets/plugin-screenshot.png)
+
+## Frontend Interface
+
+The plugin provides an interactive web interface following TensorBoard's standard design patterns. Select training runs and filter tags using the familiar sidebar controls - each run can contain multiple tags representing slices at different training steps. Switch between three dashboard types using the tab navigation: Linear Interpolation shows 1D line plots along parameter paths, Axis Parallel displays multiple subplots for individual parameter slices, and Random Direction presents 2D contour heatmaps of the loss landscape. All dashboards include axis range controls to focus on regions of interest.
+
+## Project Architecture
 
 ```
 TensorBoard Plugin Architecture
@@ -20,67 +26,80 @@ TensorBoard Plugin Architecture
 
 ## Installation
 
-### 1. Install the Plugin
+### Using uv (Recommended)
+
+From the project root, install all dependencies including the plugin:
+
+```bash
+uv sync
+```
+
+### Using pip
+
+Navigate to the plugin directory and install in development mode:
 
 ```bash
 cd tensorboard_plugin
-pip install -e . #links to source code directory - changes in the core are immediately reflected. Good for development and testing
+pip install -e .
 ```
+This links to the source code directory, so changes are immediately reflected - ideal for development and testing. Without the `-e` flag development mode is disabled and all files are copied to the python package directory.
 
-**Alternative installation method:**
-```bash
-cd tensorboard_plugin
-pip install . # copies files to Python Package directory. Better for production use.
-```
-
-### 2. Verify Installation
-
-```bash
-pip list | grep tensorboard-loss-slicer
-```
-
-You should see `tensorboard-loss-slicer` in the output.
-
-## Frontend Interface
-
-### Navigation
-
-1. **Run Selector**: Choose which training run to visualize
-2. **Tag Filter**: Filter slices by name pattern
-3. **Slice Method Selector**: Switch between different slicing methods
-4. **Time Navigation**: Navigate through different training steps
-
-### Slice Method Dashboards
-
-#### Linear Interpolation Dashboard
-- **1D line plot** showing loss along the interpolation path
-- **Controls**: Step navigation, smoothing options
-- **Info**: Start/end point losses, parameter statistics
-
-#### Axis Parallel Dashboard
-- **Multiple subplots** showing loss vs individual parameters
-- **Controls**: Parameter selection, bounds adjustment
-- **Info**: Parameter names, layer information, center point loss
-
-#### Random Direction Dashboard
-- **2D contour/heatmap** showing loss landscape
-- **Controls**: Colormap selection, contour levels
-- **Info**: Direction vectors, center point loss, grid resolution
+**Note:** TensorBoard must be installed separately if not using `uv sync`.
 
 ## Basic Usage
 
-## Basic Usage
+The plugin follows TensorBoard's standard logging pattern. During PyTorch model training, use the provided summary writer to log slice data at different training steps. After training completes, launch TensorBoard to interactively explore how the loss landscape evolved.
 
-Check [`slicing-library/examples/hyperparameter-tuning-example.py`](../slicing-library/examples/hyperparamerter-tuning-example.py) for a hyperparameter tuning example.
+Suppose the user has trained a PyTorch model and wishes to visualize the loss landscape before and after training. First, create model wrappers for both the untrained and trained versions, then generate slices using any slicer method:
 
-### 4. Launch TensorBoard
+```python
+import copy
+from pysclice.core.model_wrapper import ModelWrapper
+from pysclice.slicers.random_direction_slicer import RandomDirectionSlicer
+from tensorboard_loss_slicer import log_slice
 
-```bash
-tensorboard --logdir=runs/path_to_log_directory
+# Save untrained model state
+untrained_model = copy.deepcopy(model)
+
+# Train model
+for epoch in range(100):
+    train(model)
+
+# Create model wrappers
+untrained_wrapper = ModelWrapper(untrained_model, criterion, train_loader)
+trained_wrapper = ModelWrapper(model, criterion, train_loader)
+
+# Generate slices
+slice_untrained = RandomDirectionSlicer.slice(
+    model=untrained_wrapper,
+    n_samples=30,
+    x_range=(-4, 4),
+    y_range=(-4, 4)
+)
+
+slice_trained = RandomDirectionSlicer.slice(
+    model=trained_wrapper,
+    n_samples=30,
+    x_range=(-4, 4),
+    y_range=(-4, 4)
+)
+
+# Log to TensorBoard
+log_slice("landscape/untrained", slice_untrained, step=0)
+log_slice("landscape/trained", slice_trained, step=100)
 ```
 
-Navigate to `http://localhost:6006` and click on the "Loss Slicer" tab.
+Launch TensorBoard with the log directory and navigate to `http://localhost:6006`:
 
+```bash
+uv run tensorboard --logdir=runs
+```
+
+Select the "Loss Slicer" tab to explore the visualizations. The plugin becomes particularly powerful when used alongside standard TensorBoard metrics like loss curves and accuracy, enabling correlation between landscape changes and training dynamics.
+
+## Use Case Demonstration
+
+[Here](/docs/use-case-demonstration.md) you can find a more detailled use case demonstration.
 
 ## Development
 

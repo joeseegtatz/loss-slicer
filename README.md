@@ -4,14 +4,6 @@
 
 PySlice is a PyTorch-focused library for analyzing neural network loss landscapes. It provides tools to visualize and understand how loss functions behave in parameter space, which is crucial for understanding optimization dynamics, generalization, and model behavior. Additionally a Tensorboard Plugin is provided which provides a web-based responsive UI for exploring the results of different slicing methods alongside other logged metrics in the training process.
 
-
-## Loss Landscape Analysis
-Loss landscape analysis involves examining how the loss function changes as we move through the parameter space of a neural network. This helps us understand:
-- **Optimization dynamics**: How gradient descent navigates the parameter space
-- **Generalization**: Relationship between loss landscape geometry and model performance
-- **Model robustness**: How sensitive models are to parameter perturbations
-- **Training dynamics**: Why some models train better than others
-
 ## Project Structure
 
 ```
@@ -33,11 +25,36 @@ To get started with either the python library or the tensorboard plugin please r
 - [PySlice Library](./slicing-library/README.md) - Core loss landscape analysis tools
 - [TensorBoard Plugin](./tensorboard_plugin/README.md) - Interactive visualization plugin
 
-## Installation
+## Quick Installation
 
-In this project the python package manager uv is used. You can use the command **uv sync** to automatically install all the requirements as well as the slicing library and the tensorboard plugin into a virtual environment. You can activate the venv manually or use run the script like **uv run hyperparamerter-tuning-example.py** or **uv run tensorboard**. It installs both of the local packages in development mode which means that changes you make are directly applied. 
+This project uses the `uv` Python package manager for dependency and virtual environment management. If you prefer using `pip`, see the installation instructions in the [PySlice Library README](./slicing-library/README.md) or [TensorBoard Plugin README](./tensorboard_plugin/README.md).
 
-If you want to use the library in an online environment like google colab you can use **!pip install git+https://github.com/joeseegtatz/loss-slicer.git#subdirectory=slicing-library** 
+### Install Dependencies
+
+Install all dependencies and local packages in development mode:
+
+```bash
+uv sync
+```
+
+This creates a virtual environment and installs:
+- All required dependencies
+- PySlice library (development mode)
+- TensorBoard plugin (development mode)
+
+### Running Commands
+
+Activate the virtual environment manually:
+```bash
+source .venv/bin/activate  # macOS/Linux
+.venv\Scripts\activate     # Windows
+```
+
+Or run commands directly with `uv`:
+```bash
+uv run python examples/hyperparameter-tuning-example.py
+uv run tensorboard --logdir=runs
+```
 
 ## Development
 
