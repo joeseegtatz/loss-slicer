@@ -124,4 +124,6 @@ Navigate to `http://localhost:6006` and explore the different tabs to analyze bo
 
 ![tensorboard-random-direction-slice](/docs/assets/tensorboard-random-direction-slice.png)
 
-This integrated view combining standard metrics, predictions, architecture, and loss landscapes provides comprehensive insight into model behavior. The visualizations clearly show that while the shallow network achieves low training loss, its flat landscape and poor predictions indicate it lacks the capacity to learn the underlying patterns in the data. The example script can be easily adapted by replacing the network architectures and dataset to perform hyperparameter tuning on different problems.
+
+
+This integrated view combining standard metrics, predictions, architecture, and loss landscapes provides comprehensive insight into model behavior. The example script can be easily adapted by replacing the network architectures and dataset to perform hyperparameter tuning on different problems.
