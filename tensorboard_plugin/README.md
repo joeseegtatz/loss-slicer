@@ -58,6 +58,8 @@ from pysclice.core.model_wrapper import ModelWrapper
 from pysclice.slicers.random_direction_slicer import RandomDirectionSlicer
 from tensorboard_loss_slicer import log_slice
 
+# ... model definition and data loading code ...
+
 # Save untrained model state
 untrained_model = copy.deepcopy(model)
 
@@ -107,7 +109,7 @@ Select the "Loss Slicer" tab to explore the visualizations. The plugin becomes p
 
 ## Use Case Demonstration
 
-[Here](/docs/use-case-demonstration.md) you can find a more detailled use case demonstration.
+See the [hyperparameter tuning example](/docs/use-case-demonstration.md) for a detailed demonstration of comparing multiple network architectures using loss landscape visualization alongside standard TensorBoard metrics.
 
 ## Development
 

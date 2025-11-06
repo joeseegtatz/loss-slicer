@@ -116,6 +116,10 @@ Navigate to `http://localhost:6006` and explore the different tabs to analyze bo
 
 ![tensorboard-graph](/docs/assets/tensorboard-graph.png)
 
+**Linear Interpolation Tab** shows loss along the linear path between untrained (epoch 0) and trained (final epoch) model states. All selected runs are overlaid on a single plot, making it easy to compare how different architectures descend from their initial random states to their final trained configurations.
+
+![tensorboard-linear-interpolation-slice](/docs/assets/tensorboard-linear-interpolation.png)
+
 **Loss Slicer Tab** reveals the loss landscape topology. The random direction visualization compares untrained (left) and trained (right) landscapes for the shallow network. The untrained landscape shows high, rough terrain with loss values around 500-560, while the trained landscape displays a smooth, wide basin with loss values around 30-32. This smoothing indicates successful optimization, though the relatively flat basin explains why the model struggles to capture fine-grained patterns.  Use the run selector to compare different architectures and observe how deeper networks develop narrower, deeper basins suggesting more precise optima.
 
 ![tensorboard-random-direction-slice](/docs/assets/tensorboard-random-direction-slice.png)
