@@ -1,8 +1,0 @@
-torch 
-tensorboard == 2.19.0
-numpy
-matplotlib
-scikit-optimize
-torchvision
-tqdm
-tensorflow
