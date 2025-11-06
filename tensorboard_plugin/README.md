@@ -85,6 +85,14 @@ slice_trained = RandomDirectionSlicer.slice(
 )
 
 # Log to TensorBoard
+
+#set directory where log data is saved to
+logdir = './runs'
+
+#create writer 
+custom_writer = tf.summary.create_file_writer(logdir)
+
+#log slices 
 log_slice("landscape/untrained", slice_untrained, step=0)
 log_slice("landscape/trained", slice_trained, step=100)
 ```

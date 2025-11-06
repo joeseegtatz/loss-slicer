@@ -19,7 +19,17 @@ All networks use ReLU activation and are trained with SGD. We expect the shallow
 
 ## Script Structure
 
-The script follows a systematic comparison workflow:
+The script follows a systematic comparison workflow. All logged data is saved to `./runs/width_comparison/` with separate subdirectories for each run:
+
+```
+runs/width_comparison/
+├── shallow_net_lr0.01_seed42/
+├── shallow_net_lr0.001_seed42/
+├── medium2_net_lr0.01_seed42/
+└── ...
+```
+
+Each run directory contains TensorBoard event files with both standard metrics (scalars, images) and loss landscape data logged via the plugin.
 
 ```python
 # Define architectures to compare
@@ -86,7 +96,7 @@ for run_name, checkpoints in saved_models.items():
 
 ## Viewing Results in TensorBoard
 
-After the script completes, launch TensorBoard to explore the results:
+After the script completes, launch TensorBoard pointing to the directory containing all run subdirectories:
 
 ```bash
 uv run tensorboard --logdir=./runs/width_comparison
